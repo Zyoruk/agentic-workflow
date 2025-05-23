@@ -378,3 +378,29 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 **🚀 Ready to contribute?** Start by reading our [development conventions](CONVENTIONS.md) and running `make dev-setup`!
+
+## Features
+
+- Core engine for workflow management
+- Agent-based task execution
+- Flexible memory system
+  - Short-term memory
+  - Vector store (Weaviate) for long-term memory
+  - Cache system
+  - LangChain integration for embeddings
+- Plugin architecture
+- Robust event system
+- Extensible service components
+
+## Installation
+
+```bash
+# Basic installation
+pip install agentic-workflow
+
+# With development dependencies
+pip install agentic-workflow[dev]
+
+# With embedding support (for LangChain integration)
+pip install agentic-workflow[embedding]
+```

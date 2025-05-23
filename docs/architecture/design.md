@@ -57,7 +57,7 @@ graph TB
     PM --> Planner
     Planner --> Router
     Router --> RE & CG & TA & CI & MA
-    
+
     RE --> PMT
     CG --> CGT
     TA --> TAT

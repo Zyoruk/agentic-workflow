@@ -6,7 +6,7 @@
   - **Task Graph**: Apache Airflow
   - **Skill Graph**: NetworkX, DGL
   - **Vector Store**: Weaviate
-  - **Graph Processing**: 
+  - **Graph Processing**:
     - **Query Engine**: Neo4j Cypher
     - **Update Engine**: Neo4j Procedures
     - **Validator**: Neo4j Schema Validation

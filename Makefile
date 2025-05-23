@@ -64,4 +64,4 @@ dev-down:  ## Stop development services
 	docker-compose -f docker-compose.dev.yml down
 
 package-check:  ## Check if package can be imported
-	python -c "import agentic_workflow; print(f'✅ Package {agentic_workflow.__version__} imported successfully!')" 
+	python -c "import agentic_workflow; print(f'✅ Package {agentic_workflow.__version__} imported successfully!')"

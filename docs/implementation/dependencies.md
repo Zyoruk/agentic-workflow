@@ -231,4 +231,4 @@ graph LR
 
 2. Testing → Monitoring
    - Risk: Coverage gaps
-   - Mitigation: Comprehensive testing 
+   - Mitigation: Comprehensive testing

@@ -186,4 +186,4 @@ requirements-dev.txt
 .secrets
 *.pem
 *.key
-!*.key.example 
+!*.key.example

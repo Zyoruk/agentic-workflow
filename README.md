@@ -131,4 +131,4 @@ agentic-workflow/
 1. Review and approve new structure
 2. Begin migration process
 3. Update documentation
-4. Implement new conventions 
+4. Implement new conventions

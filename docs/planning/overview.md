@@ -33,7 +33,7 @@
 ## Security and Compliance
 - **Standards**: Basic security practices tailored to each project.
 
-## Collaboration and Communication          
+## Collaboration and Communication
 - **Tools**: Use collaboration tools like Slack or Microsoft Teams for communication.
 
 ## Documentation and Training

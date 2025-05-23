@@ -255,7 +255,7 @@ pip-compile pyproject.toml --extra dev --output-file requirements-dev.txt
 [flake8]
 max-line-length = 88
 extend-ignore = E203, W503, E501
-exclude = 
+exclude =
     .git,
     __pycache__,
     .venv,
@@ -763,4 +763,4 @@ After completing this setup:
 3. **Setup monitoring**: Add basic health checks and logging
 4. **Create first tests**: Implement basic test cases for core functionality
 
-This completes the Python development environment setup. The environment is now ready for team collaboration and development of the agentic workflow system. 
+This completes the Python development environment setup. The environment is now ready for team collaboration and development of the agentic workflow system.

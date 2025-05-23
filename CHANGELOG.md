@@ -1,7 +1,8 @@
-## Unreleased
+## v0.2.0 (2025-05-22)
 
 ### Feat
 
+- **versioning**: add automated semantic versioning and changelog generation with commitizen
 - Complete Task 1.1 - Python Development Environment Setup
 - Initial commit with complete project documentation foundation
 

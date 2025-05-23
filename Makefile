@@ -65,3 +65,25 @@ dev-down:  ## Stop development services
 
 package-check:  ## Check if package can be imported
 	python -c "import agentic_workflow; print(f'✅ Package {agentic_workflow.__version__} imported successfully!')"
+
+# Version Management with Commitizen
+version-check:  ## Check current version
+	cz version
+
+version-bump:  ## Automatically bump version based on conventional commits
+	cz bump
+
+version-bump-dry:  ## Show what version would be bumped to (dry run)
+	cz bump --dry-run
+
+changelog:  ## Generate/update CHANGELOG.md
+	cz changelog
+
+commit:  ## Create a conventional commit interactively
+	cz commit
+
+release:  ## Create a release (bump version, update changelog, create tag)
+	cz bump --changelog
+
+info:  ## Show conventional commit info
+	cz info

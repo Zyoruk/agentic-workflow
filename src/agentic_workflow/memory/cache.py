@@ -126,6 +126,7 @@ class CacheMemoryStore(CacheStore):
         Returns:
             True if connection successful, False otherwise
         """
+        # Check if Redis is available
         if not REDIS_AVAILABLE or redis is None:
             logger.warning("Redis is not available - install redis to use cache store")
             return False
@@ -136,20 +137,20 @@ class CacheMemoryStore(CacheStore):
                 max_connections=self.max_connections, **self.redis_config
             )
 
-            # Create client
+            # Create client and test connection
             self.client = redis.Redis(connection_pool=self.connection_pool)
-
-            # Test connection
-            if self.client is not None:
-                await self.client.ping()
-                logger.info(
-                    f"Connected to Redis at {self.redis_config['host']}:{self.redis_config['port']}"
-                )
-                return True
-            return False
+            await self.client.ping()
+            
+            logger.info(
+                f"Connected to Redis at {self.redis_config['host']}:{self.redis_config['port']}"
+            )
+            return True
 
         except Exception as e:
+            # Clean up if connection failed
             logger.error(f"Failed to connect to Redis: {e}")
+            self.client = None
+            self.connection_pool = None
             return False
 
     async def _ensure_client(self) -> bool:

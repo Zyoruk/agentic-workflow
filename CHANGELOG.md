@@ -1,3 +1,13 @@
+## v0.3.0 (2025-05-23)
+
+### Feat
+
+- **core**: implement Task 1.2 - Core System Architecture - Complete implementation with components, services, config management, logging, and workflow engine
+
+### Fix
+
+- **memory**: add LangChain integration for Weaviate v4 compatibility
+
 ## v0.2.0 (2025-05-22)
 
 ### Feat

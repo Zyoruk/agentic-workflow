@@ -254,9 +254,11 @@ async def main() -> None:
             logger.info_with_data(  # type: ignore[attr-defined]
                 "Engine health check completed",
                 healthy=health.success,
-                components=list(health.data.get("components", {}).keys())
-                if health.data
-                else [],
+                components=(
+                    list(health.data.get("components", {}).keys())
+                    if health.data
+                    else []
+                ),
             )
 
             # Create and execute workflow

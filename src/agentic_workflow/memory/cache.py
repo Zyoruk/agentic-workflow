@@ -140,7 +140,7 @@ class CacheMemoryStore(CacheStore):
             # Create client and test connection
             self.client = redis.Redis(connection_pool=self.connection_pool)
             await self.client.ping()
-            
+
             logger.info(
                 f"Connected to Redis at {self.redis_config['host']}:{self.redis_config['port']}"
             )

@@ -26,6 +26,9 @@ lint:  ## Run linting
 	flake8 src/ tests/
 	mypy src/
 
+pre-commit:  ## Run all pre-commit hooks
+	pre-commit run --all-files
+
 format:  ## Format code
 	black src/ tests/
 	isort src/ tests/
@@ -37,6 +40,7 @@ format-check:  ## Check code formatting
 quality:  ## Run all quality checks
 	$(MAKE) format-check
 	$(MAKE) lint
+	$(MAKE) pre-commit
 	$(MAKE) test
 
 docs:  ## Build documentation with Sphinx

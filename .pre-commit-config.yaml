@@ -15,31 +15,29 @@ repos:
       - id: commitizen
         stages: [commit-msg]
 
-  - repo: https://github.com/psf/black
-    rev: 25.1.0
+  # Use local Makefile commands for code quality
+  - repo: local
     hooks:
       - id: black
-        language_version: python3.13
+        name: black
+        entry: make pre-commit-format
+        language: system
+        pass_filenames: false
 
-  - repo: https://github.com/pycqa/isort
-    rev: 6.0.1
-    hooks:
       - id: isort
+        name: isort
+        entry: make pre-commit-format
+        language: system
+        pass_filenames: false
 
-  - repo: https://github.com/pycqa/flake8
-    rev: 6.1.0
-    hooks:
       - id: flake8
-        args: [src/, tests/]
+        name: flake8
+        entry: make pre-commit-lint
+        language: system
+        pass_filenames: false
 
-  - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.15.0
-    hooks:
       - id: mypy
-        args: [src/]
-        additional_dependencies: [
-          pydantic,
-          types-PyYAML,
-          types-redis,
-          types-requests
-        ]
+        name: mypy
+        entry: make pre-commit-lint
+        language: system
+        pass_filenames: false

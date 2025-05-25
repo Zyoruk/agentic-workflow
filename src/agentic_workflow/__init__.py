@@ -1,88 +1,106 @@
-"""AI-driven agentic workflow system for autonomous workflows."""
+"""Agentic Workflow framework for building AI agent-based applications."""
 
-__version__ = "0.3.0"
+__version__ = "0.1.0"
 
-import logging
-import sys
-
-# Core imports
-from .core.config import Config, create_config, get_config
-from .core.engine import ComponentRegistry, WorkflowEngine
+# Import core components
+from .core.config import get_config, reload_config
 from .core.interfaces import (
     Component,
     ComponentStatus,
-    EventHandler,
     Service,
     ServiceResponse,
-    WorkflowDefinition,
-    WorkflowExecution,
-    WorkflowStep,
 )
-from .core.logging_config import get_logger
+from .core.logging_config import get_logger, setup_logging
+from .memory.cache_store import RedisCacheStore
 
-# Memory management
-from .memory import (  # Memory interfaces; Memory implementations; Memory manager
-    BasicMemoryStore,
-    CacheStore,
-    KeyValueStore,
+# Import memory management components
+from .memory.interfaces import (
     MemoryEntry,
-    MemoryManager,
     MemoryQuery,
     MemoryResult,
-    MemoryStats,
     MemoryStore,
     MemoryType,
-    RedisCacheStore,
-    ShortTermMemory,
-    VectorCapableStore,
-    VectorStore,
-    WeaviateVectorStore,
 )
+from .memory.manager import MemoryManager
+from .memory.short_term import ShortTermMemory
 
-# Configure basic logging
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
-    handlers=[logging.StreamHandler(sys.stdout)],
+try:
+    from .memory.vector_store import WeaviateVectorStore
+except ImportError:
+    # This is fine - Weaviate might not be installed
+    WeaviateVectorStore = None  # type: ignore
+
+# Import exceptions
+from .core.exceptions import (
+    AgentError,
+    AgenticWorkflowError,
+    ConfigurationError,
+    NotFoundError,
+    ResourceLimitError,
+    SecurityViolationError,
+    ServiceError,
+    TimeoutError,
+    ValidationError,
 )
+from .guardrails.error_handling import ErrorHandler, ErrorSeverity, RecoveryStrategy
+
+# Import guardrails components
+from .guardrails.input_validation import InputValidator, ValidationRule
+from .guardrails.resource_limits import ResourceLimiter, ResourceType, ResourceUsage
+from .guardrails.safety_checks import SafetyChecker, SafetyLevel, SafetyViolation
+from .guardrails.service import GuardrailsService
+
+# Convenient access to services
+memory_service = None
+guardrails_service = None
 
 __all__ = [
     # Version
     "__version__",
-    # Core interfaces
+    # Core
+    "get_config",
+    "reload_config",
+    "get_logger",
+    "setup_logging",
     "Component",
     "ComponentStatus",
-    "EventHandler",
     "Service",
     "ServiceResponse",
-    "WorkflowDefinition",
-    "WorkflowExecution",
-    "WorkflowStep",
-    # Core components
-    "ComponentRegistry",
-    "Config",
-    "WorkflowEngine",
-    # Configuration
-    "create_config",
-    "get_config",
-    # Logging
-    "get_logger",
-    # Memory interfaces
+    # Memory
     "MemoryEntry",
     "MemoryQuery",
     "MemoryResult",
-    "MemoryStats",
-    "MemoryType",
     "MemoryStore",
-    "CacheStore",
-    "VectorStore",
-    "BasicMemoryStore",
-    "KeyValueStore",
-    "VectorCapableStore",
-    # Memory implementations
-    "RedisCacheStore",
-    "ShortTermMemory",
-    "WeaviateVectorStore",
-    # Memory manager
+    "MemoryType",
     "MemoryManager",
+    "ShortTermMemory",
+    "RedisCacheStore",
+    "WeaviateVectorStore",
+    # Guardrails
+    "InputValidator",
+    "ValidationRule",
+    "ValidationError",
+    "ResourceLimiter",
+    "ResourceType",
+    "ResourceUsage",
+    "ErrorHandler",
+    "RecoveryStrategy",
+    "ErrorSeverity",
+    "SafetyChecker",
+    "SafetyViolation",
+    "SafetyLevel",
+    "GuardrailsService",
+    # Exceptions
+    "AgenticWorkflowError",
+    "ValidationError",
+    "ResourceLimitError",
+    "ConfigurationError",
+    "ServiceError",
+    "AgentError",
+    "SecurityViolationError",
+    "NotFoundError",
+    "TimeoutError",
+    # Service instances
+    "memory_service",
+    "guardrails_service",
 ]

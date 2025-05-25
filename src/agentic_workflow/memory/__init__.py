@@ -1,29 +1,48 @@
-"""Memory management system for the agentic workflow."""
+"""Memory management module for the agentic workflow system."""
 
-from .cache import CacheMemoryStore
+from .cache_store import RedisCacheStore
+from .factory import MemoryStoreFactory
 from .interfaces import (
+    BasicMemoryStore,
+    CacheStore,
+    KeyValueStore,
     MemoryEntry,
     MemoryQuery,
     MemoryResult,
     MemoryStats,
     MemoryStore,
     MemoryType,
+    VectorCapableStore,
+    VectorStore,
 )
 from .manager import MemoryManager
-from .service import MemoryService
 from .short_term import ShortTermMemory
-from .vector_store import VectorStore
+
+try:
+    from .vector_store import WeaviateVectorStore
+except ImportError:
+    # This is fine - Weaviate might not be installed
+    WeaviateVectorStore = None  # type: ignore
 
 __all__ = [
-    "MemoryStore",
+    # Interfaces
     "MemoryEntry",
     "MemoryQuery",
     "MemoryResult",
     "MemoryStats",
     "MemoryType",
-    "ShortTermMemory",
+    "MemoryStore",
+    "CacheStore",
     "VectorStore",
-    "CacheMemoryStore",
+    "BasicMemoryStore",
+    "KeyValueStore",
+    "VectorCapableStore",
+    # Implementations
+    "RedisCacheStore",
+    "ShortTermMemory",
+    "WeaviateVectorStore",
+    # Manager
     "MemoryManager",
-    "MemoryService",
+    # Factory
+    "MemoryStoreFactory",
 ]

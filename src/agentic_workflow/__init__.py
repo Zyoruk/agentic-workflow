@@ -1,70 +1,88 @@
-"""Agentic Workflow - AI-driven autonomous software development system."""
+"""AI-driven agentic workflow system for autonomous workflows."""
 
 __version__ = "0.3.0"
-__author__ = "Zyoruk"
-__email__ = "ce.zyoruk@gmail.com"
 
-# Core architecture imports
-from .core import (  # Core interfaces; Models; Engine; Logging; Configuration
+import logging
+import sys
+
+# Core imports
+from .core.config import Config, create_config, get_config
+from .core.engine import ComponentRegistry, WorkflowEngine
+from .core.interfaces import (
     Component,
     ComponentStatus,
     EventHandler,
     Service,
     ServiceResponse,
     WorkflowDefinition,
-    WorkflowEngine,
     WorkflowExecution,
     WorkflowStep,
-    create_config,
-    get_config,
-    get_logger,
-    reload_config,
-    set_config,
-    setup_logging,
 )
+from .core.logging_config import get_logger
+
+# Memory management
 from .memory import (  # Memory interfaces; Memory implementations; Memory manager
-    CacheMemoryStore,
+    BasicMemoryStore,
+    CacheStore,
+    KeyValueStore,
     MemoryEntry,
     MemoryManager,
     MemoryQuery,
     MemoryResult,
+    MemoryStats,
     MemoryStore,
     MemoryType,
+    RedisCacheStore,
     ShortTermMemory,
+    VectorCapableStore,
     VectorStore,
+    WeaviateVectorStore,
 )
 
-# Utility imports
-from .utils.helpers import format_response, validate_config
+# Configure basic logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    handlers=[logging.StreamHandler(sys.stdout)],
+)
 
 __all__ = [
-    # Core components
+    # Version
+    "__version__",
+    # Core interfaces
     "Component",
-    "Service",
+    "ComponentStatus",
     "EventHandler",
+    "Service",
     "ServiceResponse",
     "WorkflowDefinition",
-    "WorkflowStep",
     "WorkflowExecution",
-    "ComponentStatus",
+    "WorkflowStep",
+    # Core components
+    "ComponentRegistry",
+    "Config",
     "WorkflowEngine",
-    "get_logger",
-    "setup_logging",
-    "get_config",
-    "set_config",
+    # Configuration
     "create_config",
-    "reload_config",
-    # Memory components
-    "MemoryStore",
+    "get_config",
+    # Logging
+    "get_logger",
+    # Memory interfaces
     "MemoryEntry",
     "MemoryQuery",
     "MemoryResult",
+    "MemoryStats",
     "MemoryType",
-    "ShortTermMemory",
+    "MemoryStore",
+    "CacheStore",
     "VectorStore",
-    "CacheMemoryStore",
+    "BasicMemoryStore",
+    "KeyValueStore",
+    "VectorCapableStore",
+    # Memory implementations
+    "RedisCacheStore",
+    "ShortTermMemory",
+    "WeaviateVectorStore",
+    # Memory manager
     "MemoryManager",
-    # Utilities
-    "format_response",
-    "validate_config",
 ]

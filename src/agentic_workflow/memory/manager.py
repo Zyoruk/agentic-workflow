@@ -5,15 +5,26 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 from ..core.logging_config import get_logger
-from .cache import CacheMemoryStore
-from .interfaces import MemoryEntry, MemoryQuery, MemoryResult, MemoryStore, MemoryType
-from .vector_store import VectorStore
+from .factory import MemoryStoreFactory
+from .interfaces import (
+    CacheStore,
+    MemoryEntry,
+    MemoryQuery,
+    MemoryResult,
+    MemoryStore,
+    MemoryType,
+    VectorStore,
+)
 
 logger = get_logger(__name__)
 
 
 class MemoryManager:
-    """Coordinates multiple memory stores and provides unified memory operations."""
+    """Coordinates multiple memory stores and provides unified memory operations.
+
+    This implementation follows improved architecture with dependency injection
+    and better separation of concerns.
+    """
 
     def __init__(self, config: Optional[Dict[str, Any]] = None):
         """Initialize memory manager.
@@ -42,28 +53,30 @@ class MemoryManager:
         logger.info("Initialized memory manager")
 
     async def initialize(self) -> None:
-        """Initialize all memory stores."""
+        """Initialize all memory stores using the factory."""
         try:
-            # Import concrete implementations
-            from .cache import CacheMemoryStore
-            from .short_term import ShortTermMemory
-            from .vector_store import WeaviateVectorStore
+            # Create stores using factory
+            factory = MemoryStoreFactory()
 
             # Initialize short-term memory
             short_term_config = self.config.get("short_term", {})
-            self.stores["short_term"] = ShortTermMemory(
+            short_term_store = factory.create_short_term_store(
                 name="short_term", config=short_term_config
             )
+            self.stores["short_term"] = short_term_store
 
             # Initialize vector store
             vector_config = self.config.get("vector_store", {})
-            self.stores["vector_store"] = WeaviateVectorStore(
+            vector_store = factory.create_vector_store(
                 name="vector_store", config=vector_config
             )
+            if vector_store:
+                self.stores["vector_store"] = vector_store
 
             # Initialize cache store
             cache_config = self.config.get("cache", {})
-            self.stores["cache"] = CacheMemoryStore(name="cache", config=cache_config)
+            cache_store = factory.create_cache_store(name="cache", config=cache_config)
+            self.stores["cache"] = cache_store
 
             # Set up type mappings
             for memory_type, store_name in self.default_mappings.items():
@@ -528,7 +541,7 @@ class MemoryManager:
         """
         try:
             cache_store = self.stores.get("cache")
-            if not cache_store or not isinstance(cache_store, CacheMemoryStore):
+            if not cache_store or not isinstance(cache_store, CacheStore):
                 logger.error("Cache store not available")
                 return False
 
@@ -549,7 +562,7 @@ class MemoryManager:
         """
         try:
             cache_store = self.stores.get("cache")
-            if not cache_store or not isinstance(cache_store, CacheMemoryStore):
+            if not cache_store or not isinstance(cache_store, CacheStore):
                 logger.error("Cache store not available")
                 return None
 

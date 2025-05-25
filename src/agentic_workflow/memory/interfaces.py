@@ -3,7 +3,7 @@
 from abc import ABC, abstractmethod
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Protocol, runtime_checkable
 
 from pydantic import BaseModel, Field
 
@@ -89,6 +89,104 @@ class MemoryStats(BaseModel):
     entries_by_type: Dict[str, int] = Field(
         default_factory=dict, description="Count by memory type"
     )
+
+
+# Base interfaces using Protocol for structural typing
+
+
+@runtime_checkable
+class BaseStore(Protocol):
+    """Base protocol for all memory stores."""
+
+    name: str
+    config: Dict[str, Any]
+
+    async def health_check(self) -> bool:
+        """Check if the store is healthy."""
+        ...
+
+    async def close(self) -> None:
+        """Close the store and cleanup resources."""
+        ...
+
+
+@runtime_checkable
+class StoreWithStats(Protocol):
+    """Protocol for stores that provide statistics."""
+
+    async def get_stats(self) -> MemoryStats:
+        """Get store statistics."""
+        ...
+
+
+@runtime_checkable
+class BasicMemoryStore(BaseStore, Protocol):
+    """Protocol for basic memory operations."""
+
+    async def store(self, entry: MemoryEntry) -> bool:
+        """Store a memory entry."""
+        ...
+
+    async def retrieve(self, query: MemoryQuery) -> MemoryResult:
+        """Retrieve memory entries based on query."""
+        ...
+
+    async def update(self, entry_id: str, updates: Dict[str, Any]) -> bool:
+        """Update a memory entry."""
+        ...
+
+    async def delete(self, entry_id: str) -> bool:
+        """Delete a memory entry."""
+        ...
+
+    async def clear(self, memory_type: Optional[MemoryType] = None) -> bool:
+        """Clear memory entries."""
+        ...
+
+
+@runtime_checkable
+class VectorCapableStore(BaseStore, Protocol):
+    """Protocol for vector-based operations."""
+
+    async def create_embedding(self, content: str) -> List[float]:
+        """Create vector embedding for content."""
+        ...
+
+    async def similarity_search(
+        self, query_embedding: List[float], limit: int = 10, threshold: float = 0.7
+    ) -> MemoryResult:
+        """Perform similarity search using vector embeddings."""
+        ...
+
+    async def semantic_search(
+        self, query_text: str, limit: int = 10, threshold: float = 0.7
+    ) -> MemoryResult:
+        """Perform semantic search using text query."""
+        ...
+
+
+@runtime_checkable
+class KeyValueStore(BaseStore, Protocol):
+    """Protocol for key-value store operations."""
+
+    async def set(self, key: str, value: Any, ttl: Optional[int] = None) -> bool:
+        """Set a key-value pair."""
+        ...
+
+    async def get(self, key: str) -> Optional[Any]:
+        """Get a value by key."""
+        ...
+
+    async def exists(self, key: str) -> bool:
+        """Check if a key exists."""
+        ...
+
+    async def expire(self, key: str, ttl: int) -> bool:
+        """Set expiration on a key."""
+        ...
+
+
+# Abstract base classes for backward compatibility
 
 
 class MemoryStore(ABC):
@@ -248,17 +346,33 @@ class VectorStore(MemoryStore):
         """
         pass
 
+    @abstractmethod
+    async def semantic_search(
+        self, query_text: str, limit: int = 10, threshold: float = 0.7
+    ) -> MemoryResult:
+        """Perform semantic search using text query.
+
+        Args:
+            query_text: Text query
+            limit: Maximum number of results
+            threshold: Minimum similarity threshold
+
+        Returns:
+            Similar memory entries
+        """
+        pass
+
 
 class CacheStore(MemoryStore):
     """Abstract base class for cache storage implementations."""
 
     @abstractmethod
     async def set(self, key: str, value: Any, ttl: Optional[int] = None) -> bool:
-        """Set a cache value.
+        """Set a value in the cache.
 
         Args:
             key: Cache key
-            value: Value to cache
+            value: Value to store
             ttl: Time to live in seconds
 
         Returns:
@@ -268,7 +382,7 @@ class CacheStore(MemoryStore):
 
     @abstractmethod
     async def get(self, key: str) -> Optional[Any]:
-        """Get a cache value.
+        """Get a value from the cache.
 
         Args:
             key: Cache key
@@ -280,19 +394,19 @@ class CacheStore(MemoryStore):
 
     @abstractmethod
     async def exists(self, key: str) -> bool:
-        """Check if a key exists in cache.
+        """Check if a key exists in the cache.
 
         Args:
             key: Cache key
 
         Returns:
-            True if key exists, False otherwise
+            True if exists, False otherwise
         """
         pass
 
     @abstractmethod
     async def expire(self, key: str, ttl: int) -> bool:
-        """Set expiration for a key.
+        """Set expiration on a cache key.
 
         Args:
             key: Cache key

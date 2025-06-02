@@ -19,7 +19,11 @@ class AgenticWorkflowError(Exception):
             **kwargs: Additional keyword arguments
         """
         self.message = message
-        super().__init__(message, *args, **kwargs)
+        # Store all keyword arguments as instance attributes
+        for key, value in kwargs.items():
+            setattr(self, key, value)
+        # Call parent constructor with message and args only
+        super().__init__(message, *args)
 
 
 class ValidationError(AgenticWorkflowError):

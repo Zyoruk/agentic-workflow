@@ -365,3 +365,11 @@ class ResourceLimiter:
                 )
 
         return result
+
+    def check_limit(
+        self, context: str, resource_type: ResourceType, unit: str = ""
+    ) -> bool:
+        usage = self.get_usage(context, resource_type, unit)
+        if usage is None:
+            return True  # No limit set, so not exceeded
+        return not usage.is_exceeded

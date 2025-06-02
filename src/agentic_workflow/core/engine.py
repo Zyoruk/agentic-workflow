@@ -3,7 +3,7 @@
 import asyncio
 import uuid
 from contextlib import asynccontextmanager
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any, Dict, List, Optional, Set
 
 from .config import Config, get_config
@@ -221,22 +221,23 @@ class WorkflowEngine:
         Returns:
             Workflow execution result
         """
-        execution_id = str(uuid.uuid4())
-        start_time = datetime.utcnow().isoformat()
-
         execution = WorkflowExecution(
-            id=execution_id,
+            id=str(uuid.uuid4()),
             workflow_id=workflow.id,
             status="running",
-            start_time=start_time,
+            current_step=None,
+            start_time=datetime.now(UTC).isoformat(),
+            end_time=None,
+            result=None,
+            error=None,
         )
 
-        self.running_workflows[execution_id] = execution
+        self.running_workflows[execution.id] = execution
 
         logger.info_with_data(  # type: ignore[attr-defined]
             f"Starting workflow execution: {workflow.name}",
             workflow_id=workflow.id,
-            execution_id=execution_id,
+            execution_id=execution.id,
         )
 
         try:
@@ -248,41 +249,41 @@ class WorkflowEngine:
 
             # Mark as completed
             execution.status = "completed"
-            execution.end_time = datetime.utcnow().isoformat()
+            execution.end_time = datetime.now(UTC).isoformat()
 
             duration = asyncio.get_event_loop().time() - start_time_perf
             log_performance(
                 "workflow_execution",
                 duration,
                 workflow_id=workflow.id,
-                execution_id=execution_id,
+                execution_id=execution.id,
                 steps_count=len(workflow.steps),
             )
 
             logger.info_with_data(  # type: ignore[attr-defined]
                 f"Workflow execution completed: {workflow.name}",
                 workflow_id=workflow.id,
-                execution_id=execution_id,
+                execution_id=execution.id,
                 duration_seconds=duration,
             )
 
         except Exception as e:
             execution.status = "failed"
             execution.error = str(e)
-            execution.end_time = datetime.utcnow().isoformat()
+            execution.end_time = datetime.now(UTC).isoformat()
 
             log_error(
                 e,
                 {
                     "workflow_id": workflow.id,
-                    "execution_id": execution_id,
+                    "execution_id": execution.id,
                     "operation": "workflow_execution",
                 },
             )
 
         finally:
             # Remove from running workflows
-            self.running_workflows.pop(execution_id, None)
+            self.running_workflows.pop(execution.id, None)
 
         return execution
 
@@ -309,6 +310,7 @@ class WorkflowEngine:
         for dep_step_id in step.dependencies:
             if dep_step_id not in execution.completed_steps:
                 execution.failed_steps.append(step.id)
+                execution.error = f"Step dependency not met: {dep_step_id}"
                 raise RuntimeError(f"Step dependency not met: {dep_step_id}")
 
         # Get component
@@ -361,20 +363,8 @@ class WorkflowEngine:
 
         except asyncio.TimeoutError:
             execution.failed_steps.append(step.id)
+            execution.error = f"Step timeout: {step.name}"
             raise RuntimeError(f"Step timeout: {step.name}")
-
-        except Exception as e:
-            execution.failed_steps.append(step.id)
-            log_error(
-                e,
-                {
-                    "step_id": step.id,
-                    "component": step.component,
-                    "action": step.action,
-                    "execution_id": execution.id,
-                },
-            )
-            raise
 
     async def _emit_event(self, event_type: str, event_data: Dict[str, Any]) -> None:
         """Emit an event to all registered handlers.

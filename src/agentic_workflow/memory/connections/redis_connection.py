@@ -31,6 +31,13 @@ except ImportError:
     REDIS_AVAILABLE = False
 
 
+class RedisClientNotAvailableError(Exception):
+    """Exception raised when attempting to use Redis client before it's available."""
+
+    def __init__(self, message: str = "Redis client is not available"):
+        super().__init__(message)
+
+
 class RedisConnectionManager(ConnectionManager["Redis"]):
     """Manages connections to Redis."""
 
@@ -181,3 +188,23 @@ class RedisConnectionManager(ConnectionManager["Redis"]):
             Prefixed key
         """
         return f"{self.key_prefix}{key}"
+
+    async def ping(self) -> bool:
+        """Check if Redis connection is alive."""
+        if self.client is None:
+            return False
+        try:
+            return await self.client.ping()
+        except Exception:
+            return False
+
+    def _ensure_client(self) -> None:
+        """Ensure Redis client is available.
+
+        Raises:
+            RedisClientNotAvailableError: If client is not available
+        """
+        if not self.client:
+            raise RedisClientNotAvailableError(
+                "Redis client is not available. Call connect() first."
+            )

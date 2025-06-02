@@ -257,7 +257,8 @@ class MemoryManager:
                     entries=limited_results,
                     total_count=len(all_results),
                     query_time=0.0,  # Would need to aggregate timing
-                    similarity_scores=[],
+                    similarity_scores=[1.0] * len(limited_results),
+                    success=True,
                 )
 
             # Update statistics
@@ -273,7 +274,13 @@ class MemoryManager:
 
         except Exception as e:
             logger.error(f"Failed to retrieve memory entries: {e}")
-            return MemoryResult()
+            return MemoryResult(
+                entries=[],
+                total_count=0,
+                query_time=0.0,
+                similarity_scores=[],
+                success=False,
+            )
 
     async def search_similar(
         self,
@@ -308,7 +315,13 @@ class MemoryManager:
 
             if not vector_store:
                 logger.warning("No vector store available for similarity search")
-                return MemoryResult()
+                return MemoryResult(
+                    entries=[],
+                    total_count=0,
+                    query_time=0.0,
+                    similarity_scores=[],
+                    success=False,
+                )
 
             # Create embedding and search
             query_embedding = await vector_store.create_embedding(content)
@@ -325,7 +338,13 @@ class MemoryManager:
 
         except Exception as e:
             logger.error(f"Failed to perform similarity search: {e}")
-            return MemoryResult()
+            return MemoryResult(
+                entries=[],
+                total_count=0,
+                query_time=0.0,
+                similarity_scores=[],
+                success=False,
+            )
 
     async def update(
         self,
@@ -373,7 +392,7 @@ class MemoryManager:
             return success
 
         except Exception as e:
-            logger.error(f"Failed to update memory entry {entry_id}: {e}")
+            logger.error(f"Failed to update memory entry: {e}")
             return False
 
     async def delete(
@@ -418,7 +437,7 @@ class MemoryManager:
             return success
 
         except Exception as e:
-            logger.error(f"Failed to delete memory entry {entry_id}: {e}")
+            logger.error(f"Failed to delete memory entry: {e}")
             return False
 
     async def clear(

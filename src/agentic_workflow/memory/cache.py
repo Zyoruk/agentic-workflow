@@ -261,7 +261,13 @@ class CacheMemoryStore(CacheStore):
 
         try:
             if not await self._ensure_client() or self.client is None:
-                return MemoryResult()
+                return MemoryResult(
+                    entries=[],
+                    total_count=0,
+                    query_time=0.0,
+                    similarity_scores=[],
+                    success=True,
+                )
 
             matching_entries = []
 
@@ -320,8 +326,14 @@ class CacheMemoryStore(CacheStore):
             )
 
         except Exception as e:
-            logger.error(f"Failed to retrieve entries: {e}")
-            return MemoryResult()
+            logger.error(f"Failed to retrieve cache entries: {e}")
+            return MemoryResult(
+                entries=[],
+                total_count=0,
+                query_time=0.0,
+                similarity_scores=[],
+                success=False,
+            )
 
     def _matches_query(self, entry: MemoryEntry, query: MemoryQuery) -> bool:
         """Check if an entry matches the query criteria."""
@@ -356,7 +368,7 @@ class CacheMemoryStore(CacheStore):
 
         Args:
             entry_id: ID of the entry to update
-            updates: Fields to update
+            updates: Dictionary of field names and new values
 
         Returns:
             True if successful, False otherwise
@@ -366,21 +378,15 @@ class CacheMemoryStore(CacheStore):
                 return False
 
             key = self._make_key(entry_id)
-
-            # Get existing entry
             value = await self.client.get(key)
+
             if not value:
+                logger.warning(f"Entry not found in cache: {entry_id}")
                 return False
 
             entry = self._deserialize_entry(value)
             if not entry:
-                return False
-
-            # Get remaining TTL
-            ttl = await self.client.ttl(key)
-            if ttl == -1:  # No expiration
-                ttl = self.default_ttl
-            elif ttl == -2:  # Key doesn't exist
+                logger.warning(f"Failed to deserialize entry: {entry_id}")
                 return False
 
             # Update fields
@@ -390,13 +396,17 @@ class CacheMemoryStore(CacheStore):
 
             # Store updated entry
             updated_value = self._serialize_entry(entry)
+            # Get remaining TTL
+            ttl = await self.client.ttl(key)
+            if ttl is None or ttl < 0:
+                ttl = self.default_ttl
             await self.client.setex(key, ttl, updated_value)
 
             logger.debug(f"Updated entry in cache: {entry_id}")
             return True
 
         except Exception as e:
-            logger.error(f"Failed to update entry {entry_id}: {e}")
+            logger.error(f"Failed to update cache entry: {e}")
             return False
 
     async def delete(self, entry_id: str) -> bool:
@@ -419,7 +429,7 @@ class CacheMemoryStore(CacheStore):
             return bool(result)
 
         except Exception as e:
-            logger.error(f"Failed to delete entry {entry_id}: {e}")
+            logger.error(f"Failed to delete cache entry: {e}")
             return False
 
     async def clear(self, memory_type: Optional[MemoryType] = None) -> bool:
@@ -445,26 +455,26 @@ class CacheMemoryStore(CacheStore):
                     deleted_count += 1
 
                 logger.info(f"Cleared {deleted_count} entries from cache")
-            else:
-                # Clear entries of specific type (requires scanning)
-                pattern = f"{self.key_prefix}*"
-                deleted_count = 0
+                return True
 
-                async for key in self.client.scan_iter(match=pattern, count=100):
-                    try:
-                        value = await self.client.get(key)
-                        if value:
-                            entry = self._deserialize_entry(value)
-                            if entry and entry.memory_type == memory_type:
-                                await self.client.delete(key)
-                                deleted_count += 1
-                    except Exception:
-                        continue
+            # Clear entries of specific type
+            pattern = f"{self.key_prefix}*"
+            deleted_count = 0
 
-                logger.info(
-                    f"Cleared {deleted_count} entries of type {memory_type} from cache"
-                )
+            async for key in self.client.scan_iter(match=pattern, count=100):
+                try:
+                    value = await self.client.get(key)
+                    if value:
+                        entry = self._deserialize_entry(value)
+                        if entry and entry.memory_type == memory_type:
+                            await self.client.delete(key)
+                            deleted_count += 1
+                except Exception:
+                    continue
 
+            logger.info(
+                f"Cleared {deleted_count} entries of type {memory_type} from cache"
+            )
             return True
 
         except Exception as e:
@@ -479,7 +489,15 @@ class CacheMemoryStore(CacheStore):
         """
         try:
             if not await self._ensure_client() or self.client is None:
-                return MemoryStats()
+                return MemoryStats(
+                    total_entries=0,
+                    memory_usage=0,
+                    hit_rate=0.0,
+                    average_retrieval_time=0.0,
+                    entries_by_type={},
+                    total_stores=0,
+                    total_retrievals=0,
+                )
 
             # Get basic Redis info
             info = await self.client.info()
@@ -513,17 +531,30 @@ class CacheMemoryStore(CacheStore):
             # Memory usage from Redis info
             memory_usage = info.get("used_memory", 0)
 
+            # Calculate average retrieval time
+            average_retrieval_time = 0.0  # Would need to track this
+
             return MemoryStats(
                 total_entries=total_entries,
                 memory_usage=memory_usage,
                 hit_rate=hit_rate,
-                average_retrieval_time=0.0,  # Would need to track this
+                average_retrieval_time=average_retrieval_time,
                 entries_by_type=entries_by_type,
+                total_stores=self.total_sets,
+                total_retrievals=self.total_gets,
             )
 
         except Exception as e:
-            logger.error(f"Failed to get stats: {e}")
-            return MemoryStats()
+            logger.error(f"Failed to get cache stats: {e}")
+            return MemoryStats(
+                total_entries=0,
+                memory_usage=0,
+                hit_rate=0.0,
+                average_retrieval_time=0.0,
+                entries_by_type={},
+                total_stores=0,
+                total_retrievals=0,
+            )
 
     async def health_check(self) -> bool:
         """Check if the memory store is healthy.

@@ -169,8 +169,8 @@ class ErrorHandler:
                     severity = self.severity_levels.get(exc_type, ErrorSeverity.MEDIUM)
 
         if not strategy:
-            strategy = RecoveryStrategy.FALLBACK
-            severity = ErrorSeverity.MEDIUM
+            strategy = RecoveryStrategy.ESCALATE
+            severity = ErrorSeverity.HIGH
 
         # Log the error
         self._log_error(error, strategy, severity, context)
@@ -189,7 +189,8 @@ class ErrorHandler:
                             severity.value if severity else ErrorSeverity.MEDIUM.value
                         ),
                         "handled": True,
-                        "result": result,
+                        "action": result.get("action", "custom"),
+                        **result,
                     }
                 except Exception as e:
                     logger.error(f"Custom handler failed: {e}")
@@ -207,7 +208,8 @@ class ErrorHandler:
                         severity.value if severity else ErrorSeverity.MEDIUM.value
                     ),
                     "handled": True,
-                    "result": result,
+                    "action": result.get("action", strategy.value),
+                    **result,
                 }
             except Exception as e:
                 logger.error(f"Strategy handler failed: {e}")
@@ -221,7 +223,8 @@ class ErrorHandler:
             "strategy": strategy.value,
             "severity": severity.value if severity else ErrorSeverity.MEDIUM.value,
             "handled": result.get("handled", False),
-            "result": result,
+            "action": result.get("action", strategy.value),
+            **result,
         }
 
     def _log_error(
@@ -416,3 +419,26 @@ class ErrorHandler:
 
             # If not handled or no special action, return fallback
             return fallback_value
+
+    def get_strategy(
+        self, exception_type: Type[Exception]
+    ) -> tuple[RecoveryStrategy, ErrorSeverity]:
+        """Get the recovery strategy and severity for an exception type.
+
+        Args:
+            exception_type: Type of exception
+
+        Returns:
+            Tuple of (strategy, severity)
+        """
+        # Check for direct match
+        if exception_type in self.strategies:
+            return self.strategies[exception_type], self.severity_levels[exception_type]
+
+        # Check if exception is a subclass of any registered type
+        for exc_type, strategy in self.strategies.items():
+            if issubclass(exception_type, exc_type):
+                return strategy, self.severity_levels[exc_type]
+
+        # Default to ESCALATE for unknown types
+        return RecoveryStrategy.ESCALATE, ErrorSeverity.HIGH

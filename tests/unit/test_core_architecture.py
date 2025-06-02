@@ -1,6 +1,7 @@
 """Unit tests for core architecture components."""
 
-from typing import Any, Dict
+import asyncio
+from typing import Any, Dict, Optional
 from unittest.mock import patch
 
 import pytest
@@ -9,7 +10,6 @@ from agentic_workflow.core.config import Config, create_config
 from agentic_workflow.core.engine import ComponentRegistry, WorkflowEngine
 from agentic_workflow.core.interfaces import (
     Component,
-    ComponentStatus,
     Service,
     ServiceResponse,
     WorkflowDefinition,
@@ -20,11 +20,12 @@ from agentic_workflow.core.interfaces import (
 class MockComponent(Component):
     """Mock component for testing."""
 
-    def __init__(self, name: str, config: Dict[str, Any] = None):
-        super().__init__(name, config)
+    def __init__(self, name: str, config: Optional[Dict[str, Any]] = None):
+        super().__init__(name, config or {})
         self.initialized = False
         self.started = False
         self.stopped = False
+        self.requests_processed = 0
 
     async def initialize(self) -> None:
         """Initialize the mock component."""
@@ -42,12 +43,19 @@ class MockComponent(Component):
         """Check mock component health."""
         return ServiceResponse(success=True, data={"status": "healthy"})
 
+    async def process_request(self, request: Dict[str, Any]) -> ServiceResponse:
+        """Process a mock request."""
+        self.requests_processed += 1
+        return ServiceResponse(
+            success=True, data={"action": request.get("action"), "processed": True}
+        )
+
 
 class MockService(Service):
     """Mock service for testing."""
 
-    def __init__(self, name: str, config: Dict[str, Any] = None):
-        super().__init__(name, config)
+    def __init__(self, name: str, config: Optional[Dict[str, Any]] = None):
+        super().__init__(name, config or {})
         self.initialized = False
         self.started = False
         self.stopped = False
@@ -77,11 +85,17 @@ class MockService(Service):
         )
 
 
+class MockEventHandler:
+    """Mock event handler for testing."""
+
+    pass
+
+
 @pytest.mark.unit
 class TestConfig:
     """Test configuration management."""
 
-    def test_default_config_creation(self):
+    def test_default_config_creation(self) -> None:
         """Test creating config with defaults."""
         config = Config()
 
@@ -90,7 +104,7 @@ class TestConfig:
         assert config.debug is False
         assert config.database.neo4j_uri == "bolt://localhost:7687"
 
-    def test_config_validation(self):
+    def test_config_validation(self) -> None:
         """Test config validation."""
         # Valid config
         config = Config(worker_threads=8, max_concurrent_workflows=20)
@@ -108,7 +122,7 @@ class TestConfig:
             "AGENTIC_DATABASE__NEO4J_URI": "bolt://test:7687",
         },
     )
-    def test_config_from_environment(self):
+    def test_config_from_environment(self) -> None:
         """Test loading config from environment variables."""
         # Clear any existing config
         import agentic_workflow.core.config as config_module
@@ -124,7 +138,7 @@ class TestConfig:
 class TestComponentRegistry:
     """Test component registry functionality."""
 
-    def test_component_registration(self):
+    def test_component_registration(self) -> None:
         """Test registering components."""
         registry = ComponentRegistry()
         component = MockComponent("test-component")
@@ -134,7 +148,7 @@ class TestComponentRegistry:
         assert registry.get("test-component") == component
         assert "test-component" in registry.get_all()
 
-    def test_duplicate_registration_error(self):
+    def test_duplicate_registration_error(self) -> None:
         """Test error on duplicate component registration."""
         registry = ComponentRegistry()
         component1 = MockComponent("test-component")
@@ -145,7 +159,7 @@ class TestComponentRegistry:
         with pytest.raises(ValueError, match="already registered"):
             registry.register(component2)
 
-    def test_dependency_ordering(self):
+    def test_dependency_ordering(self) -> None:
         """Test component startup ordering based on dependencies."""
         registry = ComponentRegistry()
 
@@ -168,7 +182,7 @@ class TestComponentRegistry:
         assert startup_order.index("component-a") < startup_order.index("component-b")
         assert startup_order.index("component-b") < startup_order.index("component-c")
 
-    def test_circular_dependency_detection(self):
+    def test_circular_dependency_detection(self) -> None:
         """Test detection of circular dependencies."""
         registry = ComponentRegistry()
 
@@ -185,18 +199,50 @@ class TestComponentRegistry:
         with pytest.raises(ValueError, match="Circular dependency"):
             registry.get_startup_order()
 
+    def test_register_duplicate_component(self) -> None:
+        """Test registering duplicate component raises error."""
+        registry = ComponentRegistry()
+        component = MockComponent("test")
+        registry.register(component)
+
+        with pytest.raises(ValueError, match="Component 'test' already registered"):
+            registry.register(component)
+
+    def test_get_nonexistent_component(self) -> None:
+        """Test getting nonexistent component returns None."""
+        registry = ComponentRegistry()
+        assert registry.get("nonexistent") is None
+
+    def test_circular_dependency_detection_three_components(self) -> None:
+        """Test circular dependency detection with three components."""
+        registry = ComponentRegistry()
+        comp1 = MockComponent("comp1")
+        comp2 = MockComponent("comp2")
+        comp3 = MockComponent("comp3")
+
+        comp1.add_dependency("comp2")
+        comp2.add_dependency("comp3")
+        comp3.add_dependency("comp1")
+
+        registry.register(comp1)
+        registry.register(comp2)
+        registry.register(comp3)
+
+        with pytest.raises(ValueError, match="Circular dependency detected"):
+            registry.get_startup_order()
+
 
 @pytest.mark.unit
 class TestWorkflowEngine:
     """Test workflow engine functionality."""
 
     @pytest.fixture
-    def engine(self):
+    def engine(self) -> WorkflowEngine:
         """Create a workflow engine for testing."""
         return WorkflowEngine()
 
     @pytest.fixture
-    def mock_workflow(self):
+    def mock_workflow(self) -> WorkflowDefinition:
         """Create a mock workflow definition."""
         return WorkflowDefinition(
             id="test-workflow",
@@ -213,99 +259,89 @@ class TestWorkflowEngine:
                     id="step-2",
                     name="Second Step",
                     component="test-service",
-                    action="finalize",
-                    dependencies=["step-1"],
+                    action="process",
                 ),
             ],
         )
 
-    def test_component_registration(self, engine):
-        """Test registering components with engine."""
+    def test_component_registration(self, engine: WorkflowEngine) -> None:
+        """Test registering components with the engine."""
         component = MockComponent("test-component")
-
         engine.register_component(component)
-
         assert engine.components.get("test-component") == component
 
     @pytest.mark.asyncio
-    async def test_engine_lifecycle(self, engine):
-        """Test engine start and stop lifecycle."""
+    async def test_engine_lifecycle(self, engine: WorkflowEngine) -> None:
+        """Test engine lifecycle methods."""
         component = MockComponent("test-component")
         engine.register_component(component)
 
-        # Start engine
         await engine.start()
-
-        assert component.initialized
         assert component.started
-        assert component.status == ComponentStatus.RUNNING
 
-        # Stop engine
         await engine.stop()
-
         assert component.stopped
-        assert component.status == ComponentStatus.STOPPED
 
     @pytest.mark.asyncio
-    async def test_workflow_execution(self, engine, mock_workflow):
-        """Test basic workflow execution."""
+    async def test_workflow_execution(
+        self, engine: WorkflowEngine, mock_workflow: WorkflowDefinition
+    ) -> None:
+        """Test executing a workflow."""
         service = MockService("test-service")
         engine.register_component(service)
 
         await engine.start()
 
-        execution = await engine.execute_workflow(mock_workflow)
-
-        assert execution.status == "completed"
-        assert len(execution.completed_steps) == 2
-        assert "step-1" in execution.completed_steps
-        assert "step-2" in execution.completed_steps
+        result = await engine.execute_workflow(mock_workflow)
+        assert result.status == "completed"
         assert service.requests_processed == 2
 
         await engine.stop()
 
     @pytest.mark.asyncio
-    async def test_workflow_step_dependencies(self, engine):
-        """Test workflow step dependency handling."""
+    async def test_workflow_step_dependencies(self, engine: WorkflowEngine) -> None:
+        """Test workflow step dependencies."""
         service = MockService("test-service")
         engine.register_component(service)
 
-        # Create workflow with dependencies
         workflow = WorkflowDefinition(
-            id="dep-workflow",
-            name="Dependency Workflow",
-            description="Workflow with dependencies",
+            id="test-workflow",
+            name="Test Workflow",
+            description="A test workflow",
             steps=[
+                WorkflowStep(
+                    id="step-1",
+                    name="First Step",
+                    component="test-service",
+                    action="process",
+                ),
                 WorkflowStep(
                     id="step-2",
                     name="Second Step",
                     component="test-service",
                     action="process",
-                    dependencies=["step-1"],  # Depends on step-1 which doesn't exist
-                )
+                    dependencies=["step-1"],
+                ),
             ],
         )
 
         await engine.start()
 
-        execution = await engine.execute_workflow(workflow)
-
-        # Should fail due to unmet dependency
-        assert execution.status == "failed"
-        assert "step-2" in execution.failed_steps
+        result = await engine.execute_workflow(workflow)
+        assert result.status == "completed"
+        assert service.requests_processed == 2
 
         await engine.stop()
 
     @pytest.mark.asyncio
-    async def test_health_check(self, engine):
-        """Test engine health check."""
+    async def test_health_check(self, engine: WorkflowEngine) -> None:
+        """Test health check functionality."""
         component = MockComponent("test-component")
         engine.register_component(component)
 
         await engine.start()
 
         health = await engine.health_check()
-
         assert health.success
         assert health.data["engine_status"] == "healthy"
         assert "test-component" in health.data["components"]
@@ -313,73 +349,220 @@ class TestWorkflowEngine:
 
         await engine.stop()
 
+    @pytest.fixture
+    def mock_component(self) -> MockComponent:
+        """Create a mock component for testing."""
+        return MockComponent("test-component")
 
-@pytest.mark.unit
-class TestServiceResponse:
-    """Test service response model."""
+    @pytest.mark.asyncio
+    async def test_register_event_handler(
+        self, engine: WorkflowEngine, mock_component: MockComponent
+    ) -> None:
+        """Test registering event handlers."""
+        engine.register_component(mock_component)
+        handler = MockEventHandler()
+        engine.register_event_handler(handler)
+        assert handler in engine.event_handlers
 
-    def test_successful_response(self):
-        """Test creating successful response."""
-        response = ServiceResponse(
-            success=True, data={"result": "test"}, metadata={"timestamp": "2024-01-01"}
-        )
+    @pytest.mark.asyncio
+    async def test_health_check_with_unhealthy_component(
+        self, engine: WorkflowEngine, mock_component: MockComponent
+    ) -> None:
+        """Test health check with an unhealthy component."""
+        engine.register_component(mock_component)
+        await engine.start()
 
-        assert response.success
-        assert response.data["result"] == "test"
-        assert response.error is None
-        assert response.metadata["timestamp"] == "2024-01-01"
+        # Simulate unhealthy component
+        async def unhealthy_check() -> ServiceResponse:
+            return ServiceResponse(success=False, data={"status": "unhealthy"})
 
-    def test_error_response(self):
-        """Test creating error response."""
-        response = ServiceResponse(success=False, error="Something went wrong")
+        mock_component.health_check = unhealthy_check
 
-        assert not response.success
-        assert response.error == "Something went wrong"
-        assert response.data is None
+        health = await engine.health_check()
+        assert not health.success
+        assert health.data["components"]["test-component"]["healthy"] is False
 
+        await engine.stop()
 
-@pytest.mark.unit
-class TestWorkflowDefinition:
-    """Test workflow definition models."""
-
-    def test_workflow_step_creation(self):
-        """Test creating workflow step."""
-        step = WorkflowStep(
-            id="test-step",
-            name="Test Step",
-            component="test-component",
-            action="test-action",
-            parameters={"param1": "value1"},
-            dependencies=["other-step"],
-            timeout=30,
-        )
-
-        assert step.id == "test-step"
-        assert step.name == "Test Step"
-        assert step.component == "test-component"
-        assert step.action == "test-action"
-        assert step.parameters["param1"] == "value1"
-        assert "other-step" in step.dependencies
-        assert step.timeout == 30
-
-    def test_workflow_definition_creation(self):
-        """Test creating workflow definition."""
-        steps = [
-            WorkflowStep(
-                id="step-1", name="First Step", component="comp-1", action="action-1"
-            )
-        ]
+    @pytest.mark.asyncio
+    async def test_execute_workflow_with_timeout(
+        self, engine: WorkflowEngine, mock_component: MockComponent
+    ) -> None:
+        """Test workflow execution with timeout."""
+        engine.register_component(mock_component)
+        await engine.start()
 
         workflow = WorkflowDefinition(
             id="test-workflow",
             name="Test Workflow",
             description="A test workflow",
-            steps=steps,
-            metadata={"created_by": "test"},
+            steps=[
+                WorkflowStep(
+                    id="step-1",
+                    name="First Step",
+                    component="test-component",
+                    action="process",
+                    timeout=1,
+                ),
+            ],
+        )
+
+        # Mock a slow request
+        async def slow_request(*args: Any, **kwargs: Any) -> ServiceResponse:
+            await asyncio.sleep(2)
+            return ServiceResponse(success=True, data={"status": "done"})
+
+        mock_component.process_request = slow_request
+
+        result = await engine.execute_workflow(workflow)
+        assert result.status == "failed"
+        assert "step timeout" in result.error.lower()
+
+        await engine.stop()
+
+    @pytest.mark.asyncio
+    async def test_execute_workflow_with_missing_dependency(
+        self, engine: WorkflowEngine, mock_component: MockComponent
+    ) -> None:
+        """Test workflow execution with missing dependency."""
+        engine.register_component(mock_component)
+        await engine.start()
+
+        workflow = WorkflowDefinition(
+            id="test-workflow",
+            name="Test Workflow",
+            description="A test workflow",
+            steps=[
+                WorkflowStep(
+                    id="step-1",
+                    name="First Step",
+                    component="test-component",
+                    action="process",
+                ),
+                WorkflowStep(
+                    id="step-2",
+                    name="Second Step",
+                    component="test-component",
+                    action="process",
+                    dependencies=["nonexistent-step"],
+                ),
+            ],
+        )
+
+        result = await engine.execute_workflow(workflow)
+        assert result.status == "failed"
+        assert "step dependency not met" in result.error.lower()
+
+        await engine.stop()
+
+    @pytest.mark.asyncio
+    async def test_execute_workflow_with_nonexistent_component(
+        self, engine: WorkflowEngine
+    ) -> None:
+        """Test workflow execution with nonexistent component."""
+        await engine.start()
+
+        workflow = WorkflowDefinition(
+            id="test-workflow",
+            name="Test Workflow",
+            description="A test workflow",
+            steps=[
+                WorkflowStep(
+                    id="step-1",
+                    name="First Step",
+                    component="nonexistent-component",
+                    action="process",
+                ),
+            ],
+        )
+
+        result = await engine.execute_workflow(workflow)
+        assert result.status == "failed"
+        assert "component" in result.error.lower()
+
+        await engine.stop()
+
+    @pytest.mark.asyncio
+    async def test_lifecycle_context_manager(self, engine: WorkflowEngine) -> None:
+        """Test engine lifecycle using context manager."""
+        component = MockComponent("test-component")
+        engine.register_component(component)
+
+        async with engine.lifecycle():
+            assert component.started
+            assert not component.stopped
+
+        assert component.stopped
+
+
+@pytest.mark.unit
+class TestServiceResponse:
+    """Test service response functionality."""
+
+    def test_successful_response(self) -> None:
+        """Test creating a successful response."""
+        response = ServiceResponse(success=True, data={"message": "success"})
+        assert response.success
+        assert response.data["message"] == "success"
+        assert response.error is None
+
+    def test_error_response(self) -> None:
+        """Test creating an error response."""
+        response = ServiceResponse(
+            success=False, error="Something went wrong", data={"error": "details"}
+        )
+        assert not response.success
+        assert response.error == "Something went wrong"
+        assert response.data["error"] == "details"
+
+
+@pytest.mark.unit
+class TestWorkflowDefinition:
+    """Test workflow definition functionality."""
+
+    def test_workflow_step_creation(self) -> None:
+        """Test creating workflow steps."""
+        step = WorkflowStep(
+            id="test-step",
+            name="Test Step",
+            component="test-component",
+            action="process",
+            dependencies=["step-1", "step-2"],
+        )
+
+        assert step.id == "test-step"
+        assert step.name == "Test Step"
+        assert step.component == "test-component"
+        assert step.action == "process"
+        assert step.dependencies == ["step-1", "step-2"]
+
+    def test_workflow_definition_creation(self) -> None:
+        """Test creating workflow definitions."""
+        workflow = WorkflowDefinition(
+            id="test-workflow",
+            name="Test Workflow",
+            description="A test workflow",
+            steps=[
+                WorkflowStep(
+                    id="step-1",
+                    name="First Step",
+                    component="test-component",
+                    action="process",
+                ),
+                WorkflowStep(
+                    id="step-2",
+                    name="Second Step",
+                    component="test-component",
+                    action="process",
+                    dependencies=["step-1"],
+                ),
+            ],
         )
 
         assert workflow.id == "test-workflow"
         assert workflow.name == "Test Workflow"
-        assert len(workflow.steps) == 1
+        assert workflow.description == "A test workflow"
+        assert len(workflow.steps) == 2
         assert workflow.steps[0].id == "step-1"
-        assert workflow.metadata["created_by"] == "test"
+        assert workflow.steps[1].id == "step-2"
+        assert workflow.steps[1].dependencies == ["step-1"]

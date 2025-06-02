@@ -1,5 +1,7 @@
 """Unit tests for helper functions."""
 
+from typing import Any, Dict
+
 import pytest
 
 from agentic_workflow.utils.helpers import format_response, validate_config
@@ -38,7 +40,7 @@ def test_format_response_with_custom_status() -> None:
 @pytest.mark.unit
 def test_validate_config_valid() -> None:
     """Test validate_config with valid configuration."""
-    config = {
+    config: Dict[str, Any] = {
         "api_key": "test-key",
         "database_url": "postgres://localhost:5432/test",
         "extra_param": "value",
@@ -50,7 +52,7 @@ def test_validate_config_valid() -> None:
 @pytest.mark.unit
 def test_validate_config_missing_api_key() -> None:
     """Test validate_config with missing api_key."""
-    config = {"database_url": "postgres://localhost:5432/test"}
+    config: Dict[str, str] = {"database_url": "postgres://localhost:5432/test"}
 
     assert validate_config(config) is False
 
@@ -58,7 +60,7 @@ def test_validate_config_missing_api_key() -> None:
 @pytest.mark.unit
 def test_validate_config_missing_database_url() -> None:
     """Test validate_config with missing database_url."""
-    config = {"api_key": "test-key"}
+    config: Dict[str, str] = {"api_key": "test-key"}
 
     assert validate_config(config) is False
 
@@ -66,6 +68,6 @@ def test_validate_config_missing_database_url() -> None:
 @pytest.mark.unit
 def test_validate_config_empty() -> None:
     """Test validate_config with empty configuration."""
-    config = {}
+    config: Dict[str, Any] = {}
 
     assert validate_config(config) is False

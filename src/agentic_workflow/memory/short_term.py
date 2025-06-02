@@ -298,11 +298,18 @@ class ShortTermMemory(MemoryStore):
                 total_count=len(matching_entries),
                 query_time=query_time,
                 similarity_scores=[],
+                success=True,
             )
 
         except Exception as e:
             logger.error(f"Failed to retrieve entries: {e}")
-            return MemoryResult()
+            return MemoryResult(
+                entries=[],
+                total_count=0,
+                query_time=0.0,
+                similarity_scores=[],
+                success=False,
+            )
 
     def _matches_query(self, entry: MemoryEntry, query: MemoryQuery) -> bool:
         """Check if an entry matches the query criteria."""
@@ -456,11 +463,21 @@ class ShortTermMemory(MemoryStore):
                 hit_rate=hit_rate,
                 average_retrieval_time=0.0,  # Not tracked
                 entries_by_type=entries_by_type,
+                total_stores=self.total_stores,
+                total_retrievals=self.total_retrievals,
             )
 
         except Exception as e:
             logger.error(f"Failed to get stats: {e}")
-            return MemoryStats()
+            return MemoryStats(
+                total_entries=0,
+                memory_usage=0,
+                hit_rate=0.0,
+                average_retrieval_time=0.0,
+                entries_by_type={},
+                total_stores=0,
+                total_retrievals=0,
+            )
 
     async def health_check(self) -> bool:
         """Check if the memory store is healthy.
@@ -486,15 +503,12 @@ class ShortTermMemory(MemoryStore):
             return False
 
     async def get_context_window(self, window_id: str) -> Optional[ContextWindow]:
-        """Get a specific context window.
-
-        Args:
-            window_id: ID of the context window
-
-        Returns:
-            Context window or None if not found
-        """
-        return self.context_windows.get(window_id)
+        """Get a context window by ID."""
+        if window_id not in self.context_windows:
+            self.context_windows[window_id] = ContextWindow(
+                window_id, max_size=self.default_window_size
+            )
+        return self.context_windows[window_id]
 
     async def list_context_windows(self) -> List[str]:
         """List all context window IDs.

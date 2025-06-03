@@ -1,14 +1,22 @@
-"""Agents package for the agentic workflow system."""
+"""Agentic Workflow Agents Module.
+
+This module provides the agent implementations for the agentic workflow system.
+Each agent specializes in different aspects of software development and workflow
+orchestration.
+"""
 
 from typing import Any, Dict, List, Optional
 
 from .base import Agent, AgentResult, AgentTask
 from .code_generation import CodeGenerationAgent
+from .planning import PlanningAgent
 
 # Agent registry for factory pattern
 AGENT_REGISTRY: Dict[str, type] = {
     "code_generation": CodeGenerationAgent,
     "code_gen": CodeGenerationAgent,  # Alias
+    "planning": PlanningAgent,
+    "planner": PlanningAgent,  # Alias
 }
 
 
@@ -61,6 +69,7 @@ __all__ = [
     "AgentResult",
     "AgentTask",
     "CodeGenerationAgent",
+    "PlanningAgent",
     "create_agent",
     "get_available_agent_types",
     "AGENT_REGISTRY",

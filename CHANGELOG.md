@@ -1,3 +1,9 @@
+## v0.5.0 (2025-06-02)
+
+### Feat
+
+- implement task graph domain models and repository interfaces
+
 ## v0.4.0 (2025-06-02)
 
 ### Feat

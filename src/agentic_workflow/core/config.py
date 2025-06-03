@@ -107,14 +107,14 @@ def load_config_from_file(file_path: Union[str, Path]) -> Dict[str, Any]:
     """Load configuration from YAML file.
 
     Args:
-        file_path: Path to configuration file
+    file_path: Path to configuration file
 
     Returns:
-        Configuration dictionary
+    Configuration dictionary
 
     Raises:
-        FileNotFoundError: If config file doesn't exist
-        yaml.YAMLError: If config file is invalid YAML
+    FileNotFoundError: If config file doesn't exist
+    yaml.YAMLError: If config file is invalid YAML
     """
     file_path = Path(file_path)
 
@@ -133,7 +133,7 @@ def load_config_from_env() -> Dict[str, Any]:
     """Load configuration from environment variables.
 
     Returns:
-        Configuration dictionary with environment variables
+    Configuration dictionary with environment variables
     """
     config_dict: Dict[str, Any] = {}
 
@@ -173,14 +173,14 @@ def create_config(
     4. Default values
 
     Args:
-        config_file: Path to configuration file
-        override_dict: Dictionary to override configuration values
+    config_file: Path to configuration file
+    override_dict: Dictionary to override configuration values
 
     Returns:
-        Configuration instance
+    Configuration instance
 
     Raises:
-        ValidationError: If configuration is invalid
+    ValidationError: If configuration is invalid
     """
     # Start with empty dict
     config_dict = {}
@@ -216,10 +216,10 @@ def get_config() -> Config:
     """Get the global configuration instance.
 
     Returns:
-        Global configuration instance
+    Global configuration instance
 
     Raises:
-        RuntimeError: If configuration hasn't been initialized
+    RuntimeError: If configuration hasn't been initialized
     """
     global _config
 
@@ -235,7 +235,7 @@ def set_config(config: Config) -> None:
     """Set the global configuration instance.
 
     Args:
-        config: Configuration instance to set as global
+    config: Configuration instance to set as global
     """
     global _config
     _config = config
@@ -249,11 +249,11 @@ def reload_config(
     """Reload configuration from sources.
 
     Args:
-        config_file: Path to configuration file
-        override_dict: Dictionary to override configuration values
+    config_file: Path to configuration file
+    override_dict: Dictionary to override configuration values
 
     Returns:
-        New configuration instance
+    New configuration instance
     """
     new_config = create_config(config_file, override_dict)
     set_config(new_config)

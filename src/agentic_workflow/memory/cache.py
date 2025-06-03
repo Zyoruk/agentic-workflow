@@ -53,8 +53,8 @@ class CacheMemoryStore(CacheStore):
         """Initialize cache memory store.
 
         Args:
-            name: Name of the memory store
-            config: Configuration parameters
+        name: Name of the memory store
+        config: Configuration parameters
         """
         super().__init__(name, config)
 

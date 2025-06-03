@@ -18,10 +18,10 @@ def serialize_datetime(dt: datetime) -> str:
     """Serialize datetime to ISO format string.
 
     Args:
-        dt: Datetime object
+    dt: Datetime object
 
     Returns:
-        ISO format datetime string
+    ISO format datetime string
     """
     return dt.isoformat()
 
@@ -30,10 +30,10 @@ def deserialize_datetime(dt_str: str) -> datetime:
     """Deserialize ISO format string to datetime.
 
     Args:
-        dt_str: ISO format datetime string
+    dt_str: ISO format datetime string
 
     Returns:
-        Datetime object
+    Datetime object
     """
     return datetime.fromisoformat(dt_str)
 
@@ -42,10 +42,10 @@ def serialize_to_json(obj: Union[BaseModel, Dict[str, Any], List[Any]]) -> str:
     """Serialize object to JSON string.
 
     Args:
-        obj: Object to serialize
+    obj: Object to serialize
 
     Returns:
-        JSON string
+    JSON string
     """
     if isinstance(obj, BaseModel):
         return obj.model_dump_json()
@@ -58,11 +58,11 @@ def deserialize_from_json(
     """Deserialize JSON string to object.
 
     Args:
-        json_str: JSON string
-        model_class: Optional Pydantic model class to deserialize into
+    json_str: JSON string
+    model_class: Optional Pydantic model class to deserialize into
 
     Returns:
-        Deserialized object
+    Deserialized object
     """
     data = json.loads(json_str)
     if model_class is not None:
@@ -74,10 +74,10 @@ def memory_entry_to_dict(entry: MemoryEntry) -> Dict[str, Any]:
     """Convert MemoryEntry to dictionary.
 
     Args:
-        entry: Memory entry
+    entry: Memory entry
 
     Returns:
-        Dictionary representation
+    Dictionary representation
     """
     return {
         "id": entry.id,
@@ -96,10 +96,10 @@ def dict_to_memory_entry(data: Dict[str, Any]) -> MemoryEntry:
     """Convert dictionary to MemoryEntry.
 
     Args:
-        data: Dictionary data
+    data: Dictionary data
 
     Returns:
-        Memory entry
+    Memory entry
     """
     # Handle memory type
     memory_type_value = data.get("memory_type")

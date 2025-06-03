@@ -29,12 +29,12 @@ class MemoryStoreFactory:
         """Create a memory store instance.
 
         Args:
-            store_type: Type of memory store
-            name: Name of the store
-            config: Configuration parameters
+        store_type: Type of memory store
+        name: Name of the store
+        config: Configuration parameters
 
         Returns:
-            Memory store instance or None if creation failed
+        Memory store instance or None if creation failed
         """
         config = config or {}
 
@@ -68,11 +68,11 @@ class MemoryStoreFactory:
         """Create a short-term memory store.
 
         Args:
-            name: Name of the store
-            config: Configuration parameters
+        name: Name of the store
+        config: Configuration parameters
 
         Returns:
-            Short-term memory store
+        Short-term memory store
         """
         return ShortTermMemory(name=name, config=config or {})
 
@@ -83,11 +83,11 @@ class MemoryStoreFactory:
         """Create a cache store.
 
         Args:
-            name: Name of the store
-            config: Configuration parameters
+        name: Name of the store
+        config: Configuration parameters
 
         Returns:
-            Cache store
+        Cache store
         """
         return RedisCacheStore(name=name, config=config or {})
 
@@ -98,11 +98,11 @@ class MemoryStoreFactory:
         """Create a vector store.
 
         Args:
-            name: Name of the store
-            config: Configuration parameters
+        name: Name of the store
+        config: Configuration parameters
 
         Returns:
-            Vector store or None if creation failed
+        Vector store or None if creation failed
         """
         if not VECTOR_STORE_AVAILABLE:
             logger.warning("Vector store not available - install weaviate-client")

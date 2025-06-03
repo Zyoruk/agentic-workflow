@@ -47,8 +47,8 @@ class RedisConnectionManager(ConnectionManager["Redis"]):
         """Initialize Redis connection manager.
 
         Args:
-            name: Connection name
-            config: Connection configuration
+        name: Connection name
+        config: Connection configuration
         """
         # Set default configuration
         config = config or {}
@@ -182,14 +182,14 @@ class RedisConnectionManager(ConnectionManager["Redis"]):
         """Create a prefixed Redis key.
 
         Args:
-            key: Base key
+        key: Base key
 
         Returns:
-            Prefixed key
+        Prefixed key
         """
         return f"{self.key_prefix}{key}"
 
-    async def ping(self) -> bool:
+    async def ping(self) -> Any | bool:
         """Check if Redis connection is alive."""
         if self.client is None:
             return False
@@ -202,7 +202,7 @@ class RedisConnectionManager(ConnectionManager["Redis"]):
         """Ensure Redis client is available.
 
         Raises:
-            RedisClientNotAvailableError: If client is not available
+        RedisClientNotAvailableError: If client is not available
         """
         if not self.client:
             raise RedisClientNotAvailableError(

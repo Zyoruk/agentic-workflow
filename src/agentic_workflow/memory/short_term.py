@@ -26,8 +26,8 @@ class ContextWindow:
         """Initialize context window.
 
         Args:
-            window_id: Unique identifier for the window
-            max_size: Maximum number of entries in the window
+        window_id: Unique identifier for the window
+        max_size: Maximum number of entries in the window
         """
         self.window_id = window_id
         self.max_size = max_size
@@ -91,8 +91,8 @@ class ShortTermMemory(MemoryStore):
         """Initialize short-term memory.
 
         Args:
-            name: Name of the memory store
-            config: Configuration parameters
+        name: Name of the memory store
+        config: Configuration parameters
         """
         super().__init__(name, config)
 

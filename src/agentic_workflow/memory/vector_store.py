@@ -36,13 +36,12 @@ class WeaviateVectorStore(VectorStore):
     Example config:
     ```python
     config = {
-        "url": "http://localhost:8080",  # Weaviate URL
-        "auth_config": {"api_key": "your-api-key"},  # Optional Weaviate auth
-        "openai_api_key": "your-openai-key",  # For LangChain embeddings
-        "batch_size": 10  # Optional batch processing size
+    "url": "http://localhost:8080",  # Weaviate URL
+    "auth_config": {"api_key": "your-api-key"},  # Optional Weaviate auth
+    "openai_api_key": "your-openai-key",  # For LangChain embeddings
+    "batch_size": 10  # Optional batch processing size
     }
-    ```
-    """
+    ```"""
 
     def __init__(
         self,
@@ -52,8 +51,8 @@ class WeaviateVectorStore(VectorStore):
         """Initialize vector store.
 
         Args:
-            name: Name of the vector store
-            config: Configuration parameters
+        name: Name of the vector store
+        config: Configuration parameters
         """
         super().__init__(name, config)
 

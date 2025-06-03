@@ -84,10 +84,10 @@ class ResourceLimiter:
         """Set a resource limit.
 
         Args:
-            context: Context identifier (e.g., "openai", "database")
-            resource_type: Type of resource
-            limit: Maximum value
-            unit: Unit of measurement
+        context: Context identifier (e.g., "openai", "database")
+        resource_type: Type of resource
+        limit: Maximum value
+        unit: Unit of measurement
         """
         if context not in self.limits:
             self.limits[context] = {}
@@ -109,8 +109,8 @@ class ResourceLimiter:
         """Register a callback for when a resource limit is approached or exceeded.
 
         Args:
-            resource_type: Type of resource
-            callback: Callback function
+        resource_type: Type of resource
+        callback: Callback function
         """
         if resource_type not in self.callbacks:
             self.callbacks[resource_type] = []
@@ -128,17 +128,17 @@ class ResourceLimiter:
         """Increment resource usage and check against limits.
 
         Args:
-            context: Context identifier
-            resource_type: Type of resource
-            amount: Amount to increment
-            unit: Unit of measurement
-            raise_on_limit: Whether to raise an exception when limit is exceeded
+        context: Context identifier
+        resource_type: Type of resource
+        amount: Amount to increment
+        unit: Unit of measurement
+        raise_on_limit: Whether to raise an exception when limit is exceeded
 
         Returns:
-            True if limit not exceeded, False otherwise
+        True if limit not exceeded, False otherwise
 
         Raises:
-            ResourceLimitError: If limit exceeded and raise_on_limit is True
+        ResourceLimitError: If limit exceeded and raise_on_limit is True
         """
         if context not in self.limits:
             logger.warning(f"No limits defined for context: {context}")
@@ -241,11 +241,11 @@ class ResourceLimiter:
         """Trigger callbacks for resource limit events.
 
         Args:
-            resource_type: Type of resource
-            context: Context identifier
-            current: Current usage value
-            limit: Limit value
-            is_exceeded: Whether limit is exceeded
+        resource_type: Type of resource
+        context: Context identifier
+        current: Current usage value
+        limit: Limit value
+        is_exceeded: Whether limit is exceeded
         """
         if resource_type in self.callbacks:
             for callback in self.callbacks[resource_type]:
@@ -266,8 +266,8 @@ class ResourceLimiter:
         """Reset resource usage counter.
 
         Args:
-            context: Context identifier
-            resource_type: Optional resource type to reset
+        context: Context identifier
+        resource_type: Optional resource type to reset
         """
         if context not in self.usages:
             return
@@ -293,12 +293,12 @@ class ResourceLimiter:
         """Get current resource usage.
 
         Args:
-            context: Context identifier
-            resource_type: Type of resource
-            unit: Unit of measurement
+        context: Context identifier
+        resource_type: Type of resource
+        unit: Unit of measurement
 
         Returns:
-            ResourceUsage object or None if not found
+        ResourceUsage object or None if not found
         """
         if context not in self.limits:
             return None
@@ -335,7 +335,7 @@ class ResourceLimiter:
         """Get all resource usages.
 
         Returns:
-            Dictionary mapping contexts to lists of ResourceUsage objects
+        Dictionary mapping contexts to lists of ResourceUsage objects
         """
         result: Dict[str, List[ResourceUsage]] = {}
 

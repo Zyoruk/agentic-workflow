@@ -18,10 +18,10 @@ class JSONFormatter(logging.Formatter):
         """Format log record as JSON.
 
         Args:
-            record: Log record to format
+        record: Log record to format
 
         Returns:
-            JSON formatted log message
+        JSON formatted log message
         """
         log_entry = {
             "timestamp": datetime.utcnow().isoformat(),
@@ -61,10 +61,10 @@ class ColoredFormatter(logging.Formatter):
         """Format log record with colors.
 
         Args:
-            record: Log record to format
+        record: Log record to format
 
         Returns:
-            Colored log message
+        Colored log message
         """
         # Add color to level name
         color = self.COLORS.get(record.levelname, "")
@@ -79,8 +79,8 @@ def setup_logging(
     """Setup logging configuration.
 
     Args:
-        config: Optional logging configuration override
-        force_reload: Force reload of logging configuration
+    config: Optional logging configuration override
+    force_reload: Force reload of logging configuration
     """
     if not force_reload and logging.getLogger().handlers:
         # Logging already configured
@@ -164,10 +164,10 @@ def get_logger(name: str) -> logging.Logger:
     """Get a logger instance with optional extra configuration.
 
     Args:
-        name: Logger name (usually __name__)
+    name: Logger name (usually __name__)
 
     Returns:
-        Configured logger instance
+    Configured logger instance
     """
     # Ensure logging is configured
     setup_logging()
@@ -201,9 +201,9 @@ def log_function_call(
     """Log function call with parameters.
 
     Args:
-        func_name: Name of the function being called
-        args: Function arguments
-        kwargs: Function keyword arguments
+    func_name: Name of the function being called
+    args: Function arguments
+    kwargs: Function keyword arguments
     """
     logger = get_logger("function_calls")
 
@@ -221,10 +221,9 @@ def log_performance(operation: str, duration: float, **metadata: Any) -> None:
     """Log performance metrics.
 
     Args:
-        operation: Name of the operation
-        duration: Duration in seconds
-        **metadata: Additional metadata
-    """
+    operation: Name of the operation
+    duration: Duration in seconds
+    **"""
     logger = get_logger("performance")
 
     logger.info_with_data(  # type: ignore[attr-defined]
@@ -239,8 +238,8 @@ def log_error(error: Exception, context: Optional[Dict[str, Any]] = None) -> Non
     """Log error with context.
 
     Args:
-        error: Exception to log
-        context: Additional context information
+    error: Exception to log
+    context: Additional context information
     """
     logger = get_logger("errors")
 

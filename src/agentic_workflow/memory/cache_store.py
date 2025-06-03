@@ -36,8 +36,8 @@ class RedisCacheStore(CacheStore):
         """Initialize Redis cache store.
 
         Args:
-            name: Name of the store
-            config: Configuration parameters
+        name: Name of the store
+        config: Configuration parameters
         """
         super().__init__(name, config)
 
@@ -219,11 +219,11 @@ class RedisCacheStore(CacheStore):
         """Check if metadata matches filters.
 
         Args:
-            metadata: Entry metadata
-            filters: Metadata filters
+        metadata: Entry metadata
+        filters: Metadata filters
 
         Returns:
-            True if metadata matches filters, False otherwise
+        True if metadata matches filters, False otherwise
         """
         for k, v in filters.items():
             if k not in metadata or metadata[k] != v:

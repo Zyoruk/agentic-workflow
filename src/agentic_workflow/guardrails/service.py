@@ -23,8 +23,8 @@ class GuardrailsService(Service):
         """Initialize guardrails service.
 
         Args:
-            name: Service name
-            config: Service configuration
+        name: Service name
+        config: Service configuration
         """
         super().__init__(name, config)
 
@@ -97,7 +97,7 @@ class GuardrailsService(Service):
         """Handle critical safety violations.
 
         Args:
-            violation: Safety violation
+        violation: Safety violation
         """
         logger.critical(f"Critical safety violation: {violation}")
         self.safety_violations += 1
@@ -113,7 +113,7 @@ class GuardrailsService(Service):
         """Handle non-critical safety violations.
 
         Args:
-            violation: Safety violation
+        violation: Safety violation
         """
         logger.warning(f"Safety violation: {violation}")
         self.safety_violations += 1
@@ -129,11 +129,11 @@ class GuardrailsService(Service):
         """Handle token limit events.
 
         Args:
-            resource_type: Type of resource
-            context: Context identifier
-            current: Current usage
-            limit: Usage limit
-            is_exceeded: Whether limit is exceeded
+        resource_type: Type of resource
+        context: Context identifier
+        current: Current usage
+        limit: Usage limit
+        is_exceeded: Whether limit is exceeded
         """
         if is_exceeded:
             logger.warning(f"Token limit exceeded for {context}: {current}/{limit}")
@@ -150,11 +150,11 @@ class GuardrailsService(Service):
         """Handle API call limit events.
 
         Args:
-            resource_type: Type of resource
-            context: Context identifier
-            current: Current usage
-            limit: Usage limit
-            is_exceeded: Whether limit is exceeded
+        resource_type: Type of resource
+        context: Context identifier
+        current: Current usage
+        limit: Usage limit
+        is_exceeded: Whether limit is exceeded
         """
         if is_exceeded:
             logger.warning(f"API call limit exceeded for {context}: {current}/{limit}")

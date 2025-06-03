@@ -33,10 +33,10 @@ class ComponentRegistry:
         """Register a component.
 
         Args:
-            component: Component to register
+        component: Component to register
 
         Raises:
-            ValueError: If component name already exists
+        ValueError: If component name already exists
         """
         if component.name in self._components:
             raise ValueError(f"Component '{component.name}' already registered")
@@ -50,10 +50,10 @@ class ComponentRegistry:
         """Get component by name.
 
         Args:
-            name: Component name
+        name: Component name
 
         Returns:
-            Component instance or None if not found
+        Component instance or None if not found
         """
         return self._components.get(name)
 
@@ -65,10 +65,10 @@ class ComponentRegistry:
         """Get component startup order based on dependencies.
 
         Returns:
-            List of component names in startup order
+        List of component names in startup order
 
         Raises:
-            ValueError: If circular dependencies detected
+        ValueError: If circular dependencies detected
         """
         return self._topological_sort()
 
@@ -109,7 +109,7 @@ class WorkflowEngine:
         """Initialize workflow engine.
 
         Args:
-            config: Optional configuration override
+        config: Optional configuration override
         """
         self.config = config or get_config()
         self.components = ComponentRegistry()
@@ -123,7 +123,7 @@ class WorkflowEngine:
         """Register a system component.
 
         Args:
-            component: Component to register
+        component: Component to register
         """
         self.components.register(component)
 
@@ -131,7 +131,7 @@ class WorkflowEngine:
         """Register an event handler.
 
         Args:
-            handler: Event handler to register
+        handler: Event handler to register
         """
         self.event_handlers.append(handler)
         logger.info(f"Registered event handler: {handler.__class__.__name__}")

@@ -30,7 +30,7 @@ class MemoryManager:
         """Initialize memory manager.
 
         Args:
-            config: Configuration for memory stores
+        config: Configuration for memory stores
         """
         self.config = config or {}
 
@@ -92,8 +92,8 @@ class MemoryManager:
         """Register a custom memory store.
 
         Args:
-            name: Name of the store
-            store: Memory store instance
+        name: Name of the store
+        store: Memory store instance
         """
         self.stores[name] = store
         logger.info(f"Registered memory store: {name}")
@@ -102,8 +102,8 @@ class MemoryManager:
         """Set which store to use for a specific memory type.
 
         Args:
-            memory_type: Type of memory
-            store_name: Name of the store to use
+        memory_type: Type of memory
+        store_name: Name of the store to use
         """
         if store_name not in self.stores:
             raise ValueError(f"Store '{store_name}' not found")
@@ -115,13 +115,13 @@ class MemoryManager:
         """Get the appropriate store for a memory type.
 
         Args:
-            memory_type: Type of memory
+        memory_type: Type of memory
 
         Returns:
-            Memory store instance
+        Memory store instance
 
         Raises:
-            ValueError: If no store is configured for the type
+        ValueError: If no store is configured for the type
         """
         store_name = self.store_types.get(memory_type)
         if not store_name:

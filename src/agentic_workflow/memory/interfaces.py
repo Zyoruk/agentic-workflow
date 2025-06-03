@@ -189,8 +189,8 @@ class MemoryStore(ABC):
         """Initialize the memory store.
 
         Args:
-            name: Name of the memory store
-            config: Configuration parameters
+        name: Name of the memory store
+        config: Configuration parameters
         """
         self.name = name
         self.config = config or {}

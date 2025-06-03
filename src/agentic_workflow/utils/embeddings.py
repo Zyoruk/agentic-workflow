@@ -42,7 +42,7 @@ class OpenAIEmbeddingProvider(EmbeddingProvider):
         """Initialize OpenAI embedding provider.
 
         Args:
-            config: Configuration parameters
+        config: Configuration parameters
         """
         config = config or {}
         super().__init__(config.get("model", "text-embedding-ada-002"))
@@ -105,7 +105,7 @@ class OpenAIEmbeddingProvider(EmbeddingProvider):
         """Generate a random embedding for fallback.
 
         Returns:
-            Random vector embedding
+        Random vector embedding
         """
         return [random.uniform(-1, 1) for _ in range(1536)]
 
@@ -117,7 +117,7 @@ class MockEmbeddingProvider(EmbeddingProvider):
         """Initialize mock embedding provider.
 
         Args:
-            config: Configuration parameters
+        config: Configuration parameters
         """
         config = config or {}
         super().__init__(config.get("model", "text-embedding-ada-002"))
@@ -151,11 +151,11 @@ def get_embedding_provider(
     """Get embedding provider instance.
 
     Args:
-        provider_type: Type of embedding provider ("openai" or "mock")
-        config: Configuration parameters
+    provider_type: Type of embedding provider ("openai" or "mock")
+    config: Configuration parameters
 
     Returns:
-        Embedding provider instance
+    Embedding provider instance
     """
     if provider_type == "openai":
         return OpenAIEmbeddingProvider(config)

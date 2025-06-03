@@ -1,3 +1,9 @@
+## v0.4.0 (2025-06-02)
+
+### Feat
+
+- implement knowledge graph architecture with domain, application, and infrastructure layers
+
 ## v0.3.0 (2025-05-23)
 
 ### Feat

@@ -10,6 +10,7 @@ from typing import Any, Dict, List, Optional
 from .base import Agent, AgentResult, AgentTask
 from .code_generation import CodeGenerationAgent
 from .planning import PlanningAgent
+from .review import ReviewAgent
 
 # Agent registry for factory pattern
 AGENT_REGISTRY: Dict[str, type] = {
@@ -17,6 +18,8 @@ AGENT_REGISTRY: Dict[str, type] = {
     "code_gen": CodeGenerationAgent,  # Alias
     "planning": PlanningAgent,
     "planner": PlanningAgent,  # Alias
+    "review": ReviewAgent,
+    "reviewer": ReviewAgent,  # Alias
 }
 
 
@@ -70,6 +73,7 @@ __all__ = [
     "AgentTask",
     "CodeGenerationAgent",
     "PlanningAgent",
+    "ReviewAgent",
     "create_agent",
     "get_available_agent_types",
     "AGENT_REGISTRY",

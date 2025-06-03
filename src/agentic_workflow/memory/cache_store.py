@@ -5,10 +5,7 @@ import time
 from typing import Any, Dict, List, Optional, cast
 
 from ..core.logging_config import get_logger
-from ..utils.serialization import (
-    memory_entry_to_dict,
-    serialize_to_json,
-)
+from ..utils.serialization import memory_entry_to_dict, serialize_to_json
 from .connections import RedisConnectionManager
 from .connections.redis_connection import RedisClientNotAvailableError
 from .interfaces import (

@@ -30,6 +30,16 @@ except ImportError:
     # This is fine - Weaviate might not be installed
     WeaviateVectorStore = None  # type: ignore
 
+# Import agents components
+from .agents import (
+    Agent,
+    AgentResult,
+    AgentTask,
+    CodeGenerationAgent,
+    create_agent,
+    get_available_agent_types,
+)
+
 # Import exceptions
 from .core.exceptions import (
     AgentError,
@@ -76,6 +86,13 @@ __all__ = [
     "ShortTermMemory",
     "RedisCacheStore",
     "WeaviateVectorStore",
+    # Agents
+    "Agent",
+    "AgentResult",
+    "AgentTask",
+    "CodeGenerationAgent",
+    "create_agent",
+    "get_available_agent_types",
     # Guardrails
     "InputValidator",
     "ValidationRule",

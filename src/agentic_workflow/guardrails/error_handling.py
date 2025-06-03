@@ -82,9 +82,9 @@ class ErrorHandler:
         """Register a recovery strategy for an exception type.
 
         Args:
-            exception_type: Type of exception
-            strategy: Recovery strategy
-            severity: Error severity
+        exception_type: Type of exception
+        strategy: Recovery strategy
+        severity: Error severity
         """
         self.strategies[exception_type] = strategy
         self.severity_levels[exception_type] = severity
@@ -99,8 +99,8 @@ class ErrorHandler:
         """Register a handler function for a recovery strategy.
 
         Args:
-            strategy: Recovery strategy
-            handler_func: Handler function
+        strategy: Recovery strategy
+        handler_func: Handler function
         """
         self.handlers[strategy] = handler_func
         logger.debug(f"Registered handler for {strategy.value} strategy")
@@ -111,8 +111,8 @@ class ErrorHandler:
         """Register a custom handler for a specific exception type.
 
         Args:
-            exception_type: Type of exception
-            handler_func: Handler function
+        exception_type: Type of exception
+        handler_func: Handler function
         """
         self.custom_handlers[exception_type] = handler_func
         logger.debug(f"Registered custom handler for {exception_type.__name__}")
@@ -123,8 +123,8 @@ class ErrorHandler:
         """Set maximum retries for an exception type.
 
         Args:
-            exception_type: Type of exception
-            max_retries: Maximum number of retries
+        exception_type: Type of exception
+        max_retries: Maximum number of retries
         """
         self.max_retries[exception_type] = max_retries
 
@@ -132,10 +132,10 @@ class ErrorHandler:
         """Get current retry count for an exception type.
 
         Args:
-            exception_type: Type of exception
+        exception_type: Type of exception
 
         Returns:
-            Current retry count
+        Current retry count
         """
         return self.error_counts.get(exception_type.__name__, 0)
 
@@ -145,11 +145,11 @@ class ErrorHandler:
         """Handle an error using the registered strategy.
 
         Args:
-            error: Exception to handle
-            context: Optional context information
+        error: Exception to handle
+        context: Optional context information
 
         Returns:
-            Dictionary with handling results
+        Dictionary with handling results
         """
         context = context or {}
         error_type = type(error)
@@ -169,8 +169,8 @@ class ErrorHandler:
                     severity = self.severity_levels.get(exc_type, ErrorSeverity.MEDIUM)
 
         if not strategy:
-            strategy = RecoveryStrategy.FALLBACK
-            severity = ErrorSeverity.MEDIUM
+            strategy = RecoveryStrategy.ESCALATE
+            severity = ErrorSeverity.HIGH
 
         # Log the error
         self._log_error(error, strategy, severity, context)
@@ -189,7 +189,8 @@ class ErrorHandler:
                             severity.value if severity else ErrorSeverity.MEDIUM.value
                         ),
                         "handled": True,
-                        "result": result,
+                        "action": result.get("action", "custom"),
+                        **result,
                     }
                 except Exception as e:
                     logger.error(f"Custom handler failed: {e}")
@@ -207,7 +208,8 @@ class ErrorHandler:
                         severity.value if severity else ErrorSeverity.MEDIUM.value
                     ),
                     "handled": True,
-                    "result": result,
+                    "action": result.get("action", strategy.value),
+                    **result,
                 }
             except Exception as e:
                 logger.error(f"Strategy handler failed: {e}")
@@ -221,7 +223,8 @@ class ErrorHandler:
             "strategy": strategy.value,
             "severity": severity.value if severity else ErrorSeverity.MEDIUM.value,
             "handled": result.get("handled", False),
-            "result": result,
+            "action": result.get("action", strategy.value),
+            **result,
         }
 
     def _log_error(
@@ -234,10 +237,10 @@ class ErrorHandler:
         """Log error with appropriate level based on severity.
 
         Args:
-            error: Exception that occurred
-            strategy: Recovery strategy
-            severity: Error severity
-            context: Context information
+        error: Exception that occurred
+        strategy: Recovery strategy
+        severity: Error severity
+        context: Context information
         """
         error_type = type(error).__name__
         error_msg = str(error)
@@ -274,13 +277,13 @@ class ErrorHandler:
         """Apply default behavior for a strategy.
 
         Args:
-            error: Exception that occurred
-            strategy: Recovery strategy
-            severity: Error severity
-            context: Context information
+        error: Exception that occurred
+        strategy: Recovery strategy
+        severity: Error severity
+        context: Context information
 
         Returns:
-            Strategy result
+        Strategy result
         """
         error_type = type(error)
 
@@ -380,14 +383,14 @@ class ErrorHandler:
         """Execute a function with error handling.
 
         Args:
-            func: Function to execute
-            *args: Positional arguments
-            error_context: Context for error handling
-            fallback_value: Value to return on error
-            **kwargs: Keyword arguments
+        func: Function to execute
+        *args: Positional arguments
+        error_context: Context for error handling
+        fallback_value: Value to return on error
+        **kwargs: Keyword arguments
 
         Returns:
-            Function result or fallback value
+        Function result or fallback value
         """
         context = error_context or {}
         context["fallback_value"] = fallback_value
@@ -416,3 +419,26 @@ class ErrorHandler:
 
             # If not handled or no special action, return fallback
             return fallback_value
+
+    def get_strategy(
+        self, exception_type: Type[Exception]
+    ) -> tuple[RecoveryStrategy, ErrorSeverity]:
+        """Get the recovery strategy and severity for an exception type.
+
+        Args:
+        exception_type: Type of exception
+
+        Returns:
+        Tuple of (strategy, severity)
+        """
+        # Check for direct match
+        if exception_type in self.strategies:
+            return self.strategies[exception_type], self.severity_levels[exception_type]
+
+        # Check if exception is a subclass of any registered type
+        for exc_type, strategy in self.strategies.items():
+            if issubclass(exception_type, exc_type):
+                return strategy, self.severity_levels[exc_type]
+
+        # Default to ESCALATE for unknown types
+        return RecoveryStrategy.ESCALATE, ErrorSeverity.HIGH

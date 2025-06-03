@@ -3,7 +3,7 @@
 import asyncio
 import uuid
 from contextlib import asynccontextmanager
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any, Dict, List, Optional, Set
 
 from .config import Config, get_config
@@ -33,10 +33,10 @@ class ComponentRegistry:
         """Register a component.
 
         Args:
-            component: Component to register
+        component: Component to register
 
         Raises:
-            ValueError: If component name already exists
+        ValueError: If component name already exists
         """
         if component.name in self._components:
             raise ValueError(f"Component '{component.name}' already registered")
@@ -50,10 +50,10 @@ class ComponentRegistry:
         """Get component by name.
 
         Args:
-            name: Component name
+        name: Component name
 
         Returns:
-            Component instance or None if not found
+        Component instance or None if not found
         """
         return self._components.get(name)
 
@@ -65,10 +65,10 @@ class ComponentRegistry:
         """Get component startup order based on dependencies.
 
         Returns:
-            List of component names in startup order
+        List of component names in startup order
 
         Raises:
-            ValueError: If circular dependencies detected
+        ValueError: If circular dependencies detected
         """
         return self._topological_sort()
 
@@ -109,7 +109,7 @@ class WorkflowEngine:
         """Initialize workflow engine.
 
         Args:
-            config: Optional configuration override
+        config: Optional configuration override
         """
         self.config = config or get_config()
         self.components = ComponentRegistry()
@@ -123,7 +123,7 @@ class WorkflowEngine:
         """Register a system component.
 
         Args:
-            component: Component to register
+        component: Component to register
         """
         self.components.register(component)
 
@@ -131,7 +131,7 @@ class WorkflowEngine:
         """Register an event handler.
 
         Args:
-            handler: Event handler to register
+        handler: Event handler to register
         """
         self.event_handlers.append(handler)
         logger.info(f"Registered event handler: {handler.__class__.__name__}")
@@ -221,22 +221,23 @@ class WorkflowEngine:
         Returns:
             Workflow execution result
         """
-        execution_id = str(uuid.uuid4())
-        start_time = datetime.utcnow().isoformat()
-
         execution = WorkflowExecution(
-            id=execution_id,
+            id=str(uuid.uuid4()),
             workflow_id=workflow.id,
             status="running",
-            start_time=start_time,
+            current_step=None,
+            start_time=datetime.now(UTC).isoformat(),
+            end_time=None,
+            result=None,
+            error=None,
         )
 
-        self.running_workflows[execution_id] = execution
+        self.running_workflows[execution.id] = execution
 
         logger.info_with_data(  # type: ignore[attr-defined]
             f"Starting workflow execution: {workflow.name}",
             workflow_id=workflow.id,
-            execution_id=execution_id,
+            execution_id=execution.id,
         )
 
         try:
@@ -248,41 +249,41 @@ class WorkflowEngine:
 
             # Mark as completed
             execution.status = "completed"
-            execution.end_time = datetime.utcnow().isoformat()
+            execution.end_time = datetime.now(UTC).isoformat()
 
             duration = asyncio.get_event_loop().time() - start_time_perf
             log_performance(
                 "workflow_execution",
                 duration,
                 workflow_id=workflow.id,
-                execution_id=execution_id,
+                execution_id=execution.id,
                 steps_count=len(workflow.steps),
             )
 
             logger.info_with_data(  # type: ignore[attr-defined]
                 f"Workflow execution completed: {workflow.name}",
                 workflow_id=workflow.id,
-                execution_id=execution_id,
+                execution_id=execution.id,
                 duration_seconds=duration,
             )
 
         except Exception as e:
             execution.status = "failed"
             execution.error = str(e)
-            execution.end_time = datetime.utcnow().isoformat()
+            execution.end_time = datetime.now(UTC).isoformat()
 
             log_error(
                 e,
                 {
                     "workflow_id": workflow.id,
-                    "execution_id": execution_id,
+                    "execution_id": execution.id,
                     "operation": "workflow_execution",
                 },
             )
 
         finally:
             # Remove from running workflows
-            self.running_workflows.pop(execution_id, None)
+            self.running_workflows.pop(execution.id, None)
 
         return execution
 
@@ -309,6 +310,7 @@ class WorkflowEngine:
         for dep_step_id in step.dependencies:
             if dep_step_id not in execution.completed_steps:
                 execution.failed_steps.append(step.id)
+                execution.error = f"Step dependency not met: {dep_step_id}"
                 raise RuntimeError(f"Step dependency not met: {dep_step_id}")
 
         # Get component
@@ -361,20 +363,8 @@ class WorkflowEngine:
 
         except asyncio.TimeoutError:
             execution.failed_steps.append(step.id)
+            execution.error = f"Step timeout: {step.name}"
             raise RuntimeError(f"Step timeout: {step.name}")
-
-        except Exception as e:
-            execution.failed_steps.append(step.id)
-            log_error(
-                e,
-                {
-                    "step_id": step.id,
-                    "component": step.component,
-                    "action": step.action,
-                    "execution_id": execution.id,
-                },
-            )
-            raise
 
     async def _emit_event(self, event_type: str, event_data: Dict[str, Any]) -> None:
         """Emit an event to all registered handlers.

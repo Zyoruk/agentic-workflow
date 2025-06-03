@@ -3,6 +3,7 @@
 
 import asyncio
 from datetime import datetime
+import os
 
 from agentic_workflow.core import get_logger, setup_logging
 from agentic_workflow.memory import MemoryManager, MemoryQuery, MemoryType
@@ -292,55 +293,46 @@ async def demonstrate_memory_statistics(memory_manager: MemoryManager) -> None:
 
 async def main() -> None:
     """Main function demonstrating the memory management system."""
-    # Setup logging
     setup_logging()
-
     logger.info("🧠 Starting Memory Management System Demonstration")
 
-    # Configure memory manager
+    # Configure memory manager with mock settings
     memory_config = {
         "short_term": {
             "max_total_entries": 1000,
             "default_window_size": 50,
-            "cleanup_interval": 60,  # 1 minute cleanup
+            "cleanup_interval": 60,
         },
         "vector_store": {
-            "url": "http://localhost:8080",  # Weaviate URL
-            "class_name": "AgenticMemory",
+            "provider": "mock",  # Use mock embeddings
+            "store_type": "local",  # Use local storage
+            "dimensions": 1536,  # Standard embedding dimension
+            "url": None,  # Disable Weaviate connection
+            "class_name": "MemoryEntry",
+            "batch_size": 10,
+            "timeout": 30,
+            "openai_api_key": None,  # Disable OpenAI embeddings
         },
         "cache": {
-            "url": "redis://localhost:6379",  # Redis URL
+            "url": "redis://localhost:6379",
             "key_prefix": "agentic_memory:",
-            "default_ttl": 3600,  # 1 hour default
+            "default_ttl": 3600,
         },
     }
 
-    # Initialize memory manager
     memory_manager = MemoryManager(memory_config)
+    logger.info("Initializing memory manager...")
+    await memory_manager.initialize()
 
     try:
-        logger.info("Initializing memory manager...")
-        await memory_manager.initialize()
-
-        # Run demonstrations
         await demonstrate_short_term_memory(memory_manager)
         await demonstrate_vector_memory(memory_manager)
         await demonstrate_cache_memory(memory_manager)
         await demonstrate_cross_memory_operations(memory_manager)
         await demonstrate_memory_statistics(memory_manager)
-
-        logger.info("\n🎉 Memory system demonstration completed successfully!")
-
-        # Show final stats
-        final_stats = await memory_manager.get_stats()
-        logger.info(f"\nFinal operation count: {final_stats['total_operations']}")
-
     except Exception as e:
         logger.error(f"❌ Demonstration failed: {e}", exc_info=True)
-        raise
-
     finally:
-        # Cleanup
         logger.info("\nCleaning up memory manager...")
         await memory_manager.close()
         logger.info("Memory manager closed.")

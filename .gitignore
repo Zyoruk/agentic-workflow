@@ -87,6 +87,9 @@ venv.bak/
 # mkdocs documentation
 /site
 
+# Sphinx documentation
+docs/api/_*
+
 # mypy
 .mypy_cache/
 .dmypy.json
@@ -141,6 +144,8 @@ yarn-error.log*
 # Documentation builds
 docs/_build/
 docs/build/
+docs/api/_build/
+docs/api/_autosummary/
 
 # Neo4j
 neo4j_data/

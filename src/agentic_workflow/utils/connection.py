@@ -18,8 +18,8 @@ class ConnectionManager(Generic[T], ABC):
         """Initialize connection manager.
 
         Args:
-            name: Service name
-            config: Connection configuration
+        name: Service name
+        config: Connection configuration
         """
         self.name = name
         self.config = config
@@ -82,7 +82,7 @@ class ConnectionManager(Generic[T], ABC):
         """Get current connection status.
 
         Returns:
-            Dictionary with connection status information
+        Dictionary with connection status information
         """
         return {
             "name": self.name,

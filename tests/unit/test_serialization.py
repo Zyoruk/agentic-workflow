@@ -18,8 +18,8 @@ from agentic_workflow.utils.serialization import (
 )
 
 
-class TestPydanticModel(BaseModel):
-    """Test Pydantic model for serialization."""
+class PydanticModelTest(BaseModel):
+    """Test Pydantic model for serialization tests."""
 
     name: str
     value: int
@@ -50,9 +50,9 @@ class TestSerializationUtils:
         )
 
     @pytest.fixture
-    def sample_model(self) -> TestPydanticModel:
+    def sample_model(self) -> PydanticModelTest:
         """Create a sample Pydantic model."""
-        return TestPydanticModel(
+        return PydanticModelTest(
             name="test", value=42, tags=["a", "b"], metadata={"key": "value"}
         )
 
@@ -102,7 +102,7 @@ class TestSerializationUtils:
         assert parsed == data
 
     @pytest.mark.unit
-    def test_serialize_to_json_pydantic(self, sample_model: TestPydanticModel) -> None:
+    def test_serialize_to_json_pydantic(self, sample_model: PydanticModelTest) -> None:
         """Test serializing Pydantic model to JSON."""
         json_str = serialize_to_json(sample_model)
 
@@ -131,9 +131,9 @@ class TestSerializationUtils:
         json_str = (
             '{"name":"test","value":42,"tags":["a","b"],"metadata":{"key":"value"}}'
         )
-        model = deserialize_from_json(json_str, TestPydanticModel)
+        model = deserialize_from_json(json_str, PydanticModelTest)
 
-        assert isinstance(model, TestPydanticModel)
+        assert isinstance(model, PydanticModelTest)
         assert model.name == "test"
         assert model.value == 42
         assert model.tags == ["a", "b"]

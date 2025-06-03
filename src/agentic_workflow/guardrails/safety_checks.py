@@ -32,10 +32,10 @@ class SafetyViolation:
         """Initialize safety violation.
 
         Args:
-            rule_id: ID of the violated rule
-            description: Description of the violation
-            level: Severity level
-            context: Additional context information
+        rule_id: ID of the violated rule
+        description: Description of the violation
+        level: Severity level
+        context: Additional context information
         """
         self.rule_id = rule_id
         self.description = description
@@ -47,7 +47,7 @@ class SafetyViolation:
         """Convert to dictionary.
 
         Returns:
-            Dictionary representation
+        Dictionary representation
         """
         return {
             "rule_id": self.rule_id,
@@ -61,7 +61,7 @@ class SafetyViolation:
         """Get string representation.
 
         Returns:
-            String representation
+        String representation
         """
         return f"[{self.level.value.upper()}] Rule {self.rule_id}: {self.description}"
 
@@ -151,12 +151,12 @@ class SafetyChecker:
         """Add a safety rule.
 
         Args:
-            rule_id: Unique rule identifier
-            check_func: Function that implements the check
-            description: Rule description
-            level: Violation severity level
-            enabled: Whether the rule is enabled
-            config: Rule configuration
+        rule_id: Unique rule identifier
+        check_func: Function that implements the check
+        description: Rule description
+        level: Violation severity level
+        enabled: Whether the rule is enabled
+        config: Rule configuration
         """
         self.rules[rule_id] = {
             "check_func": check_func,
@@ -171,10 +171,10 @@ class SafetyChecker:
         """Remove a safety rule.
 
         Args:
-            rule_id: Rule identifier
+        rule_id: Rule identifier
 
         Returns:
-            True if rule was removed, False otherwise
+        True if rule was removed, False otherwise
         """
         if rule_id in self.rules:
             del self.rules[rule_id]
@@ -186,10 +186,10 @@ class SafetyChecker:
         """Enable a safety rule.
 
         Args:
-            rule_id: Rule identifier
+        rule_id: Rule identifier
 
         Returns:
-            True if rule was enabled, False otherwise
+        True if rule was enabled, False otherwise
         """
         if rule_id in self.rules:
             self.rules[rule_id]["enabled"] = True
@@ -201,10 +201,10 @@ class SafetyChecker:
         """Disable a safety rule.
 
         Args:
-            rule_id: Rule identifier
+        rule_id: Rule identifier
 
         Returns:
-            True if rule was disabled, False otherwise
+        True if rule was disabled, False otherwise
         """
         if rule_id in self.rules:
             self.rules[rule_id]["enabled"] = False
@@ -216,11 +216,11 @@ class SafetyChecker:
         """Update rule configuration.
 
         Args:
-            rule_id: Rule identifier
-            config: New configuration
+        rule_id: Rule identifier
+        config: New configuration
 
         Returns:
-            True if config was updated, False otherwise
+        True if config was updated, False otherwise
         """
         if rule_id in self.rules:
             self.rules[rule_id]["config"].update(config)
@@ -234,8 +234,8 @@ class SafetyChecker:
         """Register a handler for safety violations.
 
         Args:
-            level: Violation level
-            handler: Handler function
+        level: Violation level
+        handler: Handler function
         """
         if level not in self.violation_handlers:
             self.violation_handlers[level] = []
@@ -249,11 +249,11 @@ class SafetyChecker:
         """Check data against all enabled safety rules.
 
         Args:
-            data: Data to check
-            context: Additional context
+        data: Data to check
+        context: Additional context
 
         Returns:
-            Tuple of (is_safe, violations)
+        Tuple of (is_safe, violations)
         """
         context = context or {}
         self.violations = []
@@ -300,7 +300,7 @@ class SafetyChecker:
         """Handle a safety violation by calling registered handlers.
 
         Args:
-            violation: Safety violation
+        violation: Safety violation
         """
         # Call handlers for this level
         if violation.level in self.violation_handlers:
@@ -324,10 +324,10 @@ class SafetyChecker:
         """Get safety violations.
 
         Args:
-            level: Optional filter by level
+        level: Optional filter by level
 
         Returns:
-            List of violations
+        List of violations
         """
         if level:
             return [v for v in self.violations if v.level == level]
@@ -345,12 +345,12 @@ class SafetyChecker:
         """Check for harmful content keywords.
 
         Args:
-            data: String data to check
-            config: Rule configuration
-            context: Additional context
+        data: String data to check
+        config: Rule configuration
+        context: Additional context
 
         Returns:
-            Check result
+        Check result
         """
         # Non-string data is safe
         if not isinstance(data, str):
@@ -382,12 +382,12 @@ class SafetyChecker:
         """Check for dangerous code imports.
 
         Args:
-            data: Code to check
-            config: Rule configuration
-            context: Additional context
+        data: Code to check
+        config: Rule configuration
+        context: Additional context
 
         Returns:
-            Check result
+        Check result
         """
         # Non-string data is safe
         if not isinstance(data, str):
@@ -418,12 +418,12 @@ class SafetyChecker:
         """Check for unsafe file access.
 
         Args:
-            data: Path or command to check
-            config: Rule configuration
-            context: Additional context
+        data: Path or command to check
+        config: Rule configuration
+        context: Additional context
 
         Returns:
-            Check result
+        Check result
         """
         # Non-string data is safe
         if not isinstance(data, str):
@@ -455,11 +455,11 @@ class SafetyChecker:
         """Check multiple data items for safety.
 
         Args:
-            items: Dictionary of named data items
-            context: Additional context
+        items: Dictionary of named data items
+        context: Additional context
 
         Returns:
-            Dictionary with check results
+        Dictionary with check results
         """
         context = context or {}
         results = {}

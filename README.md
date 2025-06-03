@@ -2,7 +2,7 @@
 
 > AI-driven autonomous software development workflow system
 
-[![Version](https://img.shields.io/badge/version-0.2.0-blue.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-0.3.0-blue.svg)](CHANGELOG.md)
 [![Python](https://img.shields.io/badge/python-3.11+-blue.svg)](https://python.org)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-yellow.svg)](https://conventionalcommits.org)
@@ -32,23 +32,20 @@ An advanced agentic workflow system that enables autonomous software development
 ### Installation
 
 ```bash
-# Clone the repository
-git clone https://github.com/yourusername/agentic-workflow.git
-cd agentic-workflow
+# Full installation with all dependencies (recommended)
+make install
 
-# Create and activate environment
-conda create -n agentic-workflow python=3.11 -y
-conda activate agentic-workflow
+# Minimal installation (core package only)
+make install-minimal
 
-# Install the package in development mode
-pip install -e ".[dev,docs,test]"
+# Specific dependency groups
+make install-dev      # Development dependencies
+make install-docs     # Documentation dependencies
+make install-test     # Test dependencies
+make install-embedding # Embedding dependencies
 
-# Set up pre-commit hooks
-pre-commit install
-pre-commit install --hook-type commit-msg
-
-# Verify installation
-make package-check
+# Legacy command (same as install)
+make install-all
 ```
 
 ## 💻 Development Setup
@@ -58,17 +55,23 @@ make package-check
 The project uses **conda** for environment management and **pip** for package installation:
 
 ```bash
-# Create environment
-conda create -n agentic-workflow python=3.11
+# Clone the repository
+git clone https://github.com/yourusername/agentic-workflow.git
+cd agentic-workflow
 
-# Activate environment
+# Create and activate environment
+conda create -n agentic-workflow python=3.11 -y
 conda activate agentic-workflow
 
-# Install all dependencies
-make install
+# Install the package (choose one):
+make install          # Full installation (recommended)
+make install-minimal  # Minimal installation
 
-# Set up development environment
+# Set up pre-commit hooks
 make dev-setup
+
+# Verify installation
+make package-check
 ```
 
 ### Available Make Commands
@@ -140,12 +143,17 @@ conda activate agentic-workflow
 # Create feature branch
 git checkout -b feat/amazing-feature
 
+# Install dependencies (choose based on needs)
+make install          # Install all dependencies
+make install-dev      # Install only development dependencies
+make install-docs     # Install only documentation dependencies
+make install-test     # Install only test dependencies
+make install-embedding # Install embedding dependencies
+
 # Make changes, then check quality
 make quality
 
 # Commit using conventional commits
-git commit -m "feat(core): implement amazing feature"
-# or use interactive commit
 make commit
 ```
 
@@ -157,6 +165,14 @@ All commits are automatically validated with **pre-commit hooks**:
 - ✅ **Linting** (Flake8, MyPy)
 - ✅ **Commit Format** (Conventional Commits)
 - ✅ **File Checks** (trailing whitespace, large files, etc.)
+
+You can run quality checks manually:
+
+```bash
+make format        # Format code
+make lint         # Run linting
+make quality      # Run all quality checks
+```
 
 ### 3. Testing
 
@@ -173,7 +189,80 @@ make test-integration # Integration tests only
 make test-fast        # Skip slow tests
 ```
 
-### 4. Release Process
+### 4. Documentation
+
+The project has two types of documentation:
+1. **API Documentation** (Sphinx) - Auto-generated from code docstrings
+2. **Project Documentation** (MkDocs) - Manual documentation for architecture, guides, etc.
+
+#### First-time Setup
+
+```bash
+# Initialize API documentation structure
+make docs-init
+```
+
+#### Writing Documentation
+
+1. **API Documentation** (in code):
+```python
+def complex_function(arg1: str, arg2: int) -> Dict[str, Any]:
+    """One line summary of the function.
+
+    Args:
+        arg1: Description of the first argument.
+        arg2: Description of the second argument.
+
+    Returns:
+        Dictionary containing the processed results.
+
+    Raises:
+        ValueError: If arg1 is empty.
+    """
+    pass
+```
+
+2. **Project Documentation** (in docs/):
+- Architecture documentation
+- Implementation guides
+- Project planning
+- Requirements specification
+
+#### Building Documentation
+
+```bash
+# API Documentation (Sphinx)
+make docs            # Generate and build API docs
+make docs-serve-sphinx  # Serve API docs locally
+
+# Project Documentation (MkDocs)
+make docs-mkdocs     # Build project docs
+make docs-serve-mkdocs  # Serve project docs locally
+
+# Documentation Maintenance
+make docs-clean      # Clean all documentation build artifacts
+make docs-check      # Check documentation links and build
+```
+
+#### Documentation Structure
+
+```
+docs/
+├── api/            # Sphinx API documentation
+│   ├── _build/     # Sphinx build directory
+│   ├── _static/    # Static files
+│   ├── _templates/ # Custom templates
+│   ├── _autosummary/ # Auto-generated API docs
+│   ├── conf.py     # Sphinx configuration
+│   ├── index.rst   # API docs index
+│   └── modules.rst # API modules index
+├── architecture/   # Architecture documentation
+├── implementation/ # Implementation guides
+├── planning/       # Project planning
+└── requirements/   # Requirements specification
+```
+
+### 5. Release Process
 
 ```bash
 # Check what version would be bumped
@@ -184,6 +273,19 @@ make release
 
 # Push to remote
 git push origin main --tags
+```
+
+### 6. Development Environment
+
+```bash
+# Complete development setup
+make dev-setup
+
+# Stop development services
+make dev-down
+
+# Clean build artifacts
+make clean
 ```
 
 ## 🧪 Testing
@@ -336,8 +438,10 @@ agentic-workflow/
 │   ├── __init__.py           # Package initialization
 │   ├── core/                 # Core workflow functionality
 │   ├── agents/               # AI agent implementations
-│   ├── api/                  # REST API endpoints
-│   ├── graph/                # Graph processing
+│   ├── api/                  # FastAPI REST endpoints
+│   ├── graph/                # Neo4j graph processing
+│   ├── memory/               # Memory management (Redis, Weaviate)
+│   ├── monitoring/           # Prometheus metrics
 │   └── utils/                # Utility functions
 ├── tests/                     # Test suite
 │   ├── unit/                 # Unit tests
@@ -358,10 +462,14 @@ agentic-workflow/
 
 - **Core Engine**: Workflow execution and management
 - **AI Agents**: LangChain-based intelligent agents
-- **Graph Processing**: NetworkX-based workflow graphs
+- **Graph Processing**: Neo4j-based workflow graphs
 - **API Layer**: FastAPI REST endpoints
-- **Memory Management**: Neo4j and Weaviate integration
+- **Memory Management**:
+  - Redis for caching
+  - Weaviate for vector storage
+  - Neo4j for graph relationships
 - **Monitoring**: Prometheus metrics and logging
+- **Event System**: MQTT-based event handling
 
 ## 📄 License
 
@@ -382,12 +490,15 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Features
 
 - Core engine for workflow management
-- Agent-based task execution
+- Agent-based task execution with LangChain integration
 - Flexible memory system
-  - Short-term memory
+  - Short-term memory with Redis
   - Vector store (Weaviate) for long-term memory
-  - Cache system
+  - Graph database (Neo4j) for relationship management
   - LangChain integration for embeddings
+- FastAPI-based REST API
+- MQTT-based event system
+- Prometheus metrics and monitoring
 - Plugin architecture
 - Robust event system
 - Extensible service components
@@ -400,6 +511,12 @@ pip install agentic-workflow
 
 # With development dependencies
 pip install agentic-workflow[dev]
+
+# With documentation dependencies
+pip install agentic-workflow[docs]
+
+# With test dependencies
+pip install agentic-workflow[test]
 
 # With embedding support (for LangChain integration)
 pip install agentic-workflow[embedding]

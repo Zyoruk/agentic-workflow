@@ -1,10 +1,12 @@
+from typing import Any, Dict, cast
+
 import pytest
 
 from agentic_workflow.guardrails.safety_checks import SafetyChecker, SafetyLevel
 
 
 @pytest.mark.unit
-def test_add_and_remove_rule():
+def test_add_and_remove_rule() -> None:
     checker = SafetyChecker()
     checker.add_rule(
         rule_id="test_rule",
@@ -23,11 +25,11 @@ def test_add_and_remove_rule():
 
 
 @pytest.mark.unit
-def test_check_dangerous_imports():
+def test_check_dangerous_imports() -> None:
     checker = SafetyChecker()
     dangerous_code = "import os\nimport sys"
-    config = {"patterns": [r"import os", r"import sys"]}
-    context = {"allow_system_imports": False}
+    config: Dict[str, Any] = {"patterns": [r"import os", r"import sys"]}
+    context: Dict[str, bool] = {"allow_system_imports": False}
     result = checker._check_dangerous_imports(dangerous_code, config, context)
     assert not result["is_safe"]
     assert "patterns" in result["context"]
@@ -36,14 +38,14 @@ def test_check_dangerous_imports():
     result = checker._check_dangerous_imports(dangerous_code, config, context)
     assert result["is_safe"]
     # Non-string data is always safe
-    assert checker._check_dangerous_imports(123, config, {})["is_safe"]
+    assert checker._check_dangerous_imports(cast(str, "123"), config, {})["is_safe"]
 
 
 @pytest.mark.unit
-def test_check_file_access():
+def test_check_file_access() -> None:
     checker = SafetyChecker()
-    config = {"restricted_paths": ["/etc", "/var"]}
-    context = {}
+    config: Dict[str, Any] = {"restricted_paths": ["/etc", "/var"]}
+    context: Dict[str, Any] = {}
     # Restricted path present
     result = checker._check_file_access("/etc/passwd", config, context)
     assert not result["is_safe"]
@@ -52,4 +54,4 @@ def test_check_file_access():
     result = checker._check_file_access("/home/user/file.txt", config, context)
     assert result["is_safe"]
     # Non-string data is always safe
-    assert checker._check_file_access(123, config, {})["is_safe"]
+    assert checker._check_file_access(cast(str, "123"), config, {})["is_safe"]

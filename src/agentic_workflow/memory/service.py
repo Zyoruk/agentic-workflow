@@ -19,8 +19,8 @@ class MemoryService(Service):
         """Initialize memory service.
 
         Args:
-            name: Service name
-            config: Service configuration
+        name: Service name
+        config: Service configuration
         """
         super().__init__(name, config)
 

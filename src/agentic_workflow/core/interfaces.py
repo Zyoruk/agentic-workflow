@@ -33,8 +33,8 @@ class Component(ABC):
         """Initialize component.
 
         Args:
-            name: Component name
-            config: Component configuration
+        name: Component name
+        config: Component configuration
         """
         self.name = name
         self.config = config or {}
@@ -65,7 +65,7 @@ class Component(ABC):
         """Add a dependency on another component.
 
         Args:
-            component_name: Name of the dependent component
+        component_name: Name of the dependent component
         """
         if component_name not in self._dependencies:
             self._dependencies.append(component_name)

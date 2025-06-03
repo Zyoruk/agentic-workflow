@@ -63,32 +63,25 @@ class MemoryQuery(BaseModel):
 
 
 class MemoryResult(BaseModel):
-    """Result of a memory query operation."""
+    """Result of a memory query."""
 
-    entries: List[MemoryEntry] = Field(
-        default_factory=list, description="Retrieved memory entries"
-    )
-    total_count: int = Field(default=0, description="Total number of matching entries")
-    query_time: float = Field(
-        default=0.0, description="Query execution time in seconds"
-    )
-    similarity_scores: List[float] = Field(
-        default_factory=list, description="Similarity scores for vector queries"
-    )
+    entries: List[MemoryEntry]
+    total_count: int
+    query_time: float
+    similarity_scores: List[float]
+    success: bool = True
 
 
 class MemoryStats(BaseModel):
     """Memory store statistics."""
 
-    total_entries: int = Field(default=0, description="Total number of entries")
-    memory_usage: int = Field(default=0, description="Memory usage in bytes")
-    hit_rate: float = Field(default=0.0, description="Cache hit rate (0.0-1.0)")
-    average_retrieval_time: float = Field(
-        default=0.0, description="Average retrieval time in seconds"
-    )
-    entries_by_type: Dict[str, int] = Field(
-        default_factory=dict, description="Count by memory type"
-    )
+    total_entries: int
+    memory_usage: int
+    hit_rate: float
+    average_retrieval_time: float
+    entries_by_type: Dict[str, int]
+    total_stores: int = 0
+    total_retrievals: int = 0
 
 
 # Base interfaces using Protocol for structural typing
@@ -196,8 +189,8 @@ class MemoryStore(ABC):
         """Initialize the memory store.
 
         Args:
-            name: Name of the memory store
-            config: Configuration parameters
+        name: Name of the memory store
+        config: Configuration parameters
         """
         self.name = name
         self.config = config or {}

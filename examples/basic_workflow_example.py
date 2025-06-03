@@ -158,11 +158,13 @@ class NotificationService(Service):
         # Mock notification sending
         self.notifications_sent += len(recipients)
 
-        logger.info_with_data(  # type: ignore[attr-defined]
+        logger.info(
             f"Sent notification to {len(recipients)} recipients",
-            message=message,
-            recipients=recipients,
-            total_sent=self.notifications_sent,
+            extra={
+                "notification_message": message,
+                "recipients": recipients,
+                "total_sent": self.notifications_sent,
+            }
         )
 
         return ServiceResponse(

@@ -3,42 +3,12 @@
 import json
 import time
 from datetime import datetime
-from typing import TYPE_CHECKING, Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
-if TYPE_CHECKING:
-    from weaviate import WeaviateClient
-    from weaviate.collections import Collection
-    from weaviate.collections.classes.config import DataType, Property
-    from weaviate.collections.classes.filters import Filter
-    from weaviate.exceptions import WeaviateQueryException
-
-    WEAVIATE_AVAILABLE = True
-else:
-    try:
-        from weaviate import WeaviateClient
-        from weaviate.collections import Collection
-        from weaviate.collections.classes.config import DataType, Property
-        from weaviate.collections.classes.filters import Filter
-        from weaviate.exceptions import WeaviateQueryException
-
-        WEAVIATE_AVAILABLE = True
-    except ImportError:
-        WeaviateClient = None
-        WeaviateQueryException = Exception
-        Collection = None
-        Property = None
-        DataType = None
-        Filter = None
-        WEAVIATE_AVAILABLE = False
-
-# Import LangChain for embeddings
-try:
-    from langchain_openai import OpenAIEmbeddings
-
-    LANGCHAIN_AVAILABLE = True
-except ImportError:
-    LANGCHAIN_AVAILABLE = False
-    OpenAIEmbeddings = None  # type: ignore
+from langchain_openai import OpenAIEmbeddings
+from weaviate import WeaviateClient
+from weaviate.collections.classes.config import DataType, Property
+from weaviate.collections.classes.filters import Filter
 
 from ..core.config import get_config
 from ..core.logging_config import get_logger
@@ -66,13 +36,12 @@ class WeaviateVectorStore(VectorStore):
     Example config:
     ```python
     config = {
-        "url": "http://localhost:8080",  # Weaviate URL
-        "auth_config": {"api_key": "your-api-key"},  # Optional Weaviate auth
-        "openai_api_key": "your-openai-key",  # For LangChain embeddings
-        "batch_size": 10  # Optional batch processing size
+    "url": "http://localhost:8080",  # Weaviate URL
+    "auth_config": {"api_key": "your-api-key"},  # Optional Weaviate auth
+    "openai_api_key": "your-openai-key",  # For LangChain embeddings
+    "batch_size": 10  # Optional batch processing size
     }
-    ```
-    """
+    ```"""
 
     def __init__(
         self,
@@ -82,8 +51,8 @@ class WeaviateVectorStore(VectorStore):
         """Initialize vector store.
 
         Args:
-            name: Name of the vector store
-            config: Configuration parameters
+        name: Name of the vector store
+        config: Configuration parameters
         """
         super().__init__(name, config)
 
@@ -95,6 +64,8 @@ class WeaviateVectorStore(VectorStore):
         self.vector_dim = int(self.config.get("vector_dim", 1536))
         self.batch_size = int(self.config.get("batch_size", 100))
         self.timeout = int(self.config.get("timeout", 60))
+        self.provider = self.config.get("provider", "weaviate")
+        self.store_type = self.config.get("store_type", "remote")
 
         # Client
         self.client: Optional[WeaviateClient] = None
@@ -104,7 +75,7 @@ class WeaviateVectorStore(VectorStore):
             "openai_api_key", app_config.llm.openai_api_key
         )
         self.embedding_model = None
-        if LANGCHAIN_AVAILABLE and OpenAIEmbeddings is not None:
+        if self.provider != "mock":
             try:
                 self.embedding_model = OpenAIEmbeddings(
                     api_key=self.openai_api_key, model="text-embedding-ada-002"
@@ -127,11 +98,9 @@ class WeaviateVectorStore(VectorStore):
         Returns:
             True if connection successful, False otherwise
         """
-        if not WEAVIATE_AVAILABLE or WeaviateClient is None:
-            logger.warning(
-                "Weaviate is not available - install weaviate-client to use vector store"
-            )
-            return False
+        if self.provider == "mock" or self.store_type == "local":
+            logger.info("Using mock vector store - no connection needed")
+            return True
 
         try:
             # Create client
@@ -227,6 +196,12 @@ class WeaviateVectorStore(VectorStore):
             True if successful, False otherwise
         """
         try:
+            if self.provider == "mock" or self.store_type == "local":
+                # Mock storage - just increment counter
+                self.total_stores += 1
+                logger.debug(f"Mock stored entry in vector store: {entry.id}")
+                return True
+
             if not await self._ensure_client() or self.client is None:
                 return False
 
@@ -278,7 +253,13 @@ class WeaviateVectorStore(VectorStore):
 
         try:
             if not await self._ensure_client() or self.client is None:
-                return MemoryResult()
+                return MemoryResult(
+                    entries=[],
+                    total_count=0,
+                    query_time=0.0,
+                    similarity_scores=[],
+                    success=False,
+                )
 
             collection = self.client.collections.get(self.class_name)
 
@@ -320,8 +301,14 @@ class WeaviateVectorStore(VectorStore):
             )
 
         except Exception as e:
-            logger.error(f"Failed to retrieve entries: {e}")
-            return MemoryResult()
+            logger.error(f"Failed to retrieve vector entries: {e}")
+            return MemoryResult(
+                entries=[],
+                total_count=0,
+                query_time=0.0,
+                similarity_scores=[],
+                success=False,
+            )
 
     async def update(self, entry_id: str, updates: Dict[str, Any]) -> bool:
         """Update a memory entry.
@@ -346,7 +333,7 @@ class WeaviateVectorStore(VectorStore):
             return True
 
         except Exception as e:
-            logger.error(f"Failed to update entry {entry_id}: {e}")
+            logger.error(f"Failed to update vector entry: {e}")
             return False
 
     async def delete(self, entry_id: str) -> bool:
@@ -370,7 +357,7 @@ class WeaviateVectorStore(VectorStore):
             return True
 
         except Exception as e:
-            logger.error(f"Failed to delete entry {entry_id}: {e}")
+            logger.error(f"Failed to delete vector entry: {e}")
             return False
 
     async def clear(self, memory_type: Optional[MemoryType] = None) -> bool:
@@ -412,7 +399,15 @@ class WeaviateVectorStore(VectorStore):
         """
         try:
             if not await self._ensure_client() or self.client is None:
-                return MemoryStats()
+                return MemoryStats(
+                    total_entries=0,
+                    memory_usage=0,
+                    hit_rate=0.0,
+                    average_retrieval_time=0.0,
+                    entries_by_type={},
+                    total_stores=self.total_stores,
+                    total_retrievals=self.total_queries,
+                )
             collection = self.client.collections.get(self.class_name)
 
             # v4: count objects using aggregate
@@ -447,10 +442,20 @@ class WeaviateVectorStore(VectorStore):
                 hit_rate=1.0,
                 average_retrieval_time=0.0,
                 entries_by_type=entries_by_type,
+                total_stores=self.total_stores,
+                total_retrievals=self.total_queries,
             )
         except Exception as e:
-            logger.error(f"Failed to get stats: {e}")
-            return MemoryStats()
+            logger.error(f"Failed to get vector stats: {e}")
+            return MemoryStats(
+                total_entries=0,
+                memory_usage=0,
+                hit_rate=0.0,
+                average_retrieval_time=0.0,
+                entries_by_type={},
+                total_stores=0,
+                total_retrievals=0,
+            )
 
     async def health_check(self) -> bool:
         """Check if the vector store is healthy.
@@ -514,8 +519,24 @@ class WeaviateVectorStore(VectorStore):
             Similar memory entries
         """
         try:
+            if self.provider == "mock" or self.store_type == "local":
+                # Return empty but valid result in mock mode
+                return MemoryResult(
+                    entries=[],
+                    total_count=0,
+                    query_time=0.0,
+                    similarity_scores=[],
+                    success=True,
+                )
+
             if not await self._ensure_client() or self.client is None:
-                return MemoryResult()
+                return MemoryResult(
+                    entries=[],
+                    total_count=0,
+                    query_time=0.0,
+                    similarity_scores=[],
+                    success=False,
+                )
 
             # If query_embedding is empty and we have LangChain available, generate it
             if (
@@ -525,7 +546,13 @@ class WeaviateVectorStore(VectorStore):
                 logger.warning(
                     "Query embedding is empty, but no query text is provided"
                 )
-                return MemoryResult()
+                return MemoryResult(
+                    entries=[],
+                    total_count=0,
+                    query_time=0.0,
+                    similarity_scores=[],
+                    success=False,
+                )
 
             collection = self.client.collections.get(self.class_name)
             results = collection.query.near_vector(
@@ -550,7 +577,13 @@ class WeaviateVectorStore(VectorStore):
             )
         except Exception as e:
             logger.error(f"Failed to perform similarity search: {e}")
-            return MemoryResult()
+            return MemoryResult(
+                entries=[],
+                total_count=0,
+                query_time=0.0,
+                similarity_scores=[],
+                success=False,
+            )
 
     async def semantic_search(
         self, query_text: str, limit: int = 10, threshold: float = 0.7
@@ -566,13 +599,29 @@ class WeaviateVectorStore(VectorStore):
             Similar memory entries
         """
         try:
+            if self.provider == "mock" or self.store_type == "local":
+                # Return empty but valid result in mock mode
+                return MemoryResult(
+                    entries=[],
+                    total_count=0,
+                    query_time=0.0,
+                    similarity_scores=[],
+                    success=True,
+                )
+
             # Generate embedding from text using LangChain
             if not query_text or self.embedding_model is None:
                 logger.warning(
                     "Cannot perform semantic search: query text is empty "
                     "or LangChain embeddings are not available"
                 )
-                return MemoryResult()
+                return MemoryResult(
+                    entries=[],
+                    total_count=0,
+                    query_time=0.0,
+                    similarity_scores=[],
+                    success=False,
+                )
 
             # Get embedding for the query text
             query_embedding = self.embedding_model.embed_query(query_text)
@@ -584,7 +633,13 @@ class WeaviateVectorStore(VectorStore):
 
         except Exception as e:
             logger.error(f"Failed to perform semantic search: {e}")
-            return MemoryResult()
+            return MemoryResult(
+                entries=[],
+                total_count=0,
+                query_time=0.0,
+                similarity_scores=[],
+                success=False,
+            )
 
     async def close(self) -> None:
         """Close the vector store and cleanup resources."""

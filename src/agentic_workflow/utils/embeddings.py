@@ -1,59 +1,38 @@
 """Vector embedding utilities."""
 
 import random
-from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional
+
+from langchain_openai import OpenAIEmbeddings
 
 from ..core.config import get_config
 from ..core.logging_config import get_logger
+from .base import BaseEmbeddingProvider
 
 logger = get_logger(__name__)
 
-# Check if LangChain OpenAI embeddings are available
-try:
-    from langchain_openai import OpenAIEmbeddings
 
-    LANGCHAIN_AVAILABLE = True
-except ImportError:
-    LANGCHAIN_AVAILABLE = False
-    OpenAIEmbeddings = None  # type: ignore
+class EmbeddingProvider(BaseEmbeddingProvider):
+    """Provider for text embeddings."""
 
+    def __init__(self, model_name: str = "text-embedding-ada-002"):
+        """Initialize embedding provider."""
+        self.model_name = model_name
+        self._client: Optional[OpenAIEmbeddings] = None
 
-class EmbeddingProvider(ABC):
-    """Abstract base class for embedding providers."""
-
-    def __init__(self, config: Optional[Dict[str, Any]] = None):
-        """Initialize embedding provider.
-
-        Args:
-            config: Configuration parameters
-        """
-        self.config = config or {}
-        self.dimension: int = 1536  # Default for OpenAI embeddings
-
-    @abstractmethod
     async def embed_text(self, text: str) -> List[float]:
-        """Generate embedding for text.
+        """Get embedding for text."""
+        if not self._client:
+            self._client = OpenAIEmbeddings(model=self.model_name)
+        result = await self._client.aembed_query(text)
+        return result
 
-        Args:
-            text: Text to embed
-
-        Returns:
-            Vector embedding
-        """
-        pass
-
-    @abstractmethod
     async def embed_batch(self, texts: List[str]) -> List[List[float]]:
-        """Generate embeddings for multiple texts.
-
-        Args:
-            texts: List of texts to embed
-
-        Returns:
-            List of vector embeddings
-        """
-        pass
+        """Get embeddings for batch of texts."""
+        if not self._client:
+            self._client = OpenAIEmbeddings(model=self.model_name)
+        results = await self._client.aembed_documents(texts)
+        return results
 
 
 class OpenAIEmbeddingProvider(EmbeddingProvider):
@@ -63,38 +42,22 @@ class OpenAIEmbeddingProvider(EmbeddingProvider):
         """Initialize OpenAI embedding provider.
 
         Args:
-            config: Configuration parameters
+        config: Configuration parameters
         """
-        super().__init__(config)
-
-        if not LANGCHAIN_AVAILABLE:
-            logger.warning(
-                "LangChain OpenAI embeddings not available - install optional dependency: "
-                "pip install agentic-workflow[embedding]"
-            )
-            self.embeddings = None
-            return
+        config = config or {}
+        super().__init__(config.get("model", "text-embedding-ada-002"))
 
         # Get configuration
         app_config = get_config()
-        api_key = self.config.get("api_key", app_config.llm.openai_api_key)
-        model = self.config.get("model", "text-embedding-3-small")
+        api_key = config.get("api_key", app_config.llm.openai_api_key)
 
         # Initialize embeddings
         try:
-            self.embeddings = OpenAIEmbeddings(api_key=api_key, model=model)
-            # Set dimension based on model
-            if model == "text-embedding-3-small":
-                self.dimension = 1536
-            elif model == "text-embedding-3-large":
-                self.dimension = 3072
-            elif model == "text-embedding-ada-002":
-                self.dimension = 1536
-
-            logger.info(f"Initialized OpenAI embeddings with model: {model}")
+            self._client = OpenAIEmbeddings(api_key=api_key, model=self.model_name)
+            logger.info(f"Initialized OpenAI embeddings with model: {self.model_name}")
         except Exception as e:
             logger.error(f"Failed to initialize OpenAI embeddings: {e}")
-            self.embeddings = None
+            self._client = None
 
     async def embed_text(self, text: str) -> List[float]:
         """Generate embedding for text using OpenAI.
@@ -105,13 +68,13 @@ class OpenAIEmbeddingProvider(EmbeddingProvider):
         Returns:
             Vector embedding
         """
-        if not self.embeddings:
+        if not self._client:
             logger.warning("OpenAI embeddings not available")
             return self._generate_random_embedding()
 
         try:
             # Use LangChain to get embedding
-            embedding = await self.embeddings.aembed_query(text)
+            embedding = await self._client.aembed_query(text)
             return embedding
         except Exception as e:
             logger.error(f"Failed to generate OpenAI embedding: {e}")
@@ -126,13 +89,13 @@ class OpenAIEmbeddingProvider(EmbeddingProvider):
         Returns:
             List of vector embeddings
         """
-        if not self.embeddings:
+        if not self._client:
             logger.warning("OpenAI embeddings not available")
             return [self._generate_random_embedding() for _ in texts]
 
         try:
             # Use LangChain to get embeddings
-            embeddings = await self.embeddings.aembed_documents(texts)
+            embeddings = await self._client.aembed_documents(texts)
             return embeddings
         except Exception as e:
             logger.error(f"Failed to generate OpenAI embeddings in batch: {e}")
@@ -142,9 +105,9 @@ class OpenAIEmbeddingProvider(EmbeddingProvider):
         """Generate a random embedding for fallback.
 
         Returns:
-            Random vector embedding
+        Random vector embedding
         """
-        return [random.uniform(-1, 1) for _ in range(self.dimension)]
+        return [random.uniform(-1, 1) for _ in range(1536)]
 
 
 class MockEmbeddingProvider(EmbeddingProvider):
@@ -154,10 +117,10 @@ class MockEmbeddingProvider(EmbeddingProvider):
         """Initialize mock embedding provider.
 
         Args:
-            config: Configuration parameters
+        config: Configuration parameters
         """
-        super().__init__(config)
-        self.dimension = self.config.get("dimension", 1536)
+        config = config or {}
+        super().__init__(config.get("model", "text-embedding-ada-002"))
 
     async def embed_text(self, text: str) -> List[float]:
         """Generate mock embedding for text.
@@ -168,7 +131,7 @@ class MockEmbeddingProvider(EmbeddingProvider):
         Returns:
             Random vector embedding
         """
-        return [random.uniform(-1, 1) for _ in range(self.dimension)]
+        return [random.uniform(-1, 1) for _ in range(1536)]
 
     async def embed_batch(self, texts: List[str]) -> List[List[float]]:
         """Generate mock embeddings for multiple texts.
@@ -179,7 +142,7 @@ class MockEmbeddingProvider(EmbeddingProvider):
         Returns:
             List of random vector embeddings
         """
-        return [[random.uniform(-1, 1) for _ in range(self.dimension)] for _ in texts]
+        return [[random.uniform(-1, 1) for _ in range(1536)] for _ in texts]
 
 
 def get_embedding_provider(
@@ -188,17 +151,15 @@ def get_embedding_provider(
     """Get embedding provider instance.
 
     Args:
-        provider_type: Type of embedding provider ("openai" or "mock")
-        config: Configuration parameters
+    provider_type: Type of embedding provider ("openai" or "mock")
+    config: Configuration parameters
 
     Returns:
-        Embedding provider instance
+    Embedding provider instance
     """
-    if provider_type == "openai" and LANGCHAIN_AVAILABLE:
+    if provider_type == "openai":
         return OpenAIEmbeddingProvider(config)
-    else:
-        if provider_type == "openai" and not LANGCHAIN_AVAILABLE:
-            logger.warning(
-                "LangChain OpenAI embeddings not available, falling back to mock provider"
-            )
+    elif provider_type == "mock":
         return MockEmbeddingProvider(config)
+    else:
+        raise ValueError(f"Unknown embedding provider type: {provider_type}")

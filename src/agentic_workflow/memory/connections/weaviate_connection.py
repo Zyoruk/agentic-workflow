@@ -46,8 +46,8 @@ class WeaviateConnectionManager(ConnectionManager["WeaviateClient"]):
         """Initialize Weaviate connection manager.
 
         Args:
-            name: Connection name
-            config: Connection configuration
+        name: Connection name
+        config: Connection configuration
         """
         # Set default configuration
         config = config or {}

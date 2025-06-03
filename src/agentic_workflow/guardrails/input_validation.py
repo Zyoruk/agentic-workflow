@@ -15,9 +15,9 @@ class ValidationError(Exception):
         """Initialize validation error.
 
         Args:
-            message: Error message
-            field: Name of the field that failed validation
-            value: Value that failed validation
+        message: Error message
+        field: Name of the field that failed validation
+        value: Value that failed validation
         """
         self.field = field
         self.value = value
@@ -36,9 +36,9 @@ class ValidationRule:
         """Initialize validation rule.
 
         Args:
-            name: Rule name
-            validator: Validation function
-            error_message: Error message for validation failure
+        name: Rule name
+        validator: Validation function
+        error_message: Error message for validation failure
         """
         self.name = name
         self.validator = validator
@@ -48,10 +48,10 @@ class ValidationRule:
         """Validate value against rule.
 
         Args:
-            value: Value to validate
+        value: Value to validate
 
         Returns:
-            True if validation passed, False otherwise
+        True if validation passed, False otherwise
         """
         try:
             return bool(self.validator(value))
@@ -67,7 +67,7 @@ class InputValidator:
         """Initialize input validator.
 
         Args:
-            strict_mode: Whether to raise exceptions on validation failure
+        strict_mode: Whether to raise exceptions on validation failure
         """
         self.rules: Dict[str, List[ValidationRule]] = {}
         self.strict_mode = strict_mode
@@ -136,8 +136,8 @@ class InputValidator:
         """Add a validation rule.
 
         Args:
-            rule_id: Unique identifier for the rule
-            rule: Validation rule
+        rule_id: Unique identifier for the rule
+        rule: Validation rule
         """
         if rule_id not in self.rules:
             self.rules[rule_id] = []
@@ -150,15 +150,15 @@ class InputValidator:
         """Validate a value against specified rules.
 
         Args:
-            field: Field name
-            value: Value to validate
-            rule_ids: List of rule IDs to apply
+        field: Field name
+        value: Value to validate
+        rule_ids: List of rule IDs to apply
 
         Returns:
-            True if validation passed, False otherwise
+        True if validation passed, False otherwise
 
         Raises:
-            ValidationError: If validation fails and strict mode is enabled
+        ValidationError: If validation fails and strict mode is enabled
         """
         # Reset errors for this validation
         self.validation_errors = []
@@ -198,14 +198,14 @@ class InputValidator:
         """Validate multiple fields in a dictionary.
 
         Args:
-            data: Dictionary of field values
-            rules_map: Mapping of field names to rule IDs
+        data: Dictionary of field values
+        rules_map: Mapping of field names to rule IDs
 
         Returns:
-            True if all validations passed, False otherwise
+        True if all validations passed, False otherwise
 
         Raises:
-            ValidationError: If validation fails and strict mode is enabled
+        ValidationError: If validation fails and strict mode is enabled
         """
         all_valid = True
 
@@ -226,10 +226,10 @@ class InputValidator:
         """Sanitize a string input.
 
         Args:
-            value: String to sanitize
+        value: String to sanitize
 
         Returns:
-            Sanitized string
+        Sanitized string
         """
         # Convert non-string values to string
         sanitized_value = value
@@ -267,6 +267,6 @@ class InputValidator:
         """Get validation errors.
 
         Returns:
-            List of validation errors
+        List of validation errors
         """
         return self.validation_errors

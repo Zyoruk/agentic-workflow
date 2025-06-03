@@ -11,7 +11,8 @@ from agentic_workflow.core.interfaces import (
     WorkflowDefinition,
     WorkflowStep,
 )
-from agentic_workflow.memory import MemoryService, MemoryType
+from agentic_workflow.memory.service import MemoryService
+from agentic_workflow.memory.interfaces import MemoryType
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -279,9 +280,7 @@ async def main():
                 "class_name": "ExampleMemoryEntry",
             },
             "cache": {
-                "url": "redis://localhost:6379",
-                "key_prefix": "example:",
-                "default_ttl": 300,
+                "use_redis": False
             },
         }
     }

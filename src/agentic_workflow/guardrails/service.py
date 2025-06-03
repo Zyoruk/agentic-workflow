@@ -23,8 +23,8 @@ class GuardrailsService(Service):
         """Initialize guardrails service.
 
         Args:
-            name: Service name
-            config: Service configuration
+        name: Service name
+        config: Service configuration
         """
         super().__init__(name, config)
 
@@ -97,7 +97,7 @@ class GuardrailsService(Service):
         """Handle critical safety violations.
 
         Args:
-            violation: Safety violation
+        violation: Safety violation
         """
         logger.critical(f"Critical safety violation: {violation}")
         self.safety_violations += 1
@@ -113,7 +113,7 @@ class GuardrailsService(Service):
         """Handle non-critical safety violations.
 
         Args:
-            violation: Safety violation
+        violation: Safety violation
         """
         logger.warning(f"Safety violation: {violation}")
         self.safety_violations += 1
@@ -129,11 +129,11 @@ class GuardrailsService(Service):
         """Handle token limit events.
 
         Args:
-            resource_type: Type of resource
-            context: Context identifier
-            current: Current usage
-            limit: Usage limit
-            is_exceeded: Whether limit is exceeded
+        resource_type: Type of resource
+        context: Context identifier
+        current: Current usage
+        limit: Usage limit
+        is_exceeded: Whether limit is exceeded
         """
         if is_exceeded:
             logger.warning(f"Token limit exceeded for {context}: {current}/{limit}")
@@ -150,11 +150,11 @@ class GuardrailsService(Service):
         """Handle API call limit events.
 
         Args:
-            resource_type: Type of resource
-            context: Context identifier
-            current: Current usage
-            limit: Usage limit
-            is_exceeded: Whether limit is exceeded
+        resource_type: Type of resource
+        context: Context identifier
+        current: Current usage
+        limit: Usage limit
+        is_exceeded: Whether limit is exceeded
         """
         if is_exceeded:
             logger.warning(f"API call limit exceeded for {context}: {current}/{limit}")
@@ -419,3 +419,152 @@ class GuardrailsService(Service):
         """Close the guardrails service and cleanup resources."""
         # Nothing to clean up
         logger.info("Guardrails service closed")
+
+    async def start(self) -> None:
+        """Start the guardrails service."""
+        try:
+            if not self.initialized:
+                await self.initialize()
+
+            self.status = ComponentStatus.RUNNING
+            logger.info("Guardrails service started")
+
+        except Exception as e:
+            self.status = ComponentStatus.ERROR
+            logger.error(f"Failed to start guardrails service: {e}")
+            raise
+
+    async def stop(self) -> None:
+        """Stop the guardrails service."""
+        try:
+            self.status = ComponentStatus.STOPPED
+            logger.info("Guardrails service stopped")
+
+        except Exception as e:
+            logger.error(f"Error stopping guardrails service: {e}")
+            self.status = ComponentStatus.ERROR
+
+    async def health_check(self) -> ServiceResponse:
+        """Check guardrails service health."""
+        try:
+            if not self.initialized:
+                return ServiceResponse(
+                    success=False,
+                    error="Guardrails service not initialized",
+                    data={"status": self.status.value},
+                )
+
+            # Get component statuses
+            components = {
+                "input_validator": True,  # Simple component, always healthy
+                "resource_limiter": True,  # Simple component, always healthy
+                "error_handler": True,  # Simple component, always healthy
+                "safety_checker": True,  # Simple component, always healthy
+            }
+
+            # Get statistics
+            stats = await self.get_stats()
+
+            return ServiceResponse(
+                success=True,
+                data={
+                    "status": "healthy",
+                    "components": components,
+                    "statistics": stats.data,
+                },
+                metadata={"service": self.name},
+            )
+
+        except Exception as e:
+            logger.error(f"Health check failed: {e}")
+            return ServiceResponse(
+                success=False,
+                error=f"Health check failed: {e}",
+                metadata={"service": self.name},
+            )
+
+    async def process_request(self, request: Dict[str, Any]) -> ServiceResponse:
+        """Process a guardrails service request.
+
+        Args:
+            request: Request data with action and parameters
+
+        Returns:
+            Service response
+        """
+        try:
+            if not self.initialized:
+                return ServiceResponse(
+                    success=False,
+                    error="Guardrails service not initialized",
+                )
+
+            action = request.get("action")
+            params = request.get("parameters", {})
+
+            if action == "test":
+                # Handle test action for validation
+                if params is None:
+                    self.validation_failures += 1
+                    return ServiceResponse(
+                        success=False,
+                        error="Validation failed: parameters cannot be None",
+                    )
+
+                # Check resource limits
+                if not self.resource_limiter.check_limit("test", ResourceType.TOKENS):
+                    self.resource_limit_exceeded += 1
+                    return ServiceResponse(
+                        success=False,
+                        error="Resource limit exceeded",
+                    )
+
+                # Check safety
+                is_safe, violations = self.safety_checker.check_safety(params)
+                if not is_safe:
+                    self.safety_violations += 1
+                    return ServiceResponse(
+                        success=False,
+                        error="Safety violation detected",
+                    )
+
+                return ServiceResponse(success=True)
+
+            elif action == "validate_input":
+                return await self.validate_input(
+                    params.get("data", {}), params.get("rules", {})
+                )
+            elif action == "check_safety":
+                return await self.check_safety(
+                    params.get("data"), params.get("context")
+                )
+            elif action == "track_resource":
+                return await self.track_resource(
+                    params.get("context", ""),
+                    params.get("resource_type"),
+                    params.get("amount", 1.0),
+                    params.get("unit", ""),
+                )
+            elif action == "handle_error":
+                return await self.handle_error(
+                    params.get("error"), params.get("context")
+                )
+            elif action == "safely_execute":
+                return await self.safely_execute(
+                    params.get("func"),
+                    *params.get("args", []),
+                    error_context=params.get("error_context"),
+                    fallback_value=params.get("fallback_value"),
+                    **params.get("kwargs", {}),
+                )
+            elif action == "get_stats":
+                return await self.get_stats()
+            else:
+                return ServiceResponse(success=False, error=f"Unknown action: {action}")
+
+        except Exception as e:
+            logger.error(f"Failed to process request: {e}")
+            return ServiceResponse(
+                success=False,
+                error=f"Request processing failed: {e}",
+            )

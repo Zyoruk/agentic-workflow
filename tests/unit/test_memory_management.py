@@ -27,7 +27,13 @@ class MockMemoryStore(MemoryStore):
         super().__init__(name, config)
         self.entries: Dict[str, MemoryEntry] = {}
         self.health_status = True
-        self.stats = MemoryStats()
+        self.stats = MemoryStats(
+            total_entries=0,
+            memory_usage=0,
+            hit_rate=0.0,
+            average_retrieval_time=0.0,
+            entries_by_type={},
+        )
 
     async def store(self, entry: MemoryEntry) -> bool:
         """Store a memory entry."""
@@ -38,8 +44,27 @@ class MockMemoryStore(MemoryStore):
         """Retrieve memory entries based on query."""
         entries = []
         for entry in self.entries.values():
+            # Filter by memory type
+            if query.memory_type and entry.memory_type != query.memory_type:
+                continue
+
+            # Filter by tags
+            if query.tags and not all(tag in entry.tags for tag in query.tags):
+                continue
+
             entries.append(entry)
-        return MemoryResult(entries=entries, total_count=len(entries))
+
+        # Apply limit
+        if len(entries) > query.limit:
+            entries = entries[: query.limit]
+
+        return MemoryResult(
+            entries=entries,
+            total_count=len(entries),
+            query_time=0.0,
+            similarity_scores=[1.0] * len(entries),
+            success=True,
+        )
 
     async def update(self, entry_id: str, updates: Dict[str, Any]) -> bool:
         """Update a memory entry."""
@@ -108,7 +133,13 @@ class MockVectorStore(VectorStore):
         super().__init__(name, config)
         self.entries: Dict[str, MemoryEntry] = {}
         self.health_status = True
-        self.stats = MemoryStats()
+        self.stats = MemoryStats(
+            total_entries=0,
+            memory_usage=0,
+            hit_rate=0.0,
+            average_retrieval_time=0.0,
+            entries_by_type={},
+        )
 
     async def store(self, entry: MemoryEntry) -> bool:
         """Store a memory entry."""
@@ -120,7 +151,13 @@ class MockVectorStore(VectorStore):
         entries = []
         for entry in self.entries.values():
             entries.append(entry)
-        return MemoryResult(entries=entries, total_count=len(entries))
+        return MemoryResult(
+            entries=entries,
+            total_count=len(entries),
+            query_time=0.0,
+            similarity_scores=[1.0] * len(entries),
+            success=True,
+        )
 
     async def update(self, entry_id: str, updates: Dict[str, Any]) -> bool:
         """Update a memory entry."""
@@ -248,26 +285,41 @@ class TestMemoryManager:
     @pytest.mark.unit
     @pytest.mark.asyncio
     async def test_retrieve(self, memory_manager: MemoryManager) -> None:
-        """Test retrieving memory entries."""
-        # Store some entries
+        """Test retrieving memory entries with metadata and tags."""
+        # Store some entries with metadata and tags
         entry_id1 = await memory_manager.store(
             content="Test content 1",
             memory_type=MemoryType.SHORT_TERM,
+            metadata={"context_window": "conversation_1", "turn": 1},
+            tags=["conversation", "python"],
         )
         entry_id2 = await memory_manager.store(
             content="Test content 2",
             memory_type=MemoryType.LONG_TERM,
+            metadata={"domain": "programming"},
+            tags=["knowledge"],
         )
 
-        # Retrieve from specific store
-        result1 = await memory_manager.retrieve(memory_type=MemoryType.SHORT_TERM)
+        # Retrieve from specific store with tags
+        result1 = await memory_manager.retrieve(
+            memory_type=MemoryType.SHORT_TERM, tags=["conversation"]
+        )
         assert len(result1.entries) == 1
         assert result1.entries[0].id == entry_id1
 
+        # Retrieve using metadata filters
+        query = MemoryQuery(
+            memory_type=MemoryType.SHORT_TERM,
+            metadata_filters={"context_window": "conversation_1"},
+        )
+        result2 = await memory_manager.retrieve(query=query)
+        assert len(result2.entries) == 1
+        assert result2.entries[0].id == entry_id1
+
         # Retrieve from all stores
-        result2 = await memory_manager.retrieve()
-        assert len(result2.entries) >= 2
-        retrieved_ids = [entry.id for entry in result2.entries]
+        result3 = await memory_manager.retrieve()
+        assert len(result3.entries) >= 2
+        retrieved_ids = [entry.id for entry in result3.entries]
         assert entry_id1 in retrieved_ids
         assert entry_id2 in retrieved_ids
 

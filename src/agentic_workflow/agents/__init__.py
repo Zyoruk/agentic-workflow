@@ -11,6 +11,7 @@ from .base import Agent, AgentResult, AgentTask
 from .cicd import CICDAgent
 from .code_generation import CodeGenerationAgent
 from .planning import PlanningAgent
+from .program_manager import ProgramManagerAgent
 from .review import ReviewAgent
 from .testing import TestingAgent
 
@@ -27,6 +28,7 @@ AGENT_REGISTRY: Dict[str, type] = {
     "reviewer": ReviewAgent,  # Alias
     "testing": TestingAgent,
     "tester": TestingAgent,  # Alias
+    "program_manager": ProgramManagerAgent,
 }
 
 
@@ -83,6 +85,7 @@ __all__ = [
     "PlanningAgent",
     "ReviewAgent",
     "TestingAgent",
+    "ProgramManagerAgent",
     "create_agent",
     "get_available_agent_types",
     "AGENT_REGISTRY",

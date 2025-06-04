@@ -8,6 +8,7 @@ orchestration.
 from typing import Any, Dict, List, Optional
 
 from .base import Agent, AgentResult, AgentTask
+from .cicd import CICDAgent
 from .code_generation import CodeGenerationAgent
 from .planning import PlanningAgent
 from .review import ReviewAgent
@@ -15,6 +16,9 @@ from .testing import TestingAgent
 
 # Agent registry for factory pattern
 AGENT_REGISTRY: Dict[str, type] = {
+    "cicd": CICDAgent,
+    "ci_cd": CICDAgent,  # Alias
+    "deployment": CICDAgent,  # Alias
     "code_generation": CodeGenerationAgent,
     "code_gen": CodeGenerationAgent,  # Alias
     "planning": PlanningAgent,
@@ -74,6 +78,7 @@ __all__ = [
     "Agent",
     "AgentResult",
     "AgentTask",
+    "CICDAgent",
     "CodeGenerationAgent",
     "PlanningAgent",
     "ReviewAgent",

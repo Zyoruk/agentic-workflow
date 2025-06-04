@@ -1,3 +1,15 @@
+## v0.6.0 (2025-06-04)
+
+### Feat
+
+- **agents**: introduce ProgramManagerAgent for comprehensive project management
+- **agents**: introduce CICDAgent for comprehensive CI/CD automation
+- add foundational architecture and agent framework for the Agentic Workflow System
+- **agents**: introduce TestingAgent for automated test generation and execution
+- **agents**: introduce ReviewAgent for comprehensive code review
+- **agents**: add PlanningAgent for workflow orchestration
+- **agents**: implement base agent interface and task/result models
+
 ## v0.5.0 (2025-06-02)
 
 ### Feat

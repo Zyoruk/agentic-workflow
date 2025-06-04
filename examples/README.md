@@ -61,6 +61,40 @@ python cicd_agent_demo.py
 7. **Production Safety** - Manual approval gates and comprehensive validation
 8. **Resource Monitoring** - CPU, memory, disk usage, and response time tracking
 
+### 🏢 Program Manager Demo
+
+**Files:**
+- `program_manager_demo.py` - Comprehensive Program Manager Agent demonstration
+
+**Description:**
+Demonstrates the Program Manager Agent's enterprise project management capabilities including:
+- **Project Planning**: Create and manage comprehensive software projects
+- **Resource Allocation**: Optimize resources across multiple agents and projects
+- **Progress Tracking**: Monitor milestones, tasks, and overall program progress
+- **Risk Management**: Assess, mitigate, and monitor project risks
+- **Agent Coordination**: Orchestrate multiple agents for complex workflows
+- **Comprehensive Reporting**: Generate status, progress, resource, and executive reports
+- **Timeline Management**: Optimize schedules and validate project feasibility
+- **Strategic Planning**: Plan multi-project initiatives with dependencies
+
+**Usage:**
+```bash
+cd examples
+python program_manager_demo.py
+```
+
+**What it demonstrates:**
+1. **Enterprise Project Creation** - AI-powered customer analytics platform with $50K budget
+2. **Resource Optimization** - 15% efficiency gain, 8% cost reduction, 12% time savings
+3. **Progress Tracking** - Real-time milestone and task progress monitoring
+4. **Risk Assessment** - Identify timeline, resource, and budget risks with mitigation
+5. **Agent Coordination** - 5-agent workflow with 92% handoff efficiency
+6. **Executive Reporting** - Comprehensive status, progress, and strategic reports
+7. **Timeline Optimization** - 15% time savings with minimal quality impact
+8. **Strategic Planning** - Multi-task plans with dependencies and resource allocation
+9. **Multi-Project Management** - Concurrent enterprise portfolio management
+10. **Performance Monitoring** - Resource utilization and coordination health tracking
+
 ### 📊 Generated Test Results
 
 The demo generates actual runnable pytest tests that you can execute:
@@ -127,6 +161,9 @@ python test_agent_demo.py
 # Run the CI/CD Agent demo (no external services required)
 python cicd_agent_demo.py
 
+# Run the Program Manager demo (no external services required)
+python program_manager_demo.py
+
 # Run memory system examples (requires Redis)
 python memory_system_example.py
 
@@ -143,6 +180,7 @@ python basic_workflow_example.py
 |----------|-------|-------|----------------------|
 | **Testing** | Automated test generation and execution | `test_agent_demo.py`, `example_calculator.py` | None |
 | **CI/CD** | Deployment automation and pipeline management | `cicd_agent_demo.py` | None |
+| **Program Management** | Enterprise project management and coordination | `program_manager_demo.py` | None |
 | **Memory** | Multi-store memory operations | `memory_*.py` | Redis, Weaviate |
 | **Safety** | Validation and error handling | `guardrails_example.py` | None |
 | **Workflow** | Agent orchestration | `basic_workflow_example.py` | Redis |
@@ -151,9 +189,10 @@ python basic_workflow_example.py
 
 1. **Start with Testing Agent** - Shows core agent capabilities without external dependencies
 2. **Explore CI/CD Agent** - Learn deployment automation and environment management
-3. **Understand Memory System** - Learn about data persistence and retrieval
-4. **Try Guardrails** - See how safety and validation work
-5. **Experiment with Workflows** - Coordinate multiple agents
+3. **Try Program Manager** - Understand enterprise project management and agent coordination
+4. **Understand Memory System** - Learn about data persistence and retrieval
+5. **Try Guardrails** - See how safety and validation work
+6. **Experiment with Workflows** - Coordinate multiple agents
 
 ## Agent Capabilities Overview
 
@@ -171,6 +210,16 @@ python basic_workflow_example.py
 - Health monitoring and validation
 - Automated rollback and recovery
 - Infrastructure as Code (IaC) support
+
+### Program Manager Agent (Task 3.5) ✅
+- Enterprise project planning and management
+- Multi-agent resource allocation and optimization
+- Progress tracking and milestone management
+- Risk assessment and mitigation strategies
+- Agent coordination and workflow orchestration
+- Comprehensive reporting (status, progress, executive)
+- Timeline management and optimization
+- Strategic planning and portfolio management
 
 ## Contributing Examples
 

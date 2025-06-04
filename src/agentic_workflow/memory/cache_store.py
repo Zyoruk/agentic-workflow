@@ -482,7 +482,8 @@ class RedisCacheStore(CacheStore):
 
             self.redis._ensure_client()
             client = cast(Any, self.redis.client)
-            return bool(await client.ping())
+            ping_result = await client.ping()
+            return bool(ping_result)
 
         except RedisClientNotAvailableError as e:
             logger.error(f"Redis client not available: {e}")
@@ -570,18 +571,19 @@ class RedisCacheStore(CacheStore):
 
             # Store with optional TTL
             if ttl:
-                success = await client.setex(key, ttl, serialized)
+                success_result = await client.setex(key, ttl, serialized)
             else:
-                success = await client.set(key, serialized)
+                success_result = await client.set(key, serialized)
 
-            if isinstance(success, bool):
-                if success:
-                    self.total_sets += 1
-                return success
-            # If Redis returns 1/0 or other types, convert to bool
+            if isinstance(success_result, bool):
+                success = success_result
+            else:
+                # If Redis returns 1/0 or other types, convert to bool
+                success = bool(success_result)
+
             if success:
                 self.total_sets += 1
-            return bool(success)
+            return success
 
         except RedisClientNotAvailableError as e:
             logger.error(f"Redis client not available: {e}")

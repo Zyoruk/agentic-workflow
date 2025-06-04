@@ -4,12 +4,7 @@ __version__ = "0.1.0"
 
 # Import core components
 from .core.config import get_config, reload_config
-from .core.interfaces import (
-    Component,
-    ComponentStatus,
-    Service,
-    ServiceResponse,
-)
+from .core.interfaces import Component, ComponentStatus, Service, ServiceResponse
 from .core.logging_config import get_logger, setup_logging
 from .memory.cache_store import RedisCacheStore
 
@@ -29,6 +24,16 @@ try:
 except ImportError:
     # This is fine - Weaviate might not be installed
     WeaviateVectorStore = None  # type: ignore
+
+# Import agents components
+from .agents import (
+    Agent,
+    AgentResult,
+    AgentTask,
+    CodeGenerationAgent,
+    create_agent,
+    get_available_agent_types,
+)
 
 # Import exceptions
 from .core.exceptions import (
@@ -76,6 +81,13 @@ __all__ = [
     "ShortTermMemory",
     "RedisCacheStore",
     "WeaviateVectorStore",
+    # Agents
+    "Agent",
+    "AgentResult",
+    "AgentTask",
+    "CodeGenerationAgent",
+    "create_agent",
+    "get_available_agent_types",
     # Guardrails
     "InputValidator",
     "ValidationRule",

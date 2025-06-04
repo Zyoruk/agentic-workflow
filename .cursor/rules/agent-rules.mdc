@@ -1,0 +1,382 @@
+---
+description:
+globs:
+alwaysApply: true
+---
+# Agentic Workflow System - Cursor Rules
+# AI-driven autonomous software development workflow system
+
+## Project Context
+
+You are working on an **Agentic Workflow System** - a sophisticated AI-driven framework for autonomous software development. This is a high-quality, enterprise-grade Python project with exceptional architecture but currently missing core agent implementations.
+
+### Project Overview
+- **Domain**: AI-driven workflow orchestration and autonomous software development
+- **Architecture**: Multi-layered system with microservices-like component separation
+- **Current State**: Strong infrastructure (95% complete) but missing agents (0% complete)
+- **Primary Goal**: Implement intelligent agents to unlock business functionality
+
+### Tech Stack
+- **Backend**: Python 3.11+, FastAPI, asyncio
+- **AI/ML**: LangChain, OpenAI, vector embeddings
+- **Databases**: Neo4j (graph), Weaviate (vector), Redis (cache)
+- **Infrastructure**: Docker, MQTT, Prometheus monitoring
+- **Quality**: Black, flake8, mypy, pytest, pre-commit hooks
+
+## Code Style & Standards
+
+### Python Style
+- **Line Length**: 88 characters (Black default)
+- **Formatter**: Black with isort for imports
+- **Type Hints**: Required for all public APIs and recommended everywhere
+- **Docstrings**: Google style, comprehensive documentation
+- **Error Handling**: Custom exception hierarchy, comprehensive guardrails
+
+### Import Organization
+```python
+# Standard library
+import asyncio
+from typing import Any, Dict, List, Optional
+
+# Third-party
+from fastapi import FastAPI
+from langchain import LLMChain
+
+# Local - absolute imports preferred
+from agentic_workflow.core import Engine
+from agentic_workflow.memory import MemoryManager
+```
+
+### Code Quality Requirements
+- **Test Coverage**: Minimum 80%, target 90%+
+- **Type Coverage**: Full typing with mypy compliance
+- **Documentation**: All public APIs must have docstrings
+- **Error Handling**: Use custom exceptions from `core.exceptions`
+
+## Architecture Patterns
+
+### Component Organization
+```
+src/agentic_workflow/
+├── core/          # Foundation: config, logging, interfaces, exceptions
+├── agents/        # 🚨 CRITICAL: Agent implementations (currently missing)
+├── api/           # FastAPI REST endpoints
+├── memory/        # Multi-store memory system (Redis, Weaviate, Neo4j)
+├── graph/         # Neo4j workflow graph processing
+├── guardrails/    # Safety, validation, resource limits
+└── utils/         # Shared utilities
+```
+
+### Design Patterns to Follow
+1. **Dependency Injection**: Use interfaces and dependency injection
+2. **Factory Pattern**: For creating agents and services
+3. **Strategy Pattern**: For different agent behaviors
+4. **Observer Pattern**: For event handling and monitoring
+5. **Command Pattern**: For workflow steps and agent actions
+
+### Memory Architecture
+- **Short-term**: Redis for session data and caching
+- **Long-term**: Weaviate for vector storage and semantic search
+- **Graph**: Neo4j for workflow relationships and dependencies
+- **Integration**: Use `MemoryManager` as unified interface
+
+## Agent Development (Priority #1)
+
+### Agent Interface Pattern
+```python
+from abc import ABC, abstractmethod
+from typing import Any, Dict, Optional
+from agentic_workflow.core.interfaces import Component
+
+class Agent(Component, ABC):
+    """Base agent interface for all agentic workflow agents."""
+
+    @abstractmethod
+    async def execute(self, task: Dict[str, Any]) -> Dict[str, Any]:
+        """Execute agent task and return results."""
+        pass
+
+    @abstractmethod
+    async def plan(self, objective: str) -> List[Dict[str, Any]]:
+        """Create execution plan for objective."""
+        pass
+```
+
+### Critical Agents to Implement
+1. **CodeGenerationAgent**: Core business logic for autonomous coding
+2. **PlanningAgent**: Break down complex tasks into workflows
+3. **ReviewAgent**: Code review and quality assurance
+4. **TestingAgent**: Automated test generation and execution
+5. **MonitoringAgent**: System health and performance monitoring
+
+## FastAPI Patterns
+
+### Endpoint Structure
+```python
+from fastapi import APIRouter, Depends, HTTPException
+from agentic_workflow.core.logging_config import get_logger
+
+router = APIRouter(prefix="/api/v1", tags=["agents"])
+logger = get_logger(__name__)
+
+@router.post("/agents/{agent_type}/execute")
+async def execute_agent(
+    agent_type: str,
+    request: AgentRequest,
+    service: AgentService = Depends(get_agent_service)
+) -> AgentResponse:
+    """Execute agent with comprehensive error handling."""
+    try:
+        result = await service.execute_agent(agent_type, request.dict())
+        return AgentResponse(status="success", data=result)
+    except ValidationError as e:
+        logger.error(f"Validation error: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+```
+
+### Response Patterns
+```python
+from pydantic import BaseModel
+from typing import Any, Optional
+
+class StandardResponse(BaseModel):
+    """Standard API response format."""
+    status: str  # "success" | "error" | "pending"
+    data: Optional[Any] = None
+    message: Optional[str] = None
+    request_id: Optional[str] = None
+```
+
+## Error Handling
+
+### Custom Exception Usage
+```python
+from agentic_workflow.core.exceptions import (
+    AgentError, ValidationError, ResourceLimitError
+)
+
+# Raise specific exceptions
+if not task_data:
+    raise ValidationError("Task data is required")
+
+if resource_usage > limit:
+    raise ResourceLimitError(f"Resource limit exceeded: {resource_usage}")
+```
+
+### Guardrails Integration
+```python
+from agentic_workflow.guardrails import GuardrailsService
+
+async def safe_agent_execution(agent, task):
+    """Execute agent with comprehensive safety checks."""
+    guardrails = GuardrailsService()
+
+    # Pre-execution validation
+    await guardrails.validate_input(task)
+    await guardrails.check_resource_limits()
+
+    try:
+        result = await agent.execute(task)
+        await guardrails.validate_output(result)
+        return result
+    except Exception as e:
+        await guardrails.handle_error(e)
+        raise
+```
+
+## Testing Patterns
+
+### Test Structure
+```python
+import pytest
+from unittest.mock import Mock, AsyncMock
+from agentic_workflow.agents import CodeGenerationAgent
+
+class TestCodeGenerationAgent:
+    """Test cases for CodeGenerationAgent."""
+
+    @pytest.fixture
+    async def agent(self):
+        """Create agent instance for testing."""
+        config = {"model": "gpt-4", "temperature": 0.1}
+        return CodeGenerationAgent(config)
+
+    @pytest.mark.asyncio
+    async def test_execute_simple_task(self, agent):
+        """Test agent execution with simple task."""
+        task = {"type": "generate", "prompt": "Create a hello world function"}
+        result = await agent.execute(task)
+
+        assert result["status"] == "success"
+        assert "code" in result["data"]
+```
+
+### Integration Testing
+```python
+@pytest.mark.integration
+async def test_agent_memory_integration():
+    """Test agent integration with memory system."""
+    memory_manager = MemoryManager()
+    agent = CodeGenerationAgent(memory_manager=memory_manager)
+
+    # Test workflow
+    task = {"prompt": "Generate code"}
+    result = await agent.execute(task)
+
+    # Verify memory storage
+    memories = await memory_manager.retrieve("code_generation")
+    assert len(memories) > 0
+```
+
+## Documentation Standards
+
+### Docstring Format
+```python
+async def execute_workflow(
+    self,
+    workflow_id: str,
+    parameters: Dict[str, Any],
+    timeout: int = 300
+) -> WorkflowResult:
+    """Execute a workflow with comprehensive monitoring.
+
+    This method orchestrates the execution of a complete workflow,
+    managing agent coordination, memory persistence, and error recovery.
+
+    Args:
+        workflow_id: Unique identifier for the workflow to execute
+        parameters: Workflow parameters and configuration
+        timeout: Maximum execution time in seconds (default: 300)
+
+    Returns:
+        WorkflowResult containing execution status, outputs, and metadata
+
+    Raises:
+        ValidationError: If workflow_id is invalid or parameters are malformed
+        TimeoutError: If execution exceeds the specified timeout
+        AgentError: If any agent in the workflow fails critically
+
+    Example:
+        >>> engine = WorkflowEngine()
+        >>> result = await engine.execute_workflow(
+        ...     "code_generation_v1",
+        ...     {"language": "python", "complexity": "medium"}
+        ... )
+        >>> print(result.status)
+        'completed'
+    """
+```
+
+## Performance & Monitoring
+
+### Async Patterns
+- Use `async`/`await` for all I/O operations
+- Implement proper connection pooling
+- Use background tasks for non-blocking operations
+
+### Logging Standards
+```python
+from agentic_workflow.core.logging_config import get_logger
+
+logger = get_logger(__name__)
+
+async def process_task(task_id: str):
+    """Process task with comprehensive logging."""
+    logger.info(f"Starting task processing: {task_id}")
+
+    try:
+        result = await execute_complex_operation()
+        logger.info(f"Task completed successfully: {task_id}")
+        return result
+    except Exception as e:
+        logger.error(f"Task failed: {task_id}, error: {e}", exc_info=True)
+        raise
+```
+
+### Metrics Integration
+```python
+from agentic_workflow.monitoring import MetricsCollector
+
+metrics = MetricsCollector()
+
+@metrics.track_execution_time
+@metrics.track_error_rate
+async def agent_execution(agent, task):
+    """Execute agent with automatic metrics collection."""
+    return await agent.execute(task)
+```
+
+## Development Workflow
+
+### Commit Standards
+- Use conventional commits: `feat(agents): implement code generation agent`
+- All commits must pass pre-commit hooks (Black, flake8, mypy, tests)
+- Reference issues/PRs when applicable
+
+### Make Commands
+- `make install` - Full development setup
+- `make quality` - Run all quality checks
+- `make test` - Run test suite
+- `make docs` - Generate documentation
+- `make clean` - Clean build artifacts
+
+## Current Development Priorities
+
+### 🚨 CRITICAL: Agent Implementation
+1. **CodeGenerationAgent**: Core business functionality
+2. **Basic API endpoints**: Enable external interaction
+3. **Integration testing**: Verify component interactions
+4. **Monitoring setup**: Basic observability
+
+### Next Phase
+1. Advanced agent capabilities
+2. Workflow orchestration
+3. Event system enhancement
+4. Performance optimization
+
+## Code Generation Guidelines
+
+### When implementing new features:
+1. **Start with interfaces** - Define contracts first
+2. **Add comprehensive tests** - Test-driven development
+3. **Include error handling** - Use custom exceptions
+4. **Add proper logging** - Track execution flow
+5. **Update documentation** - Keep docs current
+6. **Consider performance** - Async by default
+7. **Follow existing patterns** - Maintain consistency
+
+### Avoid:
+- Blocking operations in async contexts
+- Direct database access (use services)
+- Hardcoded configuration values
+- Missing error handling
+- Inadequate test coverage
+- Inconsistent naming conventions
+
+## Integration Points
+
+### Memory System
+```python
+# Always use MemoryManager as interface
+memory_manager = MemoryManager()
+await memory_manager.store(MemoryEntry(...))
+results = await memory_manager.retrieve(MemoryQuery(...))
+```
+
+### Configuration
+```python
+# Use centralized configuration
+from agentic_workflow.core.config import get_config
+config = get_config()
+model_name = config.get("agents.code_generation.model", "gpt-4")
+```
+
+### Event System
+```python
+# Use event-driven patterns for loose coupling
+from agentic_workflow.events import EventEmitter
+emitter = EventEmitter()
+await emitter.emit("agent.task.completed", {"agent_id": id, "result": result})
+```
+
+Remember: This is a high-quality, production-ready system. Maintain the established patterns and quality standards while focusing on implementing the missing agent functionality that will unlock the system's full potential.

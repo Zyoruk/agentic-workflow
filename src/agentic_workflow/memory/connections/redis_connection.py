@@ -133,7 +133,8 @@ class RedisConnectionManager(ConnectionManager["Redis"]):
 
             # Create client and test connection
             self.client = redis.Redis(connection_pool=self.connection_pool)
-            await self.client.ping()
+            if self.client is not None:
+                await self.client.ping()
 
             self._is_healthy = True
             logger.info(

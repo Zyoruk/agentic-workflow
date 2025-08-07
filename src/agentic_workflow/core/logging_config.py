@@ -223,7 +223,8 @@ def log_performance(operation: str, duration: float, **metadata: Any) -> None:
     Args:
     operation: Name of the operation
     duration: Duration in seconds
-    **"""
+    metadata: Additional metadata to include in the log
+    """
     logger = get_logger("performance")
 
     logger.info_with_data(  # type: ignore[attr-defined]

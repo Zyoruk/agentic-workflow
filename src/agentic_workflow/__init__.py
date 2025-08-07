@@ -1,39 +1,58 @@
 """Agentic Workflow framework for building AI agent-based applications."""
 
+from typing import Any, List
+
 __version__ = "0.1.0"
 
 # Import core components
 from .core.config import get_config, reload_config
 from .core.interfaces import Component, ComponentStatus, Service, ServiceResponse
 from .core.logging_config import get_logger, setup_logging
-from .memory.cache_store import RedisCacheStore
 
 # Import memory management components
-from .memory.interfaces import (
-    MemoryEntry,
-    MemoryQuery,
-    MemoryResult,
-    MemoryStore,
-    MemoryType,
-)
-from .memory.manager import MemoryManager
-from .memory.short_term import ShortTermMemory
+try:  # Optional dependency: pydantic/redis/etc.
+    from .memory.cache_store import RedisCacheStore
+    from .memory.interfaces import (
+        MemoryEntry,
+        MemoryQuery,
+        MemoryResult,
+        MemoryStore,
+        MemoryType,
+    )
+    from .memory.manager import MemoryManager
+    from .memory.short_term import ShortTermMemory
+except Exception:  # pragma: no cover - missing optional deps
+    RedisCacheStore = None  # type: ignore
+    MemoryEntry = MemoryQuery = MemoryResult = MemoryStore = MemoryType = None  # type: ignore
+    MemoryManager = ShortTermMemory = None  # type: ignore
 
 try:
     from .memory.vector_store import WeaviateVectorStore
-except ImportError:
+except Exception:  # pragma: no cover - optional dependency
     # This is fine - Weaviate might not be installed
     WeaviateVectorStore = None  # type: ignore
 
-# Import agents components
-from .agents import (
-    Agent,
-    AgentResult,
-    AgentTask,
-    CodeGenerationAgent,
-    create_agent,
-    get_available_agent_types,
-)
+# Import agents components - may require heavy optional deps (e.g., openai)
+try:  # pragma: no cover - only executed when deps installed
+    from .agents import (
+        Agent,
+        AgentResult,
+        AgentTask,
+        CodeGenerationAgent,
+        create_agent,
+        get_available_agent_types,
+    )
+except Exception:  # pragma: no cover - optional dependency handling
+    Agent = AgentResult = AgentTask = CodeGenerationAgent = None  # type: ignore
+
+    def create_agent(*args: Any, **kwargs: Any) -> Any:  # type: ignore
+        """Fallback when agent dependencies are missing."""
+        raise ImportError(
+            "Agent dependencies are not installed. Install optional requirements to use agents."
+        )
+
+    def get_available_agent_types() -> List[str]:  # type: ignore
+        return []
 
 # Import exceptions
 from .core.exceptions import (

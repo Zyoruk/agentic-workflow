@@ -63,4 +63,11 @@ def test_log_performance_logs_info():
         mock_logger = MagicMock()
         mock_getLogger.return_value = mock_logger
         log_performance("test", duration=1.23, context={"foo": "bar"})
-        assert mock_logger.info.called
+
+        # Ensure info was called with expected message and metadata
+        mock_logger.info.assert_called_once()
+        args, kwargs = mock_logger.info.call_args
+        assert args[0] == "Performance: test"
+        extra_fields = kwargs["extra"]["extra_fields"]
+        assert extra_fields["operation"] == "test"
+        assert extra_fields["duration_seconds"] == 1.23

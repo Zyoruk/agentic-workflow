@@ -247,8 +247,8 @@ class MemoryManager:
                         logger.warning(f"Failed to query store {store_name}: {e}")
                         continue
 
-                # Sort merged results by priority and timestamp
-                all_results.sort(key=lambda e: (-e.priority, e.timestamp), reverse=True)
+                # Sort merged results by priority and timestamp (highest priority, most recent first)
+                all_results.sort(key=lambda e: (e.priority, e.timestamp), reverse=True)
 
                 # Apply limit
                 limited_results = all_results[: query.limit]

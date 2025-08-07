@@ -159,6 +159,7 @@ class MemoryManager:
 
         Raises:
             ValueError: If store is not available
+            RuntimeError: If storing the entry fails
         """
         try:
             # Generate ID if not provided

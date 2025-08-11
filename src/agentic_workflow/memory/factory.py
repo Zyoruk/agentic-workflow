@@ -126,5 +126,9 @@ class MemoryStoreFactory:
         if not has_api_key and cfg.get("provider") not in {"mock", "local"}:
             cfg.setdefault("provider", "mock")
             cfg.setdefault("store_type", "local")
+            logger.warning(
+                f"OpenAI API key not found; falling back to mock/local mode for vector store '{name}'. "
+                "Your vector store configuration was overridden. To use a real provider, set the 'openai_api_key' in config."
+            )
 
         return cast(VectorStore, WeaviateVectorStore(name=name, config=cfg))

@@ -3,6 +3,7 @@
 from typing import Any, Dict, Optional, cast
 
 from ..core.logging_config import get_logger
+from ..core.config import get_config
 from .cache_store import RedisCacheStore
 from .interfaces import CacheStore, MemoryStore, VectorStore
 from .short_term import ShortTermMemory
@@ -108,4 +109,26 @@ class MemoryStoreFactory:
             logger.warning("Vector store not available - install weaviate-client")
             return None
 
-        return cast(VectorStore, WeaviateVectorStore(name=name, config=config or {}))
+        # Ensure we have a config dict to mutate safely
+        cfg: Dict[str, Any] = dict(config or {})
+
+        # If no OpenAI API key is configured anywhere, force mock/local provider so
+        # examples and default runs don't require external services or credentials.
+        try:
+            app_cfg = get_config()
+            has_api_key = bool(
+                cfg.get("openai_api_key") or getattr(app_cfg.llm, "openai_api_key", None)
+            )
+        except Exception:
+            # If config subsystem isn't initialized, assume no key
+            has_api_key = False
+
+        if not has_api_key and cfg.get("provider") not in {"mock", "local"}:
+            cfg.setdefault("provider", "mock")
+            cfg.setdefault("store_type", "local")
+            logger.warning(
+                f"OpenAI API key not found; falling back to mock/local mode for vector store '{name}'. "
+                "Your vector store configuration was overridden. To use a real provider, set the 'openai_api_key' in config."
+            )
+
+        return cast(VectorStore, WeaviateVectorStore(name=name, config=cfg))

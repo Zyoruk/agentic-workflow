@@ -5,7 +5,7 @@ for complex task decomposition and workflow planning in the agentic system.
 """
 
 import json
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from typing import Any, Dict, List, Optional
 
 from agentic_workflow.agents.base import Agent, AgentResult, AgentTask
@@ -201,7 +201,7 @@ class PlanningAgent(Agent):
                     {
                         "task": dict(task),
                         "result": result.model_dump(),
-                        "timestamp": datetime.utcnow().isoformat(),
+                        "timestamp": datetime.now(UTC).isoformat(),
                     }
                 )
                 await self.memory_manager.store(
@@ -522,7 +522,7 @@ class PlanningAgent(Agent):
             "complexity": complexity,
             "technologies": technologies,
             "estimated_scope": self._estimate_scope(objective, complexity),
-            "analysis_timestamp": datetime.utcnow().isoformat(),
+            "analysis_timestamp": datetime.now(UTC).isoformat(),
         }
 
     def _estimate_scope(self, objective: str, complexity: str) -> Dict[str, Any]:
@@ -682,9 +682,9 @@ class PlanningAgent(Agent):
             "estimated_calendar_days": (effective_hours / 8)
             * 1.4,  # Account for non-work time
             "parallelization_savings_hours": parallel_savings,
-            "start_date": datetime.utcnow().isoformat(),
+            "start_date": datetime.now(UTC).isoformat(),
             "estimated_completion": (
-                datetime.utcnow() + timedelta(days=effective_hours / 8 * 1.4)
+                datetime.now(UTC) + timedelta(days=effective_hours / 8 * 1.4)
             ).isoformat(),
         }
 

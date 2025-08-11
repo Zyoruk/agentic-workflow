@@ -4,6 +4,7 @@ import json
 import pickle
 import time
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
+from datetime import UTC, datetime
 
 from ..core.config import get_config
 from ..core.logging_config import get_logger
@@ -190,8 +191,6 @@ class CacheMemoryStore(CacheStore):
     def _deserialize_entry(self, data: str) -> Optional[MemoryEntry]:
         """Deserialize JSON string to memory entry."""
         try:
-            from datetime import datetime
-
             entry_data = json.loads(data)
 
             # Parse timestamp
@@ -199,7 +198,7 @@ class CacheMemoryStore(CacheStore):
             if timestamp_str:
                 timestamp = datetime.fromisoformat(timestamp_str)
             else:
-                timestamp = datetime.utcnow()
+                timestamp = datetime.now(UTC)
 
             return MemoryEntry(
                 id=entry_data.get("id", "unknown"),

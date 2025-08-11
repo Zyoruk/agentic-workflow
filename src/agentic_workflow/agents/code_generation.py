@@ -423,7 +423,7 @@ class CodeGenerationAgent(Agent):
                     temperature=self.temperature,
                     max_tokens=self.max_tokens,
                 )
-            except Exception as e:
+            except (APIError, RateLimitError, AuthenticationError, Timeout) as e:
                 cfg = get_config()
                 default_model = cfg.llm.default_model or "gpt-4"
                 if (

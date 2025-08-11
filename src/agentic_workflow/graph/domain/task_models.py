@@ -1,6 +1,6 @@
 """Task graph domain models."""
 
-from datetime import datetime
+from datetime import UTC, datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional
 from uuid import UUID, uuid4
@@ -52,8 +52,8 @@ class TaskNode(BaseModel):
     description: Optional[str] = None
     requirements: Dict[str, Any] = Field(default_factory=dict)
     metadata: Dict[str, Any] = Field(default_factory=dict)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     started_at: Optional[datetime] = None
     completed_at: Optional[datetime] = None
     estimated_duration: Optional[float] = None  # in seconds
@@ -82,8 +82,8 @@ class TaskRelationship(BaseModel):
     type: str
     properties: Dict[str, Any] = Field(default_factory=dict)
     metadata: Dict[str, Any] = Field(default_factory=dict)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
     def __eq__(self, other: object) -> bool:
         """Compare relationships based on their ID."""
@@ -103,13 +103,13 @@ class TaskGraph(BaseModel):
     relationships: Dict[UUID, TaskRelationship] = Field(default_factory=dict)
     execution_order: List[UUID] = Field(default_factory=list)
     metadata: Dict[str, Any] = Field(default_factory=dict)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
     def add_node(self, node: TaskNode) -> None:
         """Add a task node to the graph."""
         self.nodes[node.id] = node
-        self.updated_at = datetime.utcnow()
+        self.updated_at = datetime.now(UTC)
 
     def add_relationship(self, relationship: TaskRelationship) -> None:
         """Add a relationship between tasks."""
@@ -118,7 +118,7 @@ class TaskGraph(BaseModel):
         if relationship.target_id not in self.nodes:
             raise ValueError(f"Target node {relationship.target_id} not found")
         self.relationships[relationship.id] = relationship
-        self.updated_at = datetime.utcnow()
+        self.updated_at = datetime.now(UTC)
 
     def get_node(self, node_id: UUID) -> Optional[TaskNode]:
         """Get a task node by ID."""

@@ -2,7 +2,7 @@
 
 import json
 import time
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any, Dict, List, Optional
 
 from langchain_openai import OpenAIEmbeddings
@@ -75,7 +75,8 @@ class WeaviateVectorStore(VectorStore):
             "openai_api_key", app_config.llm.openai_api_key
         )
         self.embedding_model = None
-        if self.provider != "mock":
+        # Only attempt to initialize embeddings if not mock/local and we have a key
+        if self.provider not in {"mock", "local"} and self.openai_api_key:
             try:
                 self.embedding_model = OpenAIEmbeddings(
                     api_key=self.openai_api_key, model="text-embedding-ada-002"
@@ -495,10 +496,7 @@ class WeaviateVectorStore(VectorStore):
                     )
                     return []
             else:
-                logger.warning(
-                    "LangChain embedding model is not available. "
-                    "Make sure to install langchain-openai and configure OpenAI API key."
-                )
+                # In mock/local mode or when no key is present, just return empty
                 return []
 
         except Exception as e:
@@ -611,10 +609,6 @@ class WeaviateVectorStore(VectorStore):
 
             # Generate embedding from text using LangChain
             if not query_text or self.embedding_model is None:
-                logger.warning(
-                    "Cannot perform semantic search: query text is empty "
-                    "or LangChain embeddings are not available"
-                )
                 return MemoryResult(
                     entries=[],
                     total_count=0,

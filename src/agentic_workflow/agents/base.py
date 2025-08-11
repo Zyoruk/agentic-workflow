@@ -2,7 +2,7 @@
 
 import uuid
 from abc import ABC, abstractmethod
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any, Dict, List, Optional
 
 from agentic_workflow.core.exceptions import AgentError
@@ -24,7 +24,7 @@ class AgentTask(dict):
         """
         super().__init__(**kwargs)
         self["task_id"] = task_id or str(uuid.uuid4())
-        self["created_at"] = datetime.utcnow().isoformat()
+        self["created_at"] = datetime.now(UTC).isoformat()
 
     @property
     def task_id(self) -> str:
@@ -161,13 +161,13 @@ class Agent(Component, ABC):
                     "execution_count": len(self._execution_history),
                     "dependencies": self.get_dependencies(),
                 },
-                metadata={"timestamp": datetime.utcnow().isoformat()},
+                metadata={"timestamp": datetime.now(UTC).isoformat()},
             )
         except Exception as e:
             return ServiceResponse(
                 success=False,
                 error=f"Health check failed: {e}",
-                metadata={"timestamp": datetime.utcnow().isoformat()},
+                metadata={"timestamp": datetime.now(UTC).isoformat()},
             )
 
     async def safe_execute(self, task: AgentTask) -> AgentResult:
@@ -185,7 +185,7 @@ class Agent(Component, ABC):
         Raises:
             AgentError: If execution fails after recovery attempts
         """
-        start_time = datetime.utcnow()
+        start_time = datetime.now(UTC)
         self.logger.info(f"Starting safe execution of task {task.task_id}")
 
         try:
@@ -205,7 +205,7 @@ class Agent(Component, ABC):
                 await self.guardrails.validate_input(result.model_dump(), {})
 
             # Record successful execution
-            execution_time = (datetime.utcnow() - start_time).total_seconds()
+            execution_time = (datetime.now(UTC) - start_time).total_seconds()
             self._record_execution(task, result, execution_time, True)
 
             self.logger.info(
@@ -214,7 +214,7 @@ class Agent(Component, ABC):
             return result
 
         except Exception as e:
-            execution_time = (datetime.utcnow() - start_time).total_seconds()
+            execution_time = (datetime.now(UTC) - start_time).total_seconds()
             self.logger.error(
                 f"Task {task.task_id} failed after {execution_time:.2f}s: {e}"
             )
@@ -295,7 +295,7 @@ class Agent(Component, ABC):
             {
                 "task_id": task.task_id,
                 "task_type": task.task_type,
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(UTC).isoformat(),
                 "execution_time": execution_time,
                 "success": success,
                 "result_data": result.data if hasattr(result, "data") else None,

@@ -6,7 +6,7 @@ agent coordination, and progress tracking for the agentic system.
 """
 
 import json
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
@@ -214,7 +214,7 @@ class ProgramManagerAgent(Agent):
                     {
                         "task": dict(task),
                         "result": result.model_dump(),
-                        "timestamp": datetime.utcnow().isoformat(),
+                        "timestamp": datetime.now(UTC).isoformat(),
                     }
                 )
                 await self.memory_manager.store(
@@ -429,7 +429,7 @@ class ProgramManagerAgent(Agent):
         project_scope = task.get("context", {}).get("project_scope", "standard")
 
         # Generate project ID
-        project_id = f"proj_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}"
+        project_id = f"proj_{datetime.now(UTC).strftime('%Y%m%d_%H%M%S')}"
 
         # Create project configuration
         if not project_config:
@@ -444,8 +444,8 @@ class ProgramManagerAgent(Agent):
             project_id=project_id,
             config=config,
             status=ProjectStatus.PLANNING,
-            start_date=datetime.utcnow().isoformat(),
-            last_updated=datetime.utcnow().isoformat(),
+            start_date=datetime.now(UTC).isoformat(),
+            last_updated=datetime.now(UTC).isoformat(),
         )
 
         # Generate initial tasks
@@ -589,7 +589,7 @@ class ProgramManagerAgent(Agent):
                 "milestone_id": "milestone_planning",
                 "name": "Planning Complete",
                 "description": "Project planning and requirements finalized",
-                "target_date": (datetime.utcnow() + timedelta(weeks=1)).isoformat(),
+                "target_date": (datetime.now(UTC) + timedelta(weeks=1)).isoformat(),
                 "criteria": ["Requirements documented", "Technical spec approved"],
                 "status": "pending",
             }
@@ -602,7 +602,7 @@ class ProgramManagerAgent(Agent):
                     "milestone_id": "milestone_development",
                     "name": "Development Complete",
                     "description": "Core functionality implemented",
-                    "target_date": (datetime.utcnow() + timedelta(weeks=3)).isoformat(),
+                    "target_date": (datetime.now(UTC) + timedelta(weeks=3)).isoformat(),
                     "criteria": ["Core features implemented", "Code review passed"],
                     "status": "pending",
                 }
@@ -615,7 +615,7 @@ class ProgramManagerAgent(Agent):
                     "milestone_id": "milestone_testing",
                     "name": "Testing Complete",
                     "description": "All tests passed and quality assured",
-                    "target_date": (datetime.utcnow() + timedelta(weeks=4)).isoformat(),
+                    "target_date": (datetime.now(UTC) + timedelta(weeks=4)).isoformat(),
                     "criteria": ["All tests passing", "Coverage targets met"],
                     "status": "pending",
                 }
@@ -628,7 +628,7 @@ class ProgramManagerAgent(Agent):
                     "milestone_id": "milestone_deployment",
                     "name": "Deployment Complete",
                     "description": "Successfully deployed to production",
-                    "target_date": (datetime.utcnow() + timedelta(weeks=5)).isoformat(),
+                    "target_date": (datetime.now(UTC) + timedelta(weeks=5)).isoformat(),
                     "criteria": ["Production deployment", "Health checks passing"],
                     "status": "pending",
                 }
@@ -737,7 +737,7 @@ class ProgramManagerAgent(Agent):
                 "action": action,
                 "result": result,
                 "project_status": project.status.value,
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(UTC).isoformat(),
             },
             metadata={
                 "project_id": project_id,
@@ -773,7 +773,7 @@ class ProgramManagerAgent(Agent):
                 "project_id": project_id,
                 "allocation_result": result,
                 "resource_utilization": self._calculate_resource_utilization(),
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(UTC).isoformat(),
             },
             metadata={
                 "allocation_type": allocation_type,
@@ -808,7 +808,7 @@ class ProgramManagerAgent(Agent):
                 "tracking_type": tracking_type,
                 "project_id": project_id,
                 "progress_result": result,
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(UTC).isoformat(),
             },
             metadata={
                 "tracking_type": tracking_type,
@@ -848,7 +848,7 @@ class ProgramManagerAgent(Agent):
                 "project_id": project_id,
                 "risk_action": risk_action,
                 "risk_result": result,
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(UTC).isoformat(),
             },
             metadata={
                 "project_id": project_id,
@@ -880,7 +880,7 @@ class ProgramManagerAgent(Agent):
                 "coordination_type": coordination_type,
                 "project_id": project_id,
                 "coordination_result": result,
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(UTC).isoformat(),
             },
             metadata={
                 "coordination_type": coordination_type,
@@ -914,7 +914,7 @@ class ProgramManagerAgent(Agent):
                 "report_type": report_type,
                 "project_id": project_id,
                 "report": result,
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(UTC).isoformat(),
             },
             metadata={
                 "report_type": report_type,
@@ -952,7 +952,7 @@ class ProgramManagerAgent(Agent):
                 "project_id": project_id,
                 "timeline_action": timeline_action,
                 "timeline_result": result,
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(UTC).isoformat(),
             },
             metadata={
                 "project_id": project_id,
@@ -1016,7 +1016,7 @@ class ProgramManagerAgent(Agent):
                             if "actual_hours" in task_update:
                                 task.actual_hours = task_update["actual_hours"]
 
-            project.last_updated = datetime.utcnow().isoformat()
+            project.last_updated = datetime.now(UTC).isoformat()
 
             return {
                 "success": True,
@@ -1035,9 +1035,9 @@ class ProgramManagerAgent(Agent):
         """Mark project as completed."""
         try:
             project.status = ProjectStatus.COMPLETED
-            project.end_date = datetime.utcnow().isoformat()
+            project.end_date = datetime.now(UTC).isoformat()
             project.progress_percentage = 100.0
-            project.last_updated = datetime.utcnow().isoformat()
+            project.last_updated = datetime.now(UTC).isoformat()
 
             # Mark all tasks as completed
             for task in project.tasks:
@@ -1063,8 +1063,8 @@ class ProgramManagerAgent(Agent):
         """Cancel project."""
         try:
             project.status = ProjectStatus.CANCELLED
-            project.end_date = datetime.utcnow().isoformat()
-            project.last_updated = datetime.utcnow().isoformat()
+            project.end_date = datetime.now(UTC).isoformat()
+            project.last_updated = datetime.now(UTC).isoformat()
 
             return {
                 "success": True,
@@ -1213,7 +1213,7 @@ class ProgramManagerAgent(Agent):
 
                 # Update project progress
                 project.progress_percentage = progress_percentage
-                project.last_updated = datetime.utcnow().isoformat()
+                project.last_updated = datetime.now(UTC).isoformat()
 
                 return {
                     "success": True,
@@ -1400,7 +1400,7 @@ class ProgramManagerAgent(Agent):
                         **risk,
                         "current_probability": risk["probability"],
                         "current_impact": risk["impact"],
-                        "last_assessed": datetime.utcnow().isoformat(),
+                        "last_assessed": datetime.now(UTC).isoformat(),
                     }
                 )
 
@@ -1446,7 +1446,7 @@ class ProgramManagerAgent(Agent):
                 for risk in project.risks:
                     if risk["risk_id"] == risk_id:
                         risk["status"] = "mitigated"
-                        risk["mitigation_date"] = datetime.utcnow().isoformat()
+                        risk["mitigation_date"] = datetime.now(UTC).isoformat()
 
                         return {
                             "success": True,
@@ -1487,7 +1487,7 @@ class ProgramManagerAgent(Agent):
                 "high_impact_risks": sum(
                     1 for r in project.risks if r["impact"] == "high"
                 ),
-                "monitoring_date": datetime.utcnow().isoformat(),
+                "monitoring_date": datetime.now(UTC).isoformat(),
             }
 
             return {
@@ -1571,7 +1571,7 @@ class ProgramManagerAgent(Agent):
                 "tasks_in_progress": 2,
                 "handoffs_completed": 1,
                 "estimated_completion": (
-                    datetime.utcnow() + timedelta(hours=24)
+                    datetime.now(UTC) + timedelta(hours=24)
                 ).isoformat(),
             }
 
@@ -1672,7 +1672,7 @@ class ProgramManagerAgent(Agent):
                             1 for r in project.risks if r["status"] == "mitigated"
                         ),
                     },
-                    "generated_at": datetime.utcnow().isoformat(),
+                    "generated_at": datetime.now(UTC).isoformat(),
                 }
 
                 return {
@@ -1730,7 +1730,7 @@ class ProgramManagerAgent(Agent):
                         "cost_variance": 1.02,  # Slightly over budget
                         "quality_score": 0.88,  # Good quality
                     },
-                    "generated_at": datetime.utcnow().isoformat(),
+                    "generated_at": datetime.now(UTC).isoformat(),
                 }
 
                 return {
@@ -1781,7 +1781,7 @@ class ProgramManagerAgent(Agent):
                     "Consider scaling up overutilized resources",
                     "Optimize task scheduling for better resource usage",
                 ],
-                "generated_at": datetime.utcnow().isoformat(),
+                "generated_at": datetime.now(UTC).isoformat(),
             }
 
             return {
@@ -1839,7 +1839,7 @@ class ProgramManagerAgent(Agent):
                     "Expand agent capacity for high-demand periods",
                     "Implement predictive analytics for better planning",
                 ],
-                "generated_at": datetime.utcnow().isoformat(),
+                "generated_at": datetime.now(UTC).isoformat(),
             }
 
             return {
@@ -1898,7 +1898,7 @@ class ProgramManagerAgent(Agent):
                 "timeline_impact": adjustments.get("timeline_impact", "minimal"),
                 "affected_tasks": adjustments.get("affected_tasks", []),
                 "new_completion_date": (
-                    datetime.utcnow() + timedelta(weeks=6)
+                    datetime.now(UTC) + timedelta(weeks=6)
                 ).isoformat(),
             }
 

@@ -201,7 +201,6 @@ Optional Prometheus metrics can be enabled to track model fallbacks.
 - AGENTIC_MONITORING__PROMETHEUS_PORT=8000
 
 When enabled, a counter named agentic_llm_model_fallback_total is incremented whenever the agent falls back from the preview model to the default model.
-```
 
 ### 3. Testing
 

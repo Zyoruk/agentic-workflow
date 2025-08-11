@@ -1,6 +1,6 @@
 """API endpoints for agent management and execution."""
 
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, HTTPException, status
@@ -144,7 +144,7 @@ async def create_new_agent(request: AgentCreateRequest) -> AgentResponse:
             agent_type=request.agent_type,
             status=agent.status.value,
             capabilities=agent.get_capabilities(),
-            created_at=datetime.utcnow().isoformat(),
+            created_at=datetime.now(UTC).isoformat(),
         )
 
     except ValueError as e:
@@ -176,7 +176,7 @@ async def list_agents() -> List[AgentResponse]:
                     agent_type=agent.__class__.__name__.replace("Agent", "").lower(),
                     status=agent.status.value,
                     capabilities=agent.get_capabilities(),
-                    created_at=datetime.utcnow().isoformat(),  # Note: actual creation time would be stored
+                    created_at=datetime.now(UTC).isoformat(),  # Note: actual creation time would be stored
                 )
             )
 
@@ -202,7 +202,7 @@ async def get_agent(agent_id: str) -> AgentResponse:
             agent_type=agent.__class__.__name__.replace("Agent", "").lower(),
             status=agent.status.value,
             capabilities=agent.get_capabilities(),
-            created_at=datetime.utcnow().isoformat(),
+            created_at=datetime.now(UTC).isoformat(),
         )
 
     except HTTPException:
@@ -337,7 +337,7 @@ async def check_agent_health(agent_id: str) -> AgentHealthResponse:
             is_healthy=health_result.success,
             execution_count=execution_count,
             dependencies=dependencies,
-            last_check=datetime.utcnow().isoformat(),
+            last_check=datetime.now(UTC).isoformat(),
         )
 
     except HTTPException:
@@ -416,5 +416,5 @@ async def api_health() -> Dict[str, Any]:
     return {
         "status": "healthy",
         "active_agents": len(_active_agents),
-        "timestamp": datetime.utcnow().isoformat(),
+    "timestamp": datetime.now(UTC).isoformat(),
     }

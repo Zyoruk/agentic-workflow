@@ -7,7 +7,7 @@ quality assurance, and security analysis capabilities for the agentic system.
 import ast
 import json
 import re
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any, Dict, List, Optional
 
 from agentic_workflow.agents.base import Agent, AgentResult, AgentTask
@@ -106,7 +106,7 @@ class ReviewAgent(Agent):
                     {
                         "task": dict(task),
                         "result": result.model_dump(),
-                        "timestamp": datetime.utcnow().isoformat(),
+                        "timestamp": datetime.now(UTC).isoformat(),
                     }
                 )
                 await self.memory_manager.store(
@@ -324,7 +324,7 @@ class ReviewAgent(Agent):
                     }
                 ),
                 "language": language,
-                "review_timestamp": datetime.utcnow().isoformat(),
+                "review_timestamp": datetime.now(UTC).isoformat(),
             },
             metadata={
                 "review_type": "comprehensive_code_review",
@@ -381,7 +381,7 @@ class ReviewAgent(Agent):
                     }
                 ),
                 "language": language,
-                "review_timestamp": datetime.utcnow().isoformat(),
+                "review_timestamp": datetime.now(UTC).isoformat(),
             },
             metadata={
                 "review_type": "security_review",
@@ -436,7 +436,7 @@ class ReviewAgent(Agent):
                     }
                 ),
                 "language": language,
-                "review_timestamp": datetime.utcnow().isoformat(),
+                "review_timestamp": datetime.now(UTC).isoformat(),
             },
             metadata={
                 "review_type": "quality_assessment",
@@ -487,7 +487,7 @@ class ReviewAgent(Agent):
                     }
                 ),
                 "language": language,
-                "review_timestamp": datetime.utcnow().isoformat(),
+                "review_timestamp": datetime.now(UTC).isoformat(),
             },
             metadata={
                 "review_type": "documentation_review",
@@ -540,7 +540,7 @@ class ReviewAgent(Agent):
                     }
                 ),
                 "language": language,
-                "review_timestamp": datetime.utcnow().isoformat(),
+                "review_timestamp": datetime.now(UTC).isoformat(),
             },
             metadata={
                 "review_type": "performance_review",

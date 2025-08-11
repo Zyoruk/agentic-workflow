@@ -3,7 +3,7 @@
 import ast
 import json
 import re
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any, Dict, List, Optional
 
 from openai import AsyncOpenAI
@@ -12,6 +12,7 @@ from pydantic import BaseModel
 from agentic_workflow.agents.base import Agent, AgentResult, AgentTask
 from agentic_workflow.core.config import get_config
 from agentic_workflow.core.exceptions import AgentError, ValidationError
+from agentic_workflow.utils.metrics import inc_model_fallback
 from agentic_workflow.memory.interfaces import MemoryType
 
 
@@ -128,7 +129,13 @@ class CodeGenerationAgent(Agent):
         super().__init__(agent_id, config, **kwargs)
         self.openai_client: Optional[AsyncOpenAI] = None
         self.templates = CodeTemplate()
-        self.model_name = self.config.get("model", "gpt-4")
+        # Model selection: agent config -> global LLM config
+        app_cfg = get_config()
+        if app_cfg.llm.use_gpt5_preview:
+            default_model = app_cfg.llm.gpt5_model_name
+        else:
+            default_model = app_cfg.llm.default_model or "gpt-4"
+        self.model_name = self.config.get("model", default_model)
         self.temperature = self.config.get("temperature", 0.1)
         self.max_tokens = self.config.get("max_tokens", 2048)
 
@@ -163,7 +170,7 @@ class CodeGenerationAgent(Agent):
             AgentError: If code generation fails
             ValidationError: If task parameters are invalid
         """
-        start_time = datetime.utcnow()
+        start_time = datetime.now(UTC)
         self.logger.info(f"Executing code generation task: {task.task_id}")
 
         try:
@@ -205,7 +212,7 @@ class CodeGenerationAgent(Agent):
             if self.memory_manager:
                 await self._store_generation_result(task, request, result)
 
-            execution_time = (datetime.utcnow() - start_time).total_seconds()
+            execution_time = (datetime.now(UTC) - start_time).total_seconds()
 
             return AgentResult(
                 success=True,
@@ -405,15 +412,40 @@ class CodeGenerationAgent(Agent):
             self.logger.debug(f"Generating code with model: {self.model_name}")
 
             # Generate code with OpenAI
-            response = await self.openai_client.chat.completions.create(
-                model=self.model_name,
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_prompt},
-                ],
-                temperature=self.temperature,
-                max_tokens=self.max_tokens,
-            )
+            # Try with configured model; if preview fails and health-check is enabled, fallback
+            try:
+                response = await self.openai_client.chat.completions.create(
+                    model=self.model_name,
+                    messages=[
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": user_prompt},
+                    ],
+                    temperature=self.temperature,
+                    max_tokens=self.max_tokens,
+                )
+            except Exception as e:
+                cfg = get_config()
+                default_model = cfg.llm.default_model or "gpt-4"
+                if (
+                    cfg.llm.enable_model_health_check
+                    and cfg.llm.use_gpt5_preview
+                    and self.model_name != default_model
+                ):
+                    self.logger.warning(
+                        f"Model {self.model_name} failed, falling back to {default_model}: {e}"
+                    )
+                    inc_model_fallback(self.agent_id, self.model_name, default_model)
+                    response = await self.openai_client.chat.completions.create(
+                        model=default_model,
+                        messages=[
+                            {"role": "system", "content": system_prompt},
+                            {"role": "user", "content": user_prompt},
+                        ],
+                        temperature=self.temperature,
+                        max_tokens=self.max_tokens,
+                    )
+                else:
+                    raise
 
             generated_code = response.choices[0].message.content
             if not generated_code:
@@ -678,7 +710,7 @@ Language: {request.language}
                 memory_type=MemoryType.LONG_TERM,
                 metadata={
                     "agent_id": self.agent_id,
-                    "timestamp": datetime.utcnow().isoformat(),
+                    "timestamp": datetime.now(UTC).isoformat(),
                     "language": request.language,
                     "complexity": request.complexity,
                     "quality_score": result.quality_score,

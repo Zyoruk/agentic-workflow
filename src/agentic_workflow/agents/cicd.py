@@ -6,7 +6,7 @@ management, and rollback mechanisms for the agentic system.
 """
 
 import json
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any, Dict, List, Optional, Union
 
 import yaml
@@ -161,7 +161,7 @@ class CICDAgent(Agent):
                     {
                         "task": dict(task),
                         "result": result.model_dump(),
-                        "timestamp": datetime.utcnow().isoformat(),
+                        "timestamp": datetime.now(UTC).isoformat(),
                     }
                 )
                 await self.memory_manager.store(
@@ -450,7 +450,7 @@ class CICDAgent(Agent):
                 "rollback_result": rollback_result,
                 "environment": environment,
                 "previous_version": rollback_info.get("previous_version"),
-                "rollback_timestamp": datetime.utcnow().isoformat(),
+                "rollback_timestamp": datetime.now(UTC).isoformat(),
             },
             metadata={
                 "environment": environment,
@@ -489,7 +489,7 @@ class CICDAgent(Agent):
                 "gitlab_ci_content": gitlab_ci_content,
                 "pipeline_result": pipeline_result,
                 "pipeline_type": pipeline_type,
-                "creation_timestamp": datetime.utcnow().isoformat(),
+                "creation_timestamp": datetime.now(UTC).isoformat(),
             },
             metadata={
                 "pipeline_type": pipeline_type,
@@ -528,7 +528,7 @@ class CICDAgent(Agent):
                 "environment_result": result,
                 "action": action,
                 "environment": environment,
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(UTC).isoformat(),
             },
             metadata={
                 "environment": environment,
@@ -556,7 +556,7 @@ class CICDAgent(Agent):
                 "health_result": health_result,
                 "environment": environment,
                 "check_type": check_type,
-                "check_timestamp": datetime.utcnow().isoformat(),
+                "check_timestamp": datetime.now(UTC).isoformat(),
             },
             metadata={
                 "environment": environment,
@@ -583,7 +583,7 @@ class CICDAgent(Agent):
                 "pipeline_status": pipeline_status,
                 "pipeline_id": pipeline_id,
                 "branch": branch,
-                "check_timestamp": datetime.utcnow().isoformat(),
+                "check_timestamp": datetime.now(UTC).isoformat(),
             },
             metadata={
                 "pipeline_id": str(pipeline_id) if pipeline_id else "",
@@ -594,7 +594,7 @@ class CICDAgent(Agent):
     async def _execute_deployment(self, config: DeploymentConfig) -> DeploymentResult:
         """Execute deployment with given configuration."""
         deployment_id = (
-            f"deploy-{config.environment}-{datetime.utcnow().strftime('%Y%m%d-%H%M%S')}"
+            f"deploy-{config.environment}-{datetime.now(UTC).strftime('%Y%m%d-%H%M%S')}"
         )
 
         try:
@@ -618,8 +618,8 @@ class CICDAgent(Agent):
                 deployment_id=deployment_id,
                 status="success",
                 environment=config.environment,
-                version=f"v1.0.{datetime.utcnow().strftime('%Y%m%d%H%M')}",
-                timestamp=datetime.utcnow().isoformat(),
+                version=f"v1.0.{datetime.now(UTC).strftime('%Y%m%d%H%M')}",
+                timestamp=datetime.now(UTC).isoformat(),
                 logs=deployment_logs,
                 metrics={"deployment_time": 120, "replicas": config.replicas},
             )
@@ -631,7 +631,7 @@ class CICDAgent(Agent):
                 status="failed",
                 environment=config.environment,
                 version="unknown",
-                timestamp=datetime.utcnow().isoformat(),
+                timestamp=datetime.now(UTC).isoformat(),
                 logs=[f"Deployment failed: {e}"],
             )
 
@@ -691,7 +691,7 @@ class CICDAgent(Agent):
                 "environment": environment,
                 "rolled_back_to": rollback_info["previous_version"],
                 "rollback_logs": rollback_logs,
-                "rollback_time": datetime.utcnow().isoformat(),
+                "rollback_time": datetime.now(UTC).isoformat(),
             }
 
         except Exception as e:
@@ -700,7 +700,7 @@ class CICDAgent(Agent):
                 "success": False,
                 "environment": environment,
                 "error": str(e),
-                "rollback_time": datetime.utcnow().isoformat(),
+                "rollback_time": datetime.now(UTC).isoformat(),
             }
 
     async def _generate_gitlab_ci(self, pipeline_config: Dict[str, Any]) -> str:
@@ -725,7 +725,7 @@ class CICDAgent(Agent):
             # For now, we'll simulate creating the pipeline
             return {
                 "success": True,
-                "pipeline_id": f"pipeline-{datetime.utcnow().strftime('%Y%m%d%H%M%S')}",
+                "pipeline_id": f"pipeline-{datetime.now(UTC).strftime('%Y%m%d%H%M%S')}",
                 "gitlab_ci_content": gitlab_ci_content,
                 "message": "Pipeline configuration created successfully",
             }
@@ -750,7 +750,7 @@ class CICDAgent(Agent):
                 "status": "created",
                 "config": config,
                 "url": f"https://{environment}.example.com",
-                "creation_time": datetime.utcnow().isoformat(),
+                "creation_time": datetime.now(UTC).isoformat(),
             }
         except Exception as e:
             return {
@@ -771,7 +771,7 @@ class CICDAgent(Agent):
                 "environment": environment,
                 "status": "updated",
                 "config": config,
-                "update_time": datetime.utcnow().isoformat(),
+                "update_time": datetime.now(UTC).isoformat(),
             }
         except Exception as e:
             return {
@@ -792,7 +792,7 @@ class CICDAgent(Agent):
                 "success": True,
                 "environment": environment,
                 "status": "deleted",
-                "deletion_time": datetime.utcnow().isoformat(),
+                "deletion_time": datetime.now(UTC).isoformat(),
             }
         except Exception as e:
             return {
@@ -813,7 +813,7 @@ class CICDAgent(Agent):
             "health": "healthy",
             "url": f"https://{environment}.example.com",
             "last_deployment": "2024-06-04T10:30:00Z",
-            "check_time": datetime.utcnow().isoformat(),
+            "check_time": datetime.now(UTC).isoformat(),
         }
 
     async def _execute_health_checks(
@@ -853,7 +853,7 @@ class CICDAgent(Agent):
             "environment": environment,
             "check_type": check_type,
             "checks": health_checks,
-            "check_timestamp": datetime.utcnow().isoformat(),
+            "check_timestamp": datetime.now(UTC).isoformat(),
         }
 
     async def _get_gitlab_pipeline_status(
@@ -874,11 +874,11 @@ class CICDAgent(Agent):
             return {
                 "success": True,
                 "pipeline_id": pipeline_id
-                or f"pipeline-{datetime.utcnow().strftime('%Y%m%d%H%M%S')}",
+                or f"pipeline-{datetime.now(UTC).strftime('%Y%m%d%H%M%S')}",
                 "status": status,
                 "branch": branch,
                 "jobs": jobs,
-                "started_at": datetime.utcnow().isoformat(),
+                "started_at": datetime.now(UTC).isoformat(),
                 "duration": 180 if status == "success" else None,
             }
 

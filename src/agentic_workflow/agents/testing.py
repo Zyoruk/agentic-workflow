@@ -8,7 +8,7 @@ result management for the agentic system.
 import ast
 import json
 import re
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any, Dict, List, Optional, cast
 
 from agentic_workflow.agents.base import Agent, AgentResult, AgentTask
@@ -103,7 +103,7 @@ class TestingAgent(Agent):
                     {
                         "task": dict(task),
                         "result": result.model_dump(),
-                        "timestamp": datetime.utcnow().isoformat(),
+                        "timestamp": datetime.now(UTC).isoformat(),
                     }
                 )
                 await self.memory_manager.store(
@@ -378,7 +378,7 @@ if __name__ == '__main__':
                 "coverage_estimate": self._estimate_coverage(
                     code_analysis, generated_tests
                 ),
-                "generation_timestamp": datetime.utcnow().isoformat(),
+                "generation_timestamp": datetime.now(UTC).isoformat(),
             },
             metadata={
                 "test_type": test_type,
@@ -413,7 +413,7 @@ if __name__ == '__main__':
                 "tests_passed": execution_results.get("tests_passed", 0),
                 "tests_failed": execution_results.get("tests_failed", 0),
                 "success_rate": result_analysis.get("success_rate", 0.0),
-                "execution_timestamp": datetime.utcnow().isoformat(),
+                "execution_timestamp": datetime.now(UTC).isoformat(),
             },
             metadata={
                 "execution_method": execution_results.get("method", "pytest"),
@@ -450,7 +450,7 @@ if __name__ == '__main__':
                 "meets_threshold": coverage_analysis.get("total_coverage", 0.0)
                 >= self.coverage_threshold,
                 "uncovered_lines": coverage_analysis.get("uncovered_lines", []),
-                "analysis_timestamp": datetime.utcnow().isoformat(),
+                "analysis_timestamp": datetime.now(UTC).isoformat(),
             },
             metadata={
                 "coverage_threshold": self.coverage_threshold,
@@ -484,7 +484,7 @@ if __name__ == '__main__':
                 "recommended_frameworks": test_strategy.get("frameworks", []),
                 "test_phases": test_strategy.get("phases", []),
                 "quality_gates": test_strategy.get("quality_gates", {}),
-                "strategy_timestamp": datetime.utcnow().isoformat(),
+                "strategy_timestamp": datetime.now(UTC).isoformat(),
             },
             metadata={
                 "strategy_type": test_strategy.get("type", "comprehensive"),
@@ -525,7 +525,7 @@ if __name__ == '__main__':
                 "quality_score": test_quality.get("overall_score", 0.0),
                 "completeness_score": completeness_analysis.get("score", 0.0),
                 "validation_passed": test_quality.get("overall_score", 0.0) >= 0.7,
-                "validation_timestamp": datetime.utcnow().isoformat(),
+                "validation_timestamp": datetime.now(UTC).isoformat(),
             },
             metadata={
                 "validation_criteria": ["quality", "completeness", "best_practices"],
@@ -898,7 +898,7 @@ if __name__ == '__main__':
                     "Consider integration tests for better coverage",
                 ],
             },
-            "report_timestamp": datetime.utcnow().isoformat(),
+            "report_timestamp": datetime.now(UTC).isoformat(),
         }
 
         return report

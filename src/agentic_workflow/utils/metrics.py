@@ -6,7 +6,7 @@ from typing import Optional
 
 try:
     from prometheus_client import Counter  # type: ignore
-except Exception:  # pragma: no cover - prometheus may be optional
+except ImportError:  # pragma: no cover - prometheus may be optional
     Counter = None  # type: ignore
 
 from agentic_workflow.core.config import get_config

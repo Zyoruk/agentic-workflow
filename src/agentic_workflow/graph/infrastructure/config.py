@@ -3,7 +3,7 @@
 from typing import Optional
 from urllib.parse import urlparse
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 
 
 class Neo4jConfig(BaseModel):
@@ -34,7 +34,7 @@ class Neo4jConfig(BaseModel):
         description="Delay between retries in seconds",
     )
 
-    @validator("uri")
+    @field_validator("uri")
     def validate_uri(cls, v: str) -> str:
         """Validate the Neo4j URI.
 
@@ -57,7 +57,7 @@ class Neo4jConfig(BaseModel):
         except Exception as e:
             raise ValueError(f"Invalid Neo4j URI: {str(e)}")
 
-    @validator(
+    @field_validator(
         "max_connection_lifetime", "max_connection_pool_size", "connection_timeout"
     )
     def validate_positive_int(cls, v: int) -> int:

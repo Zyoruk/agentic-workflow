@@ -174,6 +174,34 @@ make lint         # Run linting
 make quality      # Run all quality checks
 ```
 
+### LLM Configuration
+
+Set environment variables (prefix AGENTIC_) to configure the LLM provider:
+
+- AGENTIC_LLM__OPENAI_API_KEY: your OpenAI API key
+- AGENTIC_LLM__DEFAULT_MODEL: default chat model (e.g., gpt-4o)
+- AGENTIC_LLM__USE_GPT5_PREVIEW: set to true to enable GPT-5 (Preview) when available
+- AGENTIC_LLM__GPT5_MODEL_NAME: override the preview model name (default: gpt-5-preview)
+- AGENTIC_LLM__ENABLE_MODEL_HEALTH_CHECK: when true, automatically fallback to DEFAULT_MODEL if preview model fails at runtime
+
+Example:
+
+```bash
+export AGENTIC_LLM__OPENAI_API_KEY=sk-...
+export AGENTIC_LLM__DEFAULT_MODEL=gpt-4o
+export AGENTIC_LLM__USE_GPT5_PREVIEW=true
+export AGENTIC_LLM__GPT5_MODEL_NAME=gpt-5-preview
+export AGENTIC_LLM__ENABLE_MODEL_HEALTH_CHECK=true
+
+### Monitoring and Metrics
+
+Optional Prometheus metrics can be enabled to track model fallbacks.
+
+- AGENTIC_MONITORING__PROMETHEUS_ENABLED=true
+- AGENTIC_MONITORING__PROMETHEUS_PORT=8000
+
+When enabled, a counter named agentic_llm_model_fallback_total is incremented whenever the agent falls back from the preview model to the default model.
+
 ### 3. Testing
 
 ```bash

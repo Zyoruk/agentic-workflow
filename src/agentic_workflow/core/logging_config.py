@@ -4,7 +4,7 @@ import json
 import logging
 import logging.handlers
 import sys
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Dict, Optional
 
@@ -24,7 +24,7 @@ class JSONFormatter(logging.Formatter):
         JSON formatted log message
         """
         log_entry = {
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "level": record.levelname,
             "logger": record.name,
             "message": record.getMessage(),

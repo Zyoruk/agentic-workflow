@@ -31,6 +31,12 @@ class LLMConfig(BaseModel):
     openai_api_key: Optional[str] = None
     openai_base_url: Optional[str] = None
     default_model: str = Field(default="gpt-4")
+    # Preview toggles
+    use_gpt5_preview: bool = Field(default=False)
+    gpt5_model_name: str = Field(default="gpt-5-preview")
+    enable_model_health_check: bool = Field(
+        default=True, description="Enable runtime model availability check/fallback"
+    )
     temperature: float = Field(default=0.7, ge=0.0, le=2.0)
     max_tokens: int = Field(default=1000, gt=0)
     timeout: int = Field(default=30, gt=0)

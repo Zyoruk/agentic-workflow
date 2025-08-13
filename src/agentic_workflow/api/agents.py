@@ -176,7 +176,9 @@ async def list_agents() -> List[AgentResponse]:
                     agent_type=agent.__class__.__name__.replace("Agent", "").lower(),
                     status=agent.status.value,
                     capabilities=agent.get_capabilities(),
-                    created_at=datetime.now(UTC).isoformat(),  # Note: actual creation time would be stored
+                    created_at=datetime.now(
+                        UTC
+                    ).isoformat(),  # Note: actual creation time would be stored
                 )
             )
 
@@ -416,5 +418,5 @@ async def api_health() -> Dict[str, Any]:
     return {
         "status": "healthy",
         "active_agents": len(_active_agents),
-    "timestamp": datetime.now(UTC).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
     }

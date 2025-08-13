@@ -48,6 +48,87 @@ make install-embedding # Embedding dependencies
 make install-all
 ```
 
+### Quick Examples
+
+#### 🧠 Reasoning Patterns
+
+```python
+from agentic_workflow.core.reasoning import ReasoningEngine
+
+# Initialize reasoning engine
+reasoning_engine = ReasoningEngine()
+
+# Chain of Thought reasoning
+cot_result = reasoning_engine.reason(
+    task_id="demo_task",
+    agent_id="demo_agent", 
+    objective="Design scalable microservices architecture",
+    pattern="chain_of_thought"
+)
+print(f"Reasoning confidence: {cot_result.confidence:.1%}")
+print(f"Steps taken: {len(cot_result.steps)}")
+
+# ReAct (Reasoning + Acting) pattern  
+react_result = reasoning_engine.reason(
+    task_id="demo_task_2",
+    agent_id="demo_agent",
+    objective="Implement real-time chat feature",
+    pattern="react"
+)
+print(f"Final answer: {react_result.final_answer}")
+```
+
+#### 🔧 Tool Integration System
+
+```python
+from agentic_workflow.tools import ToolManager
+import asyncio
+
+async def demo_tools():
+    # Initialize tool manager
+    manager = ToolManager()
+    await manager.initialize()
+    
+    # Discover available tools
+    text_tools = manager.registry.search_tools("text processing")
+    print(f"Found {len(text_tools)} text processing tools")
+    
+    # Get tool recommendations for a task
+    recommendations = manager.recommend_tools(
+        "analyze sales data", 
+        category="analysis"
+    )
+    
+    # Execute a tool
+    result = await manager.execute_tool("data_analysis_tool", {
+        "operation": "statistics",
+        "data": [10, 20, 30, 40, 50]
+    }, agent_id="demo_agent")
+    
+    print(f"Analysis result: {result}")
+
+# Run the demo
+asyncio.run(demo_tools())
+```
+
+#### 🤖 Enhanced Planning Agent
+
+```python
+from agentic_workflow.agents.planning import PlanningAgent
+
+# Create planning agent with reasoning capabilities
+planner = PlanningAgent(agent_id="strategic_planner")
+
+# Analyze objective with Chain of Thought reasoning
+analysis = planner.analyze_objective(
+    "Develop a comprehensive testing strategy",
+    use_reasoning=True
+)
+
+print(f"Analysis: {analysis['analysis']}")
+print(f"Reasoning insights: {analysis['reasoning_insights']}")
+```
+
 ## 💻 Development Setup
 
 ### Environment Setup
@@ -357,6 +438,16 @@ def test_format_response():
 - **[CONVENTIONS.md](CONVENTIONS.md)** - Development conventions and standards
 - **[CHANGELOG.md](CHANGELOG.md)** - Automated changelog
 - **[docs/](docs/)** - Comprehensive project documentation
+  - **[Features](docs/features/)** - Advanced reasoning patterns and tool integration
+  - **[Architecture](docs/architecture/)** - System design and components
+  - **[Implementation](docs/implementation/)** - Technical implementation guides
+  - **[Planning](docs/planning/)** - Project roadmap and planning
+
+### Feature Documentation
+
+- **[🧠 Reasoning Patterns](docs/features/reasoning-patterns.md)** - Chain of Thought and ReAct reasoning
+- **[🔧 Tool Integration](docs/features/tool-integration.md)** - Comprehensive tool discovery and execution system  
+- **[📖 User Guide](docs/features/user-guide.md)** - Practical examples and real-world workflows
 
 ### Code Documentation
 
@@ -517,8 +608,22 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Features
 
+### 🧠 Advanced Reasoning Patterns
+- **Chain of Thought (CoT)**: Step-by-step problem decomposition with transparent reasoning paths
+- **ReAct (Reasoning + Acting)**: Iterative reasoning-action-observation cycles with self-correction
+- **Memory Integration**: Reasoning paths stored in both short-term and vector memory
+- **Confidence Tracking**: Quantified confidence levels for reasoning decisions
+
+### 🔧 Comprehensive Tool Integration System
+- **Dynamic Tool Discovery**: Automatic tool detection from modules and packages
+- **Registry-Based Management**: Performance monitoring and lifecycle management
+- **Built-in Tool Portfolio**: File operations, text processing, command execution, data analysis
+- **Smart Recommendations**: Task-based tool suggestions with confidence scoring
+
+### 🤖 Core Workflow Engine
 - Core engine for workflow management
 - Agent-based task execution with LangChain integration
+- Enhanced Planning Agent with CoT reasoning integration
 - Flexible memory system
   - Short-term memory with Redis
   - Vector store (Weaviate) for long-term memory

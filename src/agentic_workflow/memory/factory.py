@@ -2,8 +2,8 @@
 
 from typing import Any, Dict, Optional, cast
 
-from ..core.logging_config import get_logger
 from ..core.config import get_config
+from ..core.logging_config import get_logger
 from .cache_store import RedisCacheStore
 from .interfaces import CacheStore, MemoryStore, VectorStore
 from .short_term import ShortTermMemory
@@ -117,7 +117,8 @@ class MemoryStoreFactory:
         try:
             app_cfg = get_config()
             has_api_key = bool(
-                cfg.get("openai_api_key") or getattr(app_cfg.llm, "openai_api_key", None)
+                cfg.get("openai_api_key")
+                or getattr(app_cfg.llm, "openai_api_key", None)
             )
         except Exception:
             # If config subsystem isn't initialized, assume no key

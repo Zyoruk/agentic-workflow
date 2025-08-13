@@ -6,14 +6,20 @@ import re
 from datetime import UTC, datetime
 from typing import Any, Dict, List, Optional
 
-from openai import AsyncOpenAI
+from openai import (
+    APIError,
+    APITimeoutError,
+    AsyncOpenAI,
+    AuthenticationError,
+    RateLimitError,
+)
 from pydantic import BaseModel
 
 from agentic_workflow.agents.base import Agent, AgentResult, AgentTask
 from agentic_workflow.core.config import get_config
 from agentic_workflow.core.exceptions import AgentError, ValidationError
-from agentic_workflow.utils.metrics import inc_model_fallback
 from agentic_workflow.memory.interfaces import MemoryType
+from agentic_workflow.utils.metrics import inc_model_fallback
 
 
 class CodeGenerationRequest(BaseModel):
@@ -423,7 +429,12 @@ class CodeGenerationAgent(Agent):
                     temperature=self.temperature,
                     max_tokens=self.max_tokens,
                 )
-            except (APIError, RateLimitError, AuthenticationError, Timeout) as e:
+            except (
+                APIError,
+                RateLimitError,
+                AuthenticationError,
+                APITimeoutError,
+            ) as e:
                 cfg = get_config()
                 default_model = cfg.llm.default_model or "gpt-4"
                 if (

@@ -12,6 +12,7 @@ from .cicd import CICDAgent
 from .code_generation import CodeGenerationAgent
 from .planning import PlanningAgent
 from .program_manager import ProgramManagerAgent
+from .requirement_engineering import RequirementEngineeringAgent
 from .review import ReviewAgent
 from .testing import TestingAgent
 
@@ -24,6 +25,9 @@ AGENT_REGISTRY: Dict[str, type] = {
     "code_gen": CodeGenerationAgent,  # Alias
     "planning": PlanningAgent,
     "planner": PlanningAgent,  # Alias
+    "requirement_engineering": RequirementEngineeringAgent,
+    "req_eng": RequirementEngineeringAgent,  # Alias
+    "requirements": RequirementEngineeringAgent,  # Alias
     "review": ReviewAgent,
     "reviewer": ReviewAgent,  # Alias
     "testing": TestingAgent,
@@ -83,6 +87,7 @@ __all__ = [
     "CICDAgent",
     "CodeGenerationAgent",
     "PlanningAgent",
+    "RequirementEngineeringAgent",
     "ReviewAgent",
     "TestingAgent",
     "ProgramManagerAgent",

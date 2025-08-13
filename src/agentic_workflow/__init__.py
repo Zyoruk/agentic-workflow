@@ -51,8 +51,9 @@ except Exception:  # pragma: no cover - optional dependency handling
             "Agent dependencies are not installed. Install optional requirements to use agents."
         )
 
-    def get_available_agent_types() -> List[str]:  # type: ignore
+    def get_available_agent_types() -> List[str]:
         return []
+
 
 # Import exceptions
 from .core.exceptions import (

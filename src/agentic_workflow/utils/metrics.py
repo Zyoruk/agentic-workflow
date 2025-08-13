@@ -5,12 +5,11 @@ from __future__ import annotations
 from typing import Optional
 
 try:
-    from prometheus_client import Counter  # type: ignore
+    from prometheus_client import Counter
 except ImportError:  # pragma: no cover - prometheus may be optional
     Counter = None  # type: ignore
 
 from agentic_workflow.core.config import get_config
-
 
 _model_fallback_counter: Optional["Counter"] = None
 
@@ -39,4 +38,6 @@ def inc_model_fallback(agent_id: str, from_model: str, to_model: str) -> None:
     """Increment model fallback metric if enabled."""
     counter = get_model_fallback_counter()
     if counter is not None:
-        counter.labels(agent_id=agent_id, from_model=from_model, to_model=to_model).inc()
+        counter.labels(
+            agent_id=agent_id, from_model=from_model, to_model=to_model
+        ).inc()

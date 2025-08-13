@@ -226,3 +226,28 @@ class TimeoutError(AgenticWorkflowError):
         self.operation = operation
         self.timeout = timeout
         super().__init__(message, *args, **kwargs)
+
+
+class ReasoningError(AgenticWorkflowError):
+    """Exception raised when reasoning patterns fail."""
+
+    def __init__(
+        self,
+        message: str,
+        pattern: Optional[str] = None,
+        step: Optional[int] = None,
+        *args: Any,
+        **kwargs: Any,
+    ) -> None:
+        """Initialize reasoning error.
+
+        Args:
+        message: Error message
+        pattern: Reasoning pattern that failed
+        step: Step number where failure occurred
+        *args: Additional positional arguments
+        **kwargs: Additional keyword arguments
+        """
+        self.pattern = pattern
+        self.step = step
+        super().__init__(message, *args, **kwargs)

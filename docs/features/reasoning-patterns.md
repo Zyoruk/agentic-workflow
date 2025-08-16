@@ -8,6 +8,7 @@ The reasoning system implements multiple AI reasoning paradigms:
 
 - **Chain of Thought (CoT)**: Step-by-step logical reasoning with explicit thought processes
 - **ReAct (Reasoning + Acting)**: Iterative cycles combining reasoning with actions and observations
+- **RAISE (Reason, Act, Improve, Share, Evaluate)**: Multi-agent coordination with collaborative learning
 - **Memory Integration**: Persistent storage and retrieval of reasoning paths
 - **Confidence Tracking**: Quantified confidence levels for reasoning decisions
 
@@ -20,8 +21,9 @@ from agentic_workflow.core.reasoning import (
     ReasoningEngine,
     ReasoningStep, 
     ReasoningPath,
-    ChainOfThoughtReasoner,
-    ReActReasoner
+    ChainOfThoughtReasoning,
+    ReActReasoning,
+    RAISEReasoning
 )
 ```
 
@@ -148,6 +150,93 @@ for step in result.steps:
 - **Adaptability**: High - can recover from failed actions
 - **Execution Time**: Variable based on action complexity
 
+## RAISE Pattern (Reason, Act, Improve, Share, Evaluate)
+
+### Description
+
+RAISE is an advanced reasoning pattern designed for multi-agent coordination and collaborative problem-solving. It extends the reasoning-acting paradigm with explicit improvement, sharing, and evaluation phases to enable sophisticated agent cooperation.
+
+### Key Features
+
+- **Multi-phase coordination**: Five distinct phases for comprehensive problem-solving
+- **Agent communication**: Built-in sharing mechanism for collaborative learning
+- **Continuous improvement**: Explicit refinement based on performance analysis
+- **Objective tracking**: Dynamic assessment of goal achievement
+- **Cross-agent learning**: Insights shared across the agent network
+
+### RAISE Phases
+
+1. **Reason**: Analyze the problem and generate strategic plans
+2. **Act**: Execute actions based on reasoning decisions
+3. **Improve**: Learn from results and refine approaches
+4. **Share**: Communicate insights with other agents in the network
+5. **Evaluate**: Assess overall progress and determine next steps
+
+### Example Usage
+
+```python
+# RAISE reasoning for multi-agent coordination
+from agentic_workflow.core.communication import CommunicationManager
+
+# Setup communication for agent coordination
+comm_manager = CommunicationManager()
+reasoning_engine = ReasoningEngine(
+    agent_id="coordinator_agent",
+    communication_manager=comm_manager
+)
+
+result = reasoning_engine.reason(
+    objective="Design fault-tolerant microservices architecture",
+    pattern="raise",
+    context={
+        "team": ["architect", "developer", "tester", "deployer"],
+        "requirements": ["fault_tolerance", "scalability", "monitoring"]
+    }
+)
+
+# Examine RAISE cycles
+for i, step in enumerate(result.steps):
+    if "evaluate" in step.thought.lower():
+        cycle_num = (i // 5) + 1
+        print(f"Cycle {cycle_num} completed with confidence: {step.confidence:.2f}")
+        print(f"Objective achieved: {'Yes' if step.confidence >= 0.7 else 'Continuing'}")
+```
+
+### Typical RAISE Flow
+
+1. **Reason Phase**: Strategic analysis and plan generation
+   - Problem decomposition and context analysis
+   - Multiple approach evaluation
+   - Strategic decision making
+
+2. **Act Phase**: Concrete action execution
+   - Implementation of planned actions
+   - Resource allocation and coordination
+   - Progress tracking
+
+3. **Improve Phase**: Performance analysis and refinement
+   - Results evaluation and learning
+   - Approach optimization
+   - Confidence adjustment
+
+4. **Share Phase**: Cross-agent communication
+   - Insight broadcasting to agent network
+   - Knowledge distribution and collaboration
+   - Collective intelligence building
+
+5. **Evaluate Phase**: Objective achievement assessment
+   - Progress measurement against goals
+   - Completion determination
+   - Strategy adjustment for next cycle
+
+### Performance Characteristics
+
+- **Average Cycles**: 2-4 RAISE cycles for complex objectives
+- **Confidence Levels**: Typically 70-90% (improves over cycles)
+- **Collaboration**: High - designed for multi-agent coordination
+- **Learning**: Continuous - each cycle builds on previous insights
+- **Communication**: Integrated - automatic insight sharing
+
 ## Memory Integration
 
 ### Reasoning Path Storage
@@ -249,7 +338,7 @@ print(f"Confidence: {analysis['confidence']}")
 
 ## Best Practices
 
-### When to Use CoT vs ReAct
+### When to Use CoT vs ReAct vs RAISE
 
 **Use Chain of Thought for:**
 - Strategic planning and analysis
@@ -264,6 +353,14 @@ print(f"Confidence: {analysis['confidence']}")
 - Iterative development processes
 - Tasks requiring external feedback
 - Dynamic problem-solving scenarios
+
+**Use RAISE for:**
+- Multi-agent coordination projects
+- Complex collaborative problem-solving
+- Knowledge sharing across agent teams
+- Long-term strategic initiatives
+- Systems requiring continuous improvement
+- Cross-functional team coordination
 
 ### Optimization Tips
 

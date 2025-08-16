@@ -20,6 +20,14 @@ try:
     from agentic_workflow.guardrails.service import GuardrailsService  
 except ImportError:
     GuardrailsService = None
+try:
+    from agentic_workflow.core.reasoning import ReasoningEngine
+except ImportError:
+    ReasoningEngine = None
+try:
+    from agentic_workflow.core.communication import CommunicationManager
+except ImportError:
+    CommunicationManager = None
 from agentic_workflow.mcp.client.base import MCPClient, MCPServerConfig
 from agentic_workflow.mcp.client.registry import MCPServerRegistry
 from agentic_workflow.mcp.tools.enhanced_registry import EnhancedToolRegistry
@@ -29,10 +37,18 @@ logger = get_logger(__name__)
 
 class MCPEnhancedAgent(Agent):
     """
-    Agent enhanced with MCP capabilities.
+    Agent enhanced with MCP capabilities, advanced reasoning patterns, and communication.
     
-    Extends the base Agent class to provide access to dynamic MCP tools,
-    resources, and prompts while maintaining full backward compatibility.
+    Extends the base Agent class to provide:
+    - Access to dynamic MCP tools, resources, and prompts
+    - Advanced reasoning patterns (Chain of Thought, ReAct, RAISE)
+    - Multi-agent communication and coordination
+    - Full backward compatibility with existing agent implementations
+    
+    The agent intelligently combines MCP capabilities with reasoning patterns:
+    - Uses RAISE pattern for multi-agent coordination tasks
+    - Uses ReAct pattern for iterative implementation tasks
+    - Uses Chain of Thought for strategic planning and analysis
     """
     
     def __init__(self, 
@@ -41,14 +57,17 @@ class MCPEnhancedAgent(Agent):
                  config: Optional[Dict[str, Any]] = None,
                  memory_manager: Optional[Any] = None,
                  guardrails_service: Optional[Any] = None,
+                 communication_manager: Optional[Any] = None,
                  mcp_enabled: bool = True,
                  mcp_servers: Optional[List[MCPServerConfig]] = None,
                  mcp_categories: Optional[List[str]] = None,
                  auto_discover_servers: bool = True,
                  max_mcp_connections: int = 10,
+                 reasoning_enabled: bool = True,
+                 default_reasoning_pattern: str = "chain_of_thought",
                  **kwargs):
         """
-        Initialize MCP-enhanced agent.
+        Initialize MCP-enhanced agent with advanced reasoning and communication.
         
         Args:
             agent_id: Unique agent identifier
@@ -56,11 +75,14 @@ class MCPEnhancedAgent(Agent):
             config: Agent configuration
             memory_manager: Memory manager instance
             guardrails_service: Guardrails service instance
+            communication_manager: Communication manager for multi-agent coordination
             mcp_enabled: Whether to enable MCP capabilities
             mcp_servers: List of MCP server configurations to connect
             mcp_categories: List of server categories to auto-connect
             auto_discover_servers: Whether to auto-discover available servers
             max_mcp_connections: Maximum MCP server connections
+            reasoning_enabled: Whether to enable advanced reasoning patterns
+            default_reasoning_pattern: Default reasoning pattern (chain_of_thought, react, raise)
             **kwargs: Additional agent configuration
         """
         super().__init__(agent_id, config, memory_manager, guardrails_service)
@@ -72,10 +94,18 @@ class MCPEnhancedAgent(Agent):
         self.auto_discover_servers = auto_discover_servers
         self.max_mcp_connections = max_mcp_connections
         
+        # Enhanced capabilities configuration
+        self.reasoning_enabled = reasoning_enabled and ReasoningEngine is not None
+        self.default_reasoning_pattern = default_reasoning_pattern
+        self.communication_manager = communication_manager
+        
         # MCP components
         self.mcp_client: Optional[MCPClient] = None
         self.mcp_registry: Optional[MCPServerRegistry] = None
         self.enhanced_tools: Optional[EnhancedToolRegistry] = None
+        
+        # Enhanced reasoning components
+        self.reasoning_engine: Optional[Any] = None
         
         # MCP state
         self.mcp_initialized = False
@@ -87,17 +117,38 @@ class MCPEnhancedAgent(Agent):
         self.capability_usage_history: List[Dict[str, Any]] = []
         
     async def initialize(self) -> None:
-        """Initialize the agent with MCP capabilities."""
+        """Initialize the agent with MCP and enhanced capabilities."""
         logger.info(f"Initializing MCP-enhanced agent: {self.agent_id}")
         
         # Initialize base agent
         await super().initialize()
         
+        # Initialize enhanced reasoning
+        if self.reasoning_enabled:
+            await self._initialize_reasoning()
+        
         # Initialize MCP if enabled
         if self.mcp_enabled:
             await self._initialize_mcp()
         
-        logger.info(f"Agent {self.agent_id} initialized with MCP capabilities: {self.mcp_enabled}")
+        logger.info(f"Agent {self.agent_id} initialized with MCP: {self.mcp_enabled}, Reasoning: {self.reasoning_enabled}")
+    
+    async def _initialize_reasoning(self) -> None:
+        """Initialize reasoning engine with MCP awareness."""
+        try:
+            if ReasoningEngine:
+                self.reasoning_engine = ReasoningEngine(
+                    agent_id=self.agent_id,
+                    memory_manager=self.memory_manager,
+                    communication_manager=self.communication_manager
+                )
+                logger.info(f"Reasoning engine initialized for agent {self.agent_id}")
+            else:
+                logger.warning(f"ReasoningEngine not available for agent {self.agent_id}")
+                self.reasoning_enabled = False
+        except Exception as e:
+            logger.error(f"Failed to initialize reasoning engine for agent {self.agent_id}: {e}")
+            self.reasoning_enabled = False
     
     async def _initialize_mcp(self) -> None:
         """Initialize MCP components."""
@@ -396,65 +447,145 @@ class MCPEnhancedAgent(Agent):
         """
         Enhanced reasoning with MCP capability awareness.
         
-        Extends traditional reasoning patterns (CoT, ReAct) with dynamic capability assessment.
+        Integrates traditional reasoning patterns (CoT, ReAct, RAISE) with dynamic MCP capability assessment.
         """
         reasoning_result = {
             'approach': 'enhanced_mcp_reasoning',
             'capabilities_considered': self.dynamic_capabilities.copy(),
             'reasoning_steps': [],
             'selected_tools': [],
-            'confidence': 0.8
+            'confidence': 0.8,
+            'reasoning_pattern': self.default_reasoning_pattern
         }
         
         try:
-            # Step 1: Analyze task requirements
-            task_analysis = {
-                'task_type': task.get('type', 'unknown'),
-                'complexity': self._assess_task_complexity(task),
-                'required_capabilities': self._identify_required_capabilities(task)
-            }
-            reasoning_result['reasoning_steps'].append({
-                'step': 'task_analysis',
-                'result': task_analysis
-            })
+            # Use new reasoning engine if available
+            if self.reasoning_enabled and self.reasoning_engine:
+                objective = task.get('description', 'Execute task')
+                context = {
+                    'task_id': task.get('id', 'unknown'),
+                    'task_type': task.get('type', 'general'),
+                    'available_mcp_tools': self.dynamic_capabilities,
+                    'mcp_capabilities': self.mcp_capabilities_cache
+                }
+                
+                # Execute reasoning with MCP context
+                reasoning_path = await self._execute_mcp_aware_reasoning(objective, context)
+                
+                reasoning_result.update({
+                    'reasoning_path_id': reasoning_path.path_id,
+                    'reasoning_steps': [
+                        {
+                            'step_number': step.step_number,
+                            'question': step.question,
+                            'thought': step.thought,
+                            'action': step.action,
+                            'observation': step.observation,
+                            'confidence': step.confidence
+                        } for step in reasoning_path.steps
+                    ],
+                    'final_answer': reasoning_path.final_answer,
+                    'confidence': reasoning_path.confidence,
+                    'reasoning_pattern': reasoning_path.pattern_type
+                })
+                
+                # Extract tool selections from reasoning
+                selected_tools = self._extract_tools_from_reasoning(reasoning_path)
+                reasoning_result['selected_tools'] = selected_tools
+                
+                return reasoning_result
             
-            # Step 2: Match capabilities to requirements
-            capability_matches = []
-            for capability in task_analysis['required_capabilities']:
-                matching_tools = self._find_matching_tools(capability)
-                if matching_tools:
-                    capability_matches.append({
-                        'capability': capability,
-                        'matching_tools': matching_tools
-                    })
-            
-            reasoning_result['reasoning_steps'].append({
-                'step': 'capability_matching',
-                'result': capability_matches
-            })
-            
-            # Step 3: Select optimal tool sequence
-            selected_tools = self._select_optimal_tools(capability_matches, task_analysis)
-            reasoning_result['selected_tools'] = selected_tools
-            
-            reasoning_result['reasoning_steps'].append({
-                'step': 'tool_selection',
-                'result': selected_tools
-            })
-            
-            # Adjust confidence based on tool availability
-            if selected_tools:
-                reasoning_result['confidence'] = min(0.95, 0.6 + len(selected_tools) * 0.1)
-            else:
-                reasoning_result['confidence'] = 0.3
-            
-            return reasoning_result
+            # Fallback to basic MCP-aware reasoning
+            return await self._basic_mcp_reasoning(task, reasoning_result)
             
         except Exception as e:
             logger.error(f"Enhanced reasoning failed for agent {self.agent_id}: {e}")
             reasoning_result['error'] = str(e)
             reasoning_result['confidence'] = 0.1
             return reasoning_result
+    
+    async def _execute_mcp_aware_reasoning(self, objective: str, context: Dict[str, Any]):
+        """Execute reasoning with MCP capability awareness."""
+        # Choose reasoning pattern based on task complexity
+        task_type = context.get('task_type', 'general')
+        
+        if task_type in ['coordination', 'multi_agent', 'collaboration']:
+            pattern = 'raise'  # Use RAISE for coordination tasks
+        elif task_type in ['implementation', 'debugging', 'iterative']:
+            pattern = 'react'  # Use ReAct for implementation tasks
+        else:
+            pattern = self.default_reasoning_pattern  # Default to CoT
+        
+        # Execute reasoning with async support for RAISE
+        if pattern == 'raise':
+            return await self.reasoning_engine.reason_async(objective, pattern, context)
+        else:
+            return self.reasoning_engine.reason(objective, pattern, context)
+    
+    def _extract_tools_from_reasoning(self, reasoning_path) -> List[str]:
+        """Extract MCP tools mentioned in reasoning steps."""
+        selected_tools = []
+        
+        for step in reasoning_path.steps:
+            # Look for tool names in actions and observations
+            if step.action:
+                for tool in self.dynamic_capabilities:
+                    if tool.lower() in step.action.lower():
+                        if tool not in selected_tools:
+                            selected_tools.append(tool)
+            
+            if step.observation:
+                for tool in self.dynamic_capabilities:
+                    if tool.lower() in step.observation.lower():
+                        if tool not in selected_tools:
+                            selected_tools.append(tool)
+        
+        return selected_tools
+    
+    async def _basic_mcp_reasoning(self, task: AgentTask, reasoning_result: Dict[str, Any]) -> Dict[str, Any]:
+        """Basic MCP-aware reasoning fallback."""
+        # Step 1: Analyze task requirements
+        task_analysis = {
+            'task_type': task.get('type', 'unknown'),
+            'complexity': self._assess_task_complexity(task),
+            'required_capabilities': self._identify_required_capabilities(task)
+        }
+        reasoning_result['reasoning_steps'].append({
+            'step': 'task_analysis',
+            'result': task_analysis
+        })
+        
+        # Step 2: Match capabilities to requirements
+        capability_matches = []
+        for capability in task_analysis['required_capabilities']:
+            matching_tools = self._find_matching_tools(capability)
+            if matching_tools:
+                capability_matches.append({
+                    'capability': capability,
+                    'matching_tools': matching_tools
+                })
+        
+        reasoning_result['reasoning_steps'].append({
+            'step': 'capability_matching',
+            'result': capability_matches
+        })
+        
+        # Step 3: Select optimal tool sequence
+        selected_tools = self._select_optimal_tools(capability_matches, task_analysis)
+        reasoning_result['selected_tools'] = selected_tools
+        
+        reasoning_result['reasoning_steps'].append({
+            'step': 'tool_selection',
+            'result': selected_tools
+        })
+        
+        # Adjust confidence based on tool availability
+        if selected_tools:
+            reasoning_result['confidence'] = min(0.95, 0.6 + len(selected_tools) * 0.1)
+        else:
+            reasoning_result['confidence'] = 0.3
+        
+        return reasoning_result
     
     def _assess_task_complexity(self, task: AgentTask) -> str:
         """Assess task complexity."""

@@ -48,7 +48,7 @@ async def demonstrate_raise_pattern():
     print_step(1, "Executing RAISE Pattern", "Objective: Design scalable microservices architecture")
     
     # Execute RAISE reasoning
-    result = reasoning_engine.reason(
+    result = await reasoning_engine.reason_async(
         objective="Design scalable microservices architecture with high availability",
         pattern="raise",
         context={
@@ -249,7 +249,7 @@ async def demonstrate_integrated_workflow():
     print_step(2, "Architect Uses RAISE to Design System")
     
     # Architect uses RAISE pattern to design system
-    architect_result = reasoning_engines["architect"].reason(
+    architect_result = await reasoning_engines["architect"].reason_async(
         objective="Design fault-tolerant microservices architecture",
         pattern="raise",
         context={

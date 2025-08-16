@@ -10,6 +10,7 @@ from typing import Any, Dict, List, Optional
 
 from agentic_workflow.agents.base import Agent, AgentResult, AgentTask
 from agentic_workflow.core.exceptions import AgentError, ValidationError
+from agentic_workflow.core.reasoning import ReasoningEngine
 from agentic_workflow.memory import MemoryType
 
 
@@ -59,9 +60,15 @@ class PlanningAgent(Agent):
 
         # Task templates for different domains
         self.task_templates = self._initialize_task_templates()
+        
+        # Initialize reasoning engine for advanced planning
+        self.reasoning_engine = ReasoningEngine(
+            agent_id=self.agent_id,
+            memory_manager=self.memory_manager
+        )
 
         self.logger.info(
-            f"PlanningAgent initialized with {len(self.available_agents)} available agents"
+            f"PlanningAgent initialized with {len(self.available_agents)} available agents and reasoning engine"
         )
 
     def _initialize_task_templates(self) -> Dict[str, List[Dict[str, Any]]]:
@@ -468,7 +475,30 @@ class PlanningAgent(Agent):
     async def _analyze_project_objective(
         self, objective: str, context: Dict[str, Any]
     ) -> Dict[str, Any]:
-        """Analyze objective to determine project type and characteristics."""
+        """Analyze objective to determine project type and characteristics using CoT reasoning."""
+        self.logger.info(f"Analyzing objective with Chain of Thought: {objective}")
+        
+        # Use Chain of Thought reasoning for comprehensive analysis
+        reasoning_context = {
+            "task_id": context.get("task_id", "objective_analysis"),
+            "objective": objective,
+            "context": context
+        }
+        
+        try:
+            reasoning_path = self.reasoning_engine.reason(
+                objective=f"Analyze the project objective: {objective}",
+                pattern="chain_of_thought",
+                context=reasoning_context
+            )
+            
+            self.logger.info(f"CoT reasoning completed with {len(reasoning_path.steps)} steps")
+            
+        except Exception as e:
+            self.logger.warning(f"CoT reasoning failed, falling back to basic analysis: {e}")
+            reasoning_path = None
+        
+        # Continue with original analysis logic (enhanced by reasoning insights)
         objective_lower = objective.lower()
 
         # Determine project type
@@ -516,7 +546,7 @@ class PlanningAgent(Agent):
             if any(keyword in objective_lower for keyword in keywords):
                 technologies.append(tech)
 
-        return {
+        analysis_result = {
             "objective": objective,
             "project_type": project_type,
             "complexity": complexity,
@@ -524,6 +554,18 @@ class PlanningAgent(Agent):
             "estimated_scope": self._estimate_scope(objective, complexity),
             "analysis_timestamp": datetime.now(UTC).isoformat(),
         }
+        
+        # Add reasoning insights if available
+        if reasoning_path:
+            analysis_result["reasoning_analysis"] = {
+                "reasoning_path_id": reasoning_path.path_id,
+                "confidence": reasoning_path.confidence,
+                "step_count": len(reasoning_path.steps),
+                "final_reasoning": reasoning_path.final_answer,
+                "key_insights": [step.thought for step in reasoning_path.steps[:3]]  # First 3 insights
+            }
+        
+        return analysis_result
 
     def _estimate_scope(self, objective: str, complexity: str) -> Dict[str, Any]:
         """Estimate project scope based on objective and complexity."""

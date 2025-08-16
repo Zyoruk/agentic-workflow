@@ -6,6 +6,7 @@ from unittest.mock import Mock, AsyncMock
 
 from agentic_workflow.core.reasoning import (
     ChainOfThoughtReasoning,
+    RAISEReasoning,
     ReActReasoning,
     ReasoningEngine,
     ReasoningStep,
@@ -516,4 +517,172 @@ class TestReasoningMemoryIntegration:
         cot.store_reasoning_path(path)
         
         # Verify store was attempted
+        assert mock_memory.store.called
+
+
+class TestRAISEReasoning:
+    """Test RAISE reasoning pattern."""
+    
+    def test_raise_reasoning_creation(self):
+        """Test RAISE reasoning instance creation."""
+        mock_communication = Mock()
+        raise_reasoning = RAISEReasoning("test_agent", communication_manager=mock_communication)
+        
+        assert raise_reasoning.agent_id == "test_agent"
+        assert raise_reasoning.pattern_type == "raise"
+        assert raise_reasoning.communication_manager == mock_communication
+        assert raise_reasoning.max_cycles == 8
+        assert raise_reasoning.improvement_threshold == 0.7
+    
+    def test_raise_reasoning_execution(self):
+        """Test RAISE reasoning execution."""
+        mock_memory = Mock()
+        mock_communication = Mock()
+        
+        raise_reasoning = RAISEReasoning("test_agent", mock_memory, mock_communication)
+        
+        result = raise_reasoning.reason("Implement microservices architecture")
+        
+        assert isinstance(result, ReasoningPath)
+        assert result.pattern_type == "raise"
+        assert result.objective == "Implement microservices architecture"
+        assert len(result.steps) > 0
+        assert result.completed
+        assert result.final_answer is not None
+        assert result.confidence > 0
+    
+    def test_raise_phases_representation(self):
+        """Test that all RAISE phases are represented in reasoning."""
+        mock_memory = Mock()
+        mock_communication = Mock()
+        
+        raise_reasoning = RAISEReasoning("test_agent", mock_memory, mock_communication)
+        
+        result = raise_reasoning.reason("Test objective")
+        
+        # Check that all RAISE phases are present
+        phases = ["reason", "act", "improve", "share", "evaluate"]
+        found_phases = set()
+        
+        for step in result.steps:
+            for phase in phases:
+                if phase.lower() in step.thought.lower():
+                    found_phases.add(phase)
+        
+        assert len(found_phases) == 5, f"Missing phases: {set(phases) - found_phases}"
+    
+    def test_raise_reasoning_validation(self):
+        """Test RAISE reasoning path validation."""
+        mock_memory = Mock()
+        mock_communication = Mock()
+        
+        raise_reasoning = RAISEReasoning("test_agent", mock_memory, mock_communication)
+        
+        result = raise_reasoning.reason("Test validation objective")
+        
+        assert raise_reasoning.validate_reasoning(result)
+        assert result.confidence >= 0.6
+    
+    def test_raise_reasoning_with_communication_error(self):
+        """Test RAISE reasoning when communication fails."""
+        mock_memory = Mock()
+        mock_communication = Mock()
+        mock_communication.broadcast_insight = AsyncMock(side_effect=Exception("Communication failed"))
+        
+        raise_reasoning = RAISEReasoning("test_agent", mock_memory, mock_communication)
+        
+        # Should not fail even if communication fails
+        result = raise_reasoning.reason("Test with communication error")
+        
+        assert isinstance(result, ReasoningPath)
+        assert result.completed
+    
+    def test_raise_reasoning_confidence_improvement(self):
+        """Test that RAISE reasoning improves confidence over cycles."""
+        mock_memory = Mock()
+        mock_communication = Mock()
+        
+        raise_reasoning = RAISEReasoning("test_agent", mock_memory, mock_communication)
+        
+        result = raise_reasoning.reason("Complex optimization problem")
+        
+        # Find improve steps and check confidence progression
+        improve_steps = [s for s in result.steps if "improve" in s.thought.lower()]
+        
+        assert len(improve_steps) > 0
+        # At least some improve steps should show confidence improvement
+        for step in improve_steps:
+            assert step.confidence > 0.7
+    
+    def test_raise_reasoning_early_completion(self):
+        """Test RAISE reasoning early completion when threshold is met."""
+        mock_memory = Mock()
+        mock_communication = Mock()
+        
+        # Set a lower threshold for easier completion
+        raise_reasoning = RAISEReasoning("test_agent", mock_memory, mock_communication)
+        raise_reasoning.improvement_threshold = 0.65
+        
+        result = raise_reasoning.reason("Simple task")
+        
+        assert result.completed
+        assert result.confidence >= 0.65
+        # Should complete in fewer than max cycles
+        assert len(result.steps) < raise_reasoning.max_cycles * 5  # 5 steps per cycle
+
+
+class TestReasoningEngineWithRAISE:
+    """Test ReasoningEngine with RAISE pattern integration."""
+    
+    def test_reasoning_engine_includes_raise(self):
+        """Test that ReasoningEngine includes RAISE pattern."""
+        mock_memory = Mock()
+        mock_communication = Mock()
+        
+        engine = ReasoningEngine("test_agent", mock_memory, mock_communication)
+        
+        assert "raise" in engine.patterns
+        assert isinstance(engine.patterns["raise"], RAISEReasoning)
+    
+    def test_reasoning_engine_raise_execution(self):
+        """Test ReasoningEngine can execute RAISE pattern."""
+        mock_memory = Mock()
+        mock_communication = Mock()
+        
+        engine = ReasoningEngine("test_agent", mock_memory, mock_communication)
+        
+        result = engine.reason("Test RAISE execution", pattern="raise")
+        
+        assert isinstance(result, ReasoningPath)
+        assert result.pattern_type == "raise"
+        assert result.completed
+    
+    def test_reasoning_engine_pattern_selection(self):
+        """Test that different patterns can be selected."""
+        mock_memory = Mock()
+        mock_communication = Mock()
+        
+        engine = ReasoningEngine("test_agent", mock_memory, mock_communication)
+        
+        # Test CoT
+        cot_result = engine.reason("Test objective", pattern="chain_of_thought")
+        assert cot_result.pattern_type == "chain_of_thought"
+        
+        # Test ReAct
+        react_result = engine.reason("Test objective", pattern="react")
+        assert react_result.pattern_type == "react"
+        
+        # Test RAISE
+        raise_result = engine.reason("Test objective", pattern="raise")
+        assert raise_result.pattern_type == "raise"
+    
+    def test_reasoning_engine_unknown_pattern_error(self):
+        """Test error handling for unknown patterns."""
+        mock_memory = Mock()
+        mock_communication = Mock()
+        
+        engine = ReasoningEngine("test_agent", mock_memory, mock_communication)
+        
+        with pytest.raises(ReasoningError, match="Unknown reasoning pattern: unknown"):
+            engine.reason("Test objective", pattern="unknown")
         mock_memory.store.assert_called()

@@ -12,6 +12,17 @@ import inspect
 from agentic_workflow.core.logging_config import get_logger
 from agentic_workflow.mcp.client.base import MCPClient, MCPCapability, MCPExecutionError
 
+# Import new tool system with fallback
+try:
+    from agentic_workflow.tools import ToolManager, ToolRegistry, ToolExecution, Tool as NewTool
+    NEW_TOOL_SYSTEM_AVAILABLE = True
+except ImportError:
+    ToolManager = None
+    ToolRegistry = None
+    ToolExecution = None
+    NewTool = None
+    NEW_TOOL_SYSTEM_AVAILABLE = False
+
 logger = get_logger(__name__)
 
 
@@ -145,10 +156,10 @@ class MCPTool(Tool):
 
 class EnhancedToolRegistry:
     """
-    Enhanced tool registry that combines built-in tools with MCP capabilities.
+    Enhanced tool registry that combines built-in tools with MCP capabilities and the new tool system.
     
     Provides unified interface for tool discovery, execution, and management
-    across both built-in and dynamically discovered MCP tools.
+    across built-in tools, the new integrated tool system, and dynamically discovered MCP tools.
     """
     
     def __init__(self, mcp_client: Optional[MCPClient] = None):
@@ -171,9 +182,17 @@ class EnhancedToolRegistry:
         # Tool composition support
         self.tool_workflows: Dict[str, List[str]] = {}
         
+        # Integration with new tool system
+        self.new_tool_manager: Optional[ToolManager] = None
+        self.new_tool_system_enabled = NEW_TOOL_SYSTEM_AVAILABLE
+        
     async def initialize(self) -> None:
-        """Initialize the tool registry."""
-        logger.info("Initializing enhanced tool registry")
+        """Initialize the tool registry with all available tool systems."""
+        logger.info("Initializing enhanced tool registry with integrated systems")
+        
+        # Initialize new tool system if available
+        if self.new_tool_system_enabled and ToolManager:
+            await self._initialize_new_tool_system()
         
         # Load built-in tools
         await self._load_builtin_tools()
@@ -186,7 +205,22 @@ class EnhancedToolRegistry:
             self.mcp_client.add_event_callback('capability_added', self._on_capability_added)
             self.mcp_client.add_event_callback('capability_removed', self._on_capability_removed)
         
-        logger.info(f"Tool registry initialized with {len(self.get_all_tools())} tools")
+        total_tools = len(self.get_all_tools())
+        if self.new_tool_manager:
+            catalog = self.new_tool_manager.get_tool_catalog()
+            total_tools += catalog.get('total_tools', 0)
+            
+        logger.info(f"Enhanced tool registry initialized with {total_tools} tools across all systems")
+    
+    async def _initialize_new_tool_system(self) -> None:
+        """Initialize the new integrated tool system."""
+        try:
+            self.new_tool_manager = ToolManager()
+            await self.new_tool_manager.initialize()
+            logger.info("New tool system integrated successfully")
+        except Exception as e:
+            logger.warning(f"Failed to initialize new tool system: {e}")
+            self.new_tool_system_enabled = False
     
     async def _load_builtin_tools(self) -> None:
         """Load built-in tools."""
@@ -339,11 +373,64 @@ class EnhancedToolRegistry:
         return None
     
     def get_all_tools(self) -> Dict[str, Tool]:
-        """Get all available tools."""
+        """Get all available tools from MCP and built-in systems."""
         all_tools = {}
         all_tools.update(self.builtin_tools)
         all_tools.update(self.mcp_tools)
         return all_tools
+    
+    def get_comprehensive_tool_list(self) -> Dict[str, Any]:
+        """Get comprehensive tool information from all systems."""
+        result = {
+            'mcp_tools': {},
+            'builtin_tools': {},
+            'new_system_tools': {},
+            'total_count': 0
+        }
+        
+        # MCP tools
+        for name, tool in self.mcp_tools.items():
+            result['mcp_tools'][name] = {
+                'metadata': tool.metadata,
+                'source': 'mcp',
+                'available': True
+            }
+        
+        # Built-in tools
+        for name, tool in self.builtin_tools.items():
+            result['builtin_tools'][name] = {
+                'metadata': tool.metadata,
+                'source': 'builtin',
+                'available': True
+            }
+        
+        # New system tools
+        if self.new_tool_manager:
+            try:
+                catalog = self.new_tool_manager.get_tool_catalog()
+                for category, tools in catalog.get('categories', {}).items():
+                    for tool_info in tools:
+                        tool_name = tool_info.get('id', tool_info.get('name', 'unknown'))
+                        result['new_system_tools'][tool_name] = {
+                            'name': tool_info.get('name'),
+                            'description': tool_info.get('description'),
+                            'category': category,
+                            'source': 'new_system',
+                            'available': True,
+                            'version': tool_info.get('version'),
+                            'tags': tool_info.get('tags', [])
+                        }
+            except Exception as e:
+                logger.warning(f"Failed to get new system tools: {e}")
+        
+        # Calculate total
+        result['total_count'] = (
+            len(result['mcp_tools']) + 
+            len(result['builtin_tools']) + 
+            len(result['new_system_tools'])
+        )
+        
+        return result
     
     def list_tools(self, category: Optional[str] = None, source: Optional[str] = None, tags: Optional[List[str]] = None) -> List[ToolMetadata]:
         """
@@ -376,13 +463,19 @@ class EnhancedToolRegistry:
         tools.sort(key=lambda t: t.usage_count, reverse=True)
         return tools
     
-    async def execute_tool(self, tool_name: str, parameters: Dict[str, Any] = None) -> Any:
+    async def execute_tool(self, tool_name: str, parameters: Dict[str, Any] = None, agent_id: str = "enhanced_registry") -> Any:
         """
-        Execute a tool.
+        Execute a tool from any available system.
+        
+        Tries to execute from:
+        1. MCP tools (highest priority for dynamic capabilities)
+        2. New integrated tool system
+        3. Built-in tools (fallback)
         
         Args:
             tool_name: Name of the tool to execute
             parameters: Tool parameters
+            agent_id: ID of the agent executing the tool
             
         Returns:
             Tool execution result
@@ -391,28 +484,44 @@ class EnhancedToolRegistry:
             ValueError: If tool not found
             Exception: If tool execution fails
         """
-        tool = self.get_tool(tool_name)
-        if not tool:
-            raise ValueError(f"Tool '{tool_name}' not found")
-        
         parameters = parameters or {}
-        
-        # Validate parameters
-        if not await tool.validate_parameters(parameters):
-            raise ValueError(f"Invalid parameters for tool '{tool_name}'")
         
         # Record execution start
         execution_start = datetime.now()
         
         try:
-            # Execute tool
-            result = await tool.execute(**parameters)
+            # Try MCP tools first (highest priority)
+            if tool_name in self.mcp_tools:
+                tool = self.mcp_tools[tool_name]
+                if await tool.validate_parameters(parameters):
+                    result = await tool.execute(**parameters)
+                    execution_time = (datetime.now() - execution_start).total_seconds()
+                    await self._record_execution(tool_name, parameters, result, execution_time, True, source="mcp")
+                    return result
             
-            # Record successful execution
-            execution_time = (datetime.now() - execution_start).total_seconds()
-            await self._record_execution(tool_name, parameters, result, execution_time, True)
+            # Try new tool system if available
+            if self.new_tool_manager:
+                try:
+                    execution = await self.new_tool_manager.execute_tool(tool_name, parameters, agent_id)
+                    if execution.success:
+                        await self._record_execution(tool_name, parameters, execution.outputs, execution.execution_time, True, source="new_system")
+                        return execution.outputs
+                    else:
+                        logger.warning(f"New tool system execution failed for {tool_name}: {execution.error_message}")
+                except Exception as e:
+                    logger.debug(f"New tool system couldn't execute {tool_name}: {e}")
             
-            return result
+            # Try built-in tools as fallback
+            if tool_name in self.builtin_tools:
+                tool = self.builtin_tools[tool_name]
+                if await tool.validate_parameters(parameters):
+                    result = await tool.execute(**parameters)
+                    execution_time = (datetime.now() - execution_start).total_seconds()
+                    await self._record_execution(tool_name, parameters, result, execution_time, True, source="builtin")
+                    return result
+            
+            # Tool not found in any system
+            raise ValueError(f"Tool '{tool_name}' not found in any available system")
             
         except Exception as e:
             # Record failed execution
@@ -421,7 +530,8 @@ class EnhancedToolRegistry:
             raise
     
     async def _record_execution(self, tool_name: str, parameters: Dict[str, Any], result: Any, 
-                               execution_time: float, success: bool, error: Optional[str] = None) -> None:
+                               execution_time: float, success: bool, error: Optional[str] = None, 
+                               source: str = "unknown") -> None:
         """Record tool execution in history."""
         execution_record = {
             'tool_name': tool_name,
@@ -430,6 +540,7 @@ class EnhancedToolRegistry:
             'execution_time': execution_time,
             'success': success,
             'error': error,
+            'source': source,
             'timestamp': datetime.now().isoformat()
         }
         

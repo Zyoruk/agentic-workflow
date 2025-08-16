@@ -45,25 +45,31 @@ class TestMCPEnhancedAgent:
             agent_id="test_agent",
             mcp_enabled=True,
             mcp_servers=[sample_server_config],
-            mcp_categories=["development"]
+            mcp_categories=["development"],
+            reasoning_enabled=False,  # Disable reasoning for focused test
+            communication_manager=None
         )
         
         assert agent.mcp_enabled
         assert len(agent.mcp_servers) == 1
         assert agent.mcp_categories == ["development"]
         assert not agent.mcp_initialized  # Not initialized until initialize() is called
+        assert not agent.reasoning_enabled  # Explicitly disabled
     
     async def test_initialization_with_mcp_disabled(self):
         """Test agent initialization with MCP disabled."""
         agent = MCPEnhancedAgent(
             agent_id="test_agent",
-            mcp_enabled=False
+            mcp_enabled=False,
+            reasoning_enabled=False,  # Disable reasoning for focused test
+            communication_manager=None
         )
         
         assert not agent.mcp_enabled
         assert agent.mcp_client is None
         assert agent.mcp_registry is None
         assert agent.enhanced_tools is None
+        assert not agent.reasoning_enabled
     
     @patch('agentic_workflow.mcp.integration.agents.MCPClient')
     @patch('agentic_workflow.mcp.integration.agents.MCPServerRegistry')
@@ -585,3 +591,204 @@ class TestMCPAgentIntegration:
             # Execution should still work without MCP
             result = await agent.execute(sample_agent_task)
             assert result.success
+
+
+@pytest.mark.asyncio 
+class TestMCPEnhancedIntegration:
+    """Test MCP integration with new reasoning and communication systems."""
+    
+    async def test_initialization_with_reasoning_enabled(self):
+        """Test agent initialization with reasoning enabled."""
+        agent = MCPEnhancedAgent(
+            agent_id="test_agent",
+            mcp_enabled=False,  # Focus on reasoning
+            reasoning_enabled=True,
+            communication_manager=None
+        )
+        
+        assert agent.reasoning_enabled
+        assert agent.default_reasoning_pattern == "chain_of_thought"
+        # Reasoning engine will be None until ReasoningEngine is available
+    
+    async def test_initialization_with_communication(self):
+        """Test agent initialization with communication manager."""
+        mock_comm_manager = Mock()
+        
+        agent = MCPEnhancedAgent(
+            agent_id="test_agent",
+            mcp_enabled=False,  # Focus on communication
+            reasoning_enabled=False,
+            communication_manager=mock_comm_manager
+        )
+        
+        assert agent.communication_manager is mock_comm_manager
+    
+    async def test_enhanced_features_integration(self):
+        """Test agent with all enhanced features enabled."""
+        mock_comm_manager = Mock()
+        
+        agent = MCPEnhancedAgent(
+            agent_id="test_agent",
+            mcp_enabled=True,
+            reasoning_enabled=True,
+            communication_manager=mock_comm_manager,
+            default_reasoning_pattern="raise"
+        )
+        
+        assert agent.mcp_enabled
+        assert agent.reasoning_enabled
+        assert agent.communication_manager is mock_comm_manager
+        assert agent.default_reasoning_pattern == "raise"
+    
+    @patch('agentic_workflow.mcp.integration.agents.ReasoningEngine')
+    async def test_reasoning_engine_initialization(self, mock_reasoning_engine):
+        """Test reasoning engine initialization."""
+        mock_engine_instance = Mock()
+        mock_reasoning_engine.return_value = mock_engine_instance
+        
+        agent = MCPEnhancedAgent(
+            agent_id="test_agent",
+            mcp_enabled=False,
+            reasoning_enabled=True
+        )
+        
+        await agent.initialize()
+        
+        assert agent.reasoning_engine is mock_engine_instance
+        mock_reasoning_engine.assert_called_once_with(
+            agent_id="test_agent",
+            memory_manager=agent.memory_manager,
+            communication_manager=agent.communication_manager
+        )
+    
+    async def test_enhanced_reasoning_with_mcp_context(self):
+        """Test enhanced reasoning with MCP context."""
+        from agentic_workflow.agents.base import AgentTask
+        
+        agent = MCPEnhancedAgent(
+            agent_id="test_agent",
+            mcp_enabled=True,
+            reasoning_enabled=False  # Disable for fallback test
+        )
+        
+        # Mock dynamic capabilities
+        agent.dynamic_capabilities = ["git_tool", "file_tool", "code_analyzer"]
+        
+        task = AgentTask(
+            task_id="test_task",
+            type="analysis",
+            description="Analyze code repository"
+        )
+        
+        reasoning_result = await agent._enhanced_reasoning(task)
+        
+        assert reasoning_result["approach"] == "enhanced_mcp_reasoning"
+        assert reasoning_result["capabilities_considered"] == agent.dynamic_capabilities
+        assert "reasoning_steps" in reasoning_result
+        assert "confidence" in reasoning_result
+    
+    async def test_reasoning_pattern_selection(self):
+        """Test automatic reasoning pattern selection based on task type."""
+        agent = MCPEnhancedAgent(
+            agent_id="test_agent",
+            reasoning_enabled=True
+        )
+        
+        # Mock reasoning engine
+        mock_engine = Mock()
+        mock_reasoning_path = Mock()
+        mock_reasoning_path.path_id = "test_path"
+        mock_reasoning_path.steps = []
+        mock_reasoning_path.final_answer = "Test answer"
+        mock_reasoning_path.confidence = 0.85
+        mock_reasoning_path.pattern_type = "chain_of_thought"
+        
+        # Test different task types and expected patterns
+        test_cases = [
+            ("coordination", "raise"),
+            ("implementation", "react"), 
+            ("analysis", "chain_of_thought")
+        ]
+        
+        for task_type, expected_pattern in test_cases:
+            mock_engine.reason.return_value = mock_reasoning_path
+            mock_engine.reason_async.return_value = mock_reasoning_path
+            agent.reasoning_engine = mock_engine
+            
+            objective = f"Test {task_type} task"
+            context = {"task_type": task_type}
+            
+            result = await agent._execute_mcp_aware_reasoning(objective, context)
+            
+            # Verify correct method was called based on pattern
+            if expected_pattern == "raise":
+                mock_engine.reason_async.assert_called()
+            else:
+                mock_engine.reason.assert_called()
+    
+    async def test_tool_extraction_from_reasoning(self):
+        """Test extracting MCP tools from reasoning steps."""
+        agent = MCPEnhancedAgent(agent_id="test_agent")
+        agent.dynamic_capabilities = ["git_tool", "file_analyzer", "code_reviewer"]
+        
+        # Mock reasoning path with tool references
+        mock_step1 = Mock()
+        mock_step1.action = "Use git_tool to check repository status"
+        mock_step1.observation = "Repository is clean"
+        
+        mock_step2 = Mock()
+        mock_step2.action = "Execute file_analyzer on source files"
+        mock_step2.observation = "Found 50 Python files using file_analyzer"
+        
+        mock_step3 = Mock()
+        mock_step3.action = "No specific tool needed"
+        mock_step3.observation = "Analysis complete"
+        
+        mock_reasoning_path = Mock()
+        mock_reasoning_path.steps = [mock_step1, mock_step2, mock_step3]
+        
+        extracted_tools = agent._extract_tools_from_reasoning(mock_reasoning_path)
+        
+        assert "git_tool" in extracted_tools
+        assert "file_analyzer" in extracted_tools
+        assert "code_reviewer" not in extracted_tools  # Not referenced
+        assert len(extracted_tools) == 2
+    
+    async def test_backward_compatibility(self):
+        """Test that enhanced features work with backward compatibility."""
+        # Test with reasoning disabled
+        agent_basic = MCPEnhancedAgent(
+            agent_id="basic_agent",
+            mcp_enabled=True,
+            reasoning_enabled=False
+        )
+        
+        assert agent_basic.mcp_enabled
+        assert not agent_basic.reasoning_enabled
+        assert agent_basic.reasoning_engine is None
+        
+        # Test with communication disabled
+        agent_no_comm = MCPEnhancedAgent(
+            agent_id="no_comm_agent",
+            mcp_enabled=True,
+            communication_manager=None
+        )
+        
+        assert agent_no_comm.mcp_enabled
+        assert agent_no_comm.communication_manager is None
+        
+        # Both should still work for basic MCP functionality
+        from agentic_workflow.agents.base import AgentTask
+        
+        task = AgentTask(
+            task_id="compat_test",
+            type="basic",
+            description="Basic compatibility test"
+        )
+        
+        # Should not raise exceptions
+        result_basic = await agent_basic._enhanced_reasoning(task)
+        result_no_comm = await agent_no_comm._enhanced_reasoning(task)
+        
+        assert result_basic["approach"] == "enhanced_mcp_reasoning"
+        assert result_no_comm["approach"] == "enhanced_mcp_reasoning"

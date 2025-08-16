@@ -2,7 +2,8 @@
 Security framework for MCP integration.
 
 Provides authentication, authorization, audit logging, and security monitoring
-for MCP server connections and tool executions.
+for MCP server connections and tool executions. Includes advanced threat detection,
+prompt/response scanning, and malicious connection handling.
 """
 
 import asyncio
@@ -89,7 +90,8 @@ class SecurityManager:
     Central security manager for MCP integration.
     
     Handles authentication, authorization, policy enforcement,
-    and security auditing for MCP operations.
+    security auditing, threat detection, and prompt/response scanning
+    for MCP operations.
     """
     
     def __init__(self, config_dir: Optional[Path] = None):
@@ -118,16 +120,23 @@ class SecurityManager:
         self.security_enabled = True
         self.blocked_servers: Set[str] = set()
         self.blocked_tools: Set[str] = set()
+        self.blocked_agents: Set[str] = set()  # New: blocked agents
         self.rate_limits: Dict[str, Dict[str, Any]] = {}
         
         # Threat detection
         self.suspicious_activities: List[Dict[str, Any]] = []
         self.threat_threshold = 5
+        self.malicious_indicators: Set[str] = set()  # New: malicious IP/domains
+        
+        # Advanced security components (will be initialized later)
+        self.threat_detector = None
+        self.prompt_scanner = None
         
         # Files
         self._policies_file = self.config_dir / "policies.json"
         self._credentials_file = self.config_dir / "credentials.json"
         self._audit_file = self.config_dir / "audit.log"
+        self._blocklist_file = self.config_dir / "blocklist.json"
     
     async def initialize(self) -> None:
         """Initialize security manager."""
@@ -146,8 +155,14 @@ class SecurityManager:
         # Load credentials
         await self._load_credentials()
         
+        # Load blocklists
+        await self._load_blocklists()
+        
         # Setup audit logging
         await self._setup_audit_logging()
+        
+        # Initialize advanced security components
+        await self._initialize_advanced_security()
         
         logger.info("MCP security manager initialized")
     
@@ -818,3 +833,335 @@ class SecurityManager:
         except Exception as e:
             logger.error(f"Failed to export audit log: {e}")
             return False
+    
+    async def _initialize_advanced_security(self) -> None:
+        """Initialize advanced security components."""
+        try:
+            # Initialize threat detection engine
+            from .threat_detection import ThreatDetectionEngine
+            self.threat_detector = ThreatDetectionEngine()
+            
+            # Initialize prompt/response scanner
+            from .prompt_security import PromptResponseScanner
+            self.prompt_scanner = PromptResponseScanner()
+            
+            logger.info("Advanced security components initialized")
+        except Exception as e:
+            logger.error(f"Failed to initialize advanced security components: {e}")
+    
+    async def _load_blocklists(self) -> None:
+        """Load security blocklists."""
+        try:
+            if self._blocklist_file.exists():
+                with open(self._blocklist_file, 'r') as f:
+                    data = json.load(f)
+                
+                self.blocked_servers.update(data.get('blocked_servers', []))
+                self.blocked_tools.update(data.get('blocked_tools', []))
+                self.blocked_agents.update(data.get('blocked_agents', []))
+                self.malicious_indicators.update(data.get('malicious_indicators', []))
+                
+                logger.info(f"Loaded blocklists: {len(self.blocked_servers)} servers, "
+                           f"{len(self.blocked_tools)} tools, {len(self.blocked_agents)} agents, "
+                           f"{len(self.malicious_indicators)} indicators")
+        except Exception as e:
+            logger.error(f"Failed to load blocklists: {e}")
+    
+    async def _save_blocklists(self) -> None:
+        """Save security blocklists."""
+        try:
+            data = {
+                'blocked_servers': list(self.blocked_servers),
+                'blocked_tools': list(self.blocked_tools),
+                'blocked_agents': list(self.blocked_agents),
+                'malicious_indicators': list(self.malicious_indicators),
+                'updated_at': datetime.now().isoformat()
+            }
+            
+            with open(self._blocklist_file, 'w') as f:
+                json.dump(data, f, indent=2)
+            
+            logger.info("Saved security blocklists")
+        except Exception as e:
+            logger.error(f"Failed to save blocklists: {e}")
+    
+    async def validate_connection_security(self, agent_id: str, server_config: MCPServerConfig,
+                                         connection_data: Dict[str, Any]) -> bool:
+        """
+        Enhanced connection validation with threat detection.
+        
+        Args:
+            agent_id: Agent requesting connection
+            server_config: Server configuration
+            connection_data: Connection metadata for threat analysis
+            
+        Returns:
+            True if connection allowed
+        """
+        # Check if agent is blocked
+        if agent_id in self.blocked_agents:
+            await self._log_security_event(
+                event_type="blocked_agent_connection",
+                agent_id=agent_id,
+                server_id=server_config.name,
+                success=False,
+                error_message="Agent is blocked",
+                security_level=SecurityLevel.CRITICAL
+            )
+            return False
+        
+        # Check basic server validation first
+        if not await self.validate_server_connection(agent_id, server_config):
+            return False
+        
+        # Advanced threat detection
+        if self.threat_detector:
+            threat_event = await self.threat_detector.analyze_connection_attempt(
+                agent_id, server_config.name, connection_data
+            )
+            
+            if threat_event:
+                # Block high-confidence threats
+                if threat_event.confidence >= 0.8:
+                    await self._handle_security_threat(agent_id, server_config.name, threat_event)
+                    return False
+                
+                # Log lower-confidence threats
+                self.threat_detector.add_threat_event(threat_event)
+        
+        return True
+    
+    async def validate_request_security(self, agent_id: str, server_id: str, tool_name: str,
+                                      request_data: Dict[str, Any]) -> bool:
+        """
+        Enhanced request validation with threat detection.
+        
+        Args:
+            agent_id: Agent making request
+            server_id: Target server
+            tool_name: Tool being executed
+            request_data: Request data for analysis
+            
+        Returns:
+            True if request allowed
+        """
+        # Check basic tool validation first
+        if not await self.validate_tool_execution(agent_id, server_id, tool_name, request_data):
+            return False
+        
+        # Advanced threat detection
+        if self.threat_detector:
+            threat_event = await self.threat_detector.analyze_request(
+                agent_id, server_id, tool_name, request_data
+            )
+            
+            if threat_event:
+                # Block high-confidence threats
+                if threat_event.confidence >= 0.7:
+                    await self._handle_security_threat(agent_id, server_id, threat_event)
+                    return False
+                
+                # Log threats
+                self.threat_detector.add_threat_event(threat_event)
+        
+        return True
+    
+    async def scan_prompt_security(self, agent_id: str, prompt: str,
+                                 context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        """
+        Scan prompt for security issues.
+        
+        Args:
+            agent_id: Agent sending prompt
+            prompt: Prompt content
+            context: Additional context
+            
+        Returns:
+            Scan results with security assessment
+        """
+        if not self.prompt_scanner:
+            return {"status": "scanner_unavailable"}
+        
+        try:
+            scan_report = await self.prompt_scanner.scan_prompt(agent_id, prompt, context)
+            
+            # Handle security violations
+            if scan_report.scan_result.value in ['threat', 'blocked']:
+                await self._log_security_event(
+                    event_type="prompt_security_violation",
+                    agent_id=agent_id,
+                    success=False,
+                    error_message=f"Prompt scan result: {scan_report.scan_result.value}",
+                    security_level=SecurityLevel.HIGH
+                )
+            
+            return {
+                "status": scan_report.scan_result.value,
+                "risk_score": scan_report.risk_score,
+                "violations": len(scan_report.violations),
+                "sanitized": scan_report.sanitized_content is not None,
+                "blocked": scan_report.blocked_content is not None
+            }
+            
+        except Exception as e:
+            logger.error(f"Failed to scan prompt security: {e}")
+            return {"status": "scan_error", "error": str(e)}
+    
+    async def scan_response_security(self, agent_id: str, response: str,
+                                   context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        """
+        Scan response for security issues.
+        
+        Args:
+            agent_id: Agent receiving response
+            response: Response content
+            context: Additional context
+            
+        Returns:
+            Scan results with security assessment
+        """
+        if not self.prompt_scanner:
+            return {"status": "scanner_unavailable"}
+        
+        try:
+            scan_report = await self.prompt_scanner.scan_response(agent_id, response, context)
+            
+            # Handle security violations
+            if scan_report.scan_result.value in ['threat', 'blocked']:
+                await self._log_security_event(
+                    event_type="response_security_violation",
+                    agent_id=agent_id,
+                    success=False,
+                    error_message=f"Response scan result: {scan_report.scan_result.value}",
+                    security_level=SecurityLevel.HIGH
+                )
+            
+            return {
+                "status": scan_report.scan_result.value,
+                "risk_score": scan_report.risk_score,
+                "violations": len(scan_report.violations),
+                "sanitized": scan_report.sanitized_content is not None,
+                "blocked": scan_report.blocked_content is not None
+            }
+            
+        except Exception as e:
+            logger.error(f"Failed to scan response security: {e}")
+            return {"status": "scan_error", "error": str(e)}
+    
+    async def _handle_security_threat(self, agent_id: str, server_id: str, threat_event) -> None:
+        """Handle detected security threat."""
+        logger.critical(f"Security threat detected: {threat_event.description} "
+                       f"(confidence: {threat_event.confidence})")
+        
+        # Block the threat
+        threat_event.blocked = True
+        
+        # Consider blocking agent if multiple high-confidence threats
+        if self.threat_detector:
+            agent_risk = self.threat_detector.get_agent_risk_score(agent_id)
+            if agent_risk >= 0.8:
+                await self.block_agent(agent_id, f"High risk score: {agent_risk}")
+        
+        # Log critical security event
+        await self._log_security_event(
+            event_type="critical_threat_blocked",
+            agent_id=agent_id,
+            server_id=server_id,
+            success=False,
+            error_message=f"Blocked threat: {threat_event.description}",
+            security_level=SecurityLevel.CRITICAL
+        )
+    
+    async def block_agent(self, agent_id: str, reason: str = "") -> None:
+        """Block an agent from MCP operations."""
+        self.blocked_agents.add(agent_id)
+        await self._save_blocklists()
+        logger.critical(f"Blocked agent: {agent_id} - {reason}")
+    
+    async def unblock_agent(self, agent_id: str) -> None:
+        """Unblock an agent."""
+        self.blocked_agents.discard(agent_id)
+        await self._save_blocklists()
+        logger.info(f"Unblocked agent: {agent_id}")
+    
+    async def add_malicious_indicator(self, indicator: str, reason: str = "") -> None:
+        """Add malicious indicator (IP, domain, etc.)."""
+        self.malicious_indicators.add(indicator)
+        await self._save_blocklists()
+        logger.warning(f"Added malicious indicator: {indicator} - {reason}")
+    
+    async def remove_malicious_indicator(self, indicator: str) -> None:
+        """Remove malicious indicator."""
+        self.malicious_indicators.discard(indicator)
+        await self._save_blocklists()
+        logger.info(f"Removed malicious indicator: {indicator}")
+    
+    def get_comprehensive_security_metrics(self) -> Dict[str, Any]:
+        """Get comprehensive security metrics including advanced components."""
+        base_metrics = self.get_security_metrics()
+        
+        # Add advanced metrics
+        if self.threat_detector:
+            threat_summary = self.threat_detector.get_threat_summary()
+            base_metrics.update({
+                "threat_detection": threat_summary,
+                "total_threats_detected": threat_summary.get("total_threats", 0),
+                "critical_threats": threat_summary.get("threat_levels", {}).get("critical", 0),
+            })
+        
+        if self.prompt_scanner:
+            scan_stats = self.prompt_scanner.get_scan_statistics()
+            base_metrics.update({
+                "prompt_scanning": scan_stats,
+                "total_scans": scan_stats.get("total_scans", 0),
+                "blocked_content": scan_stats.get("blocked_content_count", 0),
+            })
+        
+        # Add blocklist metrics
+        base_metrics.update({
+            "blocked_agents_count": len(self.blocked_agents),
+            "malicious_indicators_count": len(self.malicious_indicators),
+        })
+        
+        return base_metrics
+    
+    async def generate_security_report(self, time_window: timedelta = timedelta(hours=24)) -> Dict[str, Any]:
+        """Generate comprehensive security report."""
+        report = {
+            "report_generated": datetime.now().isoformat(),
+            "time_window_hours": time_window.total_seconds() / 3600,
+            "security_metrics": self.get_comprehensive_security_metrics(),
+            "threat_analysis": {},
+            "scanning_analysis": {},
+            "recommendations": []
+        }
+        
+        # Add threat analysis
+        if self.threat_detector:
+            threat_summary = self.threat_detector.get_threat_summary(time_window)
+            report["threat_analysis"] = threat_summary
+            
+            # Generate recommendations based on threats
+            if threat_summary.get("total_threats", 0) > 10:
+                report["recommendations"].append(
+                    "High threat activity detected. Consider reviewing security policies."
+                )
+        
+        # Add scanning analysis
+        if self.prompt_scanner:
+            scan_stats = self.prompt_scanner.get_scan_statistics(time_window)
+            report["scanning_analysis"] = scan_stats
+            
+            # Generate recommendations based on scans
+            if scan_stats.get("blocked_content_count", 0) > 5:
+                report["recommendations"].append(
+                    "Multiple content blocks detected. Review content filtering policies."
+                )
+        
+        # General recommendations
+        if len(self.blocked_agents) > 0:
+            report["recommendations"].append(
+                f"{len(self.blocked_agents)} agents are currently blocked. Review agent permissions."
+            )
+        
+        return report

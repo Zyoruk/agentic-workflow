@@ -17,7 +17,7 @@ logger = get_logger(__name__)
 
 class EmailTool(Tool):
     """Tool for sending emails."""
-    
+
     def __init__(self):
         capabilities = ToolCapability(
             name="email_sender",
@@ -27,21 +27,35 @@ class EmailTool(Tool):
             input_schema={
                 "type": "object",
                 "properties": {
-                    "to": {"type": "array", "items": {"type": "string"}, "description": "Recipient email addresses"},
+                    "to": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "Recipient email addresses",
+                    },
                     "subject": {"type": "string", "description": "Email subject"},
                     "body": {"type": "string", "description": "Email body"},
                     "smtp_server": {"type": "string", "description": "SMTP server"},
-                    "smtp_port": {"type": "integer", "description": "SMTP port", "default": 587},
+                    "smtp_port": {
+                        "type": "integer",
+                        "description": "SMTP port",
+                        "default": 587,
+                    },
                     "username": {"type": "string", "description": "SMTP username"},
                     "password": {"type": "string", "description": "SMTP password"},
-                    "use_tls": {"type": "boolean", "description": "Use TLS", "default": True}
+                    "use_tls": {
+                        "type": "boolean",
+                        "description": "Use TLS",
+                        "default": True,
+                    },
                 },
-                "required": ["to", "subject", "body"]
-            }
+                "required": ["to", "subject", "body"],
+            },
         )
         super().__init__("email_sender", capabilities)
-    
-    async def execute(self, inputs: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
+
+    async def execute(
+        self, inputs: Dict[str, Any], context: Dict[str, Any] = None
+    ) -> Dict[str, Any]:
         """Execute email sending."""
         to_addresses = inputs["to"]
         subject = inputs["subject"]
@@ -51,7 +65,7 @@ class EmailTool(Tool):
         username = inputs.get("username")
         password = inputs.get("password")
         use_tls = inputs.get("use_tls", True)
-        
+
         try:
             # Create message
             msg = MIMEMultipart()
@@ -59,48 +73,48 @@ class EmailTool(Tool):
             msg["To"] = ", ".join(to_addresses)
             if username:
                 msg["From"] = username
-            
+
             # Add body
             msg.attach(MIMEText(body, "plain"))
-            
+
             # Send email (mock implementation for safety)
             # In a real implementation, you would connect to SMTP server
             logger.info(f"Mock email sent to {to_addresses}: {subject}")
-            
+
             return {
                 "success": True,
                 "message": f"Email sent to {len(to_addresses)} recipients",
                 "recipients": to_addresses,
                 "subject": subject,
-                "timestamp": datetime.now().isoformat()
+                "timestamp": datetime.now().isoformat(),
             }
-            
+
         except Exception as e:
             logger.error(f"Failed to send email: {e}")
             return {
                 "success": False,
                 "error": str(e),
                 "recipients": to_addresses,
-                "subject": subject
+                "subject": subject,
             }
-    
+
     def validate_inputs(self, inputs: Dict[str, Any]) -> bool:
         """Validate input parameters."""
         required_fields = ["to", "subject", "body"]
         if not all(field in inputs for field in required_fields):
             return False
-        
+
         # Validate email addresses format (basic check)
         to_addresses = inputs["to"]
         if not isinstance(to_addresses, list) or not to_addresses:
             return False
-        
+
         return all("@" in addr for addr in to_addresses)
 
 
 class SlackTool(Tool):
     """Tool for sending Slack messages."""
-    
+
     def __init__(self):
         capabilities = ToolCapability(
             name="slack_messenger",
@@ -110,69 +124,72 @@ class SlackTool(Tool):
             input_schema={
                 "type": "object",
                 "properties": {
-                    "webhook_url": {"type": "string", "description": "Slack webhook URL"},
+                    "webhook_url": {
+                        "type": "string",
+                        "description": "Slack webhook URL",
+                    },
                     "channel": {"type": "string", "description": "Slack channel"},
                     "message": {"type": "string", "description": "Message text"},
                     "username": {"type": "string", "description": "Bot username"},
-                    "emoji": {"type": "string", "description": "Bot emoji"}
+                    "emoji": {"type": "string", "description": "Bot emoji"},
                 },
-                "required": ["webhook_url", "message"]
-            }
+                "required": ["webhook_url", "message"],
+            },
         )
         super().__init__("slack_messenger", capabilities)
-    
-    async def execute(self, inputs: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
+
+    async def execute(
+        self, inputs: Dict[str, Any], context: Dict[str, Any] = None
+    ) -> Dict[str, Any]:
         """Execute Slack message sending."""
         webhook_url = inputs["webhook_url"]
         message = inputs["message"]
         channel = inputs.get("channel")
         username = inputs.get("username", "Agentic Workflow Bot")
         emoji = inputs.get("emoji", ":robot_face:")
-        
+
         try:
             # Prepare Slack payload
-            payload = {
-                "text": message,
-                "username": username,
-                "icon_emoji": emoji
-            }
-            
+            payload = {"text": message, "username": username, "icon_emoji": emoji}
+
             if channel:
                 payload["channel"] = channel
-            
+
             # Mock sending (in real implementation, use requests to post to webhook)
-            logger.info(f"Mock Slack message sent to {channel or 'default channel'}: {message}")
-            
+            logger.info(
+                f"Mock Slack message sent to {channel or 'default channel'}: {message}"
+            )
+
             return {
                 "success": True,
                 "message": "Slack message sent successfully",
                 "channel": channel,
                 "text": message,
-                "timestamp": datetime.now().isoformat()
+                "timestamp": datetime.now().isoformat(),
             }
-            
+
         except Exception as e:
             logger.error(f"Failed to send Slack message: {e}")
             return {
                 "success": False,
                 "error": str(e),
                 "channel": channel,
-                "text": message
+                "text": message,
             }
-    
+
     def validate_inputs(self, inputs: Dict[str, Any]) -> bool:
         """Validate input parameters."""
         return (
-            "webhook_url" in inputs and 
-            "message" in inputs and 
-            isinstance(inputs["webhook_url"], str) and
-            isinstance(inputs["message"], str)
+            "webhook_url" in inputs
+            and "message" in inputs
+            and isinstance(inputs["webhook_url"], str)
+            and isinstance(inputs["message"], str)
         )
 
 
 class NotificationTool(Tool):
     """Tool for general notifications."""
-    
+
     def __init__(self):
         capabilities = ToolCapability(
             name="notification_sender",
@@ -182,19 +199,39 @@ class NotificationTool(Tool):
             input_schema={
                 "type": "object",
                 "properties": {
-                    "message": {"type": "string", "description": "Notification message"},
+                    "message": {
+                        "type": "string",
+                        "description": "Notification message",
+                    },
                     "title": {"type": "string", "description": "Notification title"},
-                    "priority": {"type": "string", "enum": ["low", "normal", "high"], "default": "normal"},
-                    "channels": {"type": "array", "items": {"type": "string"}, "description": "Notification channels"},
-                    "recipients": {"type": "array", "items": {"type": "string"}, "description": "Recipient identifiers"},
-                    "metadata": {"type": "object", "description": "Additional metadata"}
+                    "priority": {
+                        "type": "string",
+                        "enum": ["low", "normal", "high"],
+                        "default": "normal",
+                    },
+                    "channels": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "Notification channels",
+                    },
+                    "recipients": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "Recipient identifiers",
+                    },
+                    "metadata": {
+                        "type": "object",
+                        "description": "Additional metadata",
+                    },
                 },
-                "required": ["message"]
-            }
+                "required": ["message"],
+            },
         )
         super().__init__("notification_sender", capabilities)
-    
-    async def execute(self, inputs: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
+
+    async def execute(
+        self, inputs: Dict[str, Any], context: Dict[str, Any] = None
+    ) -> Dict[str, Any]:
         """Execute notification sending."""
         message = inputs["message"]
         title = inputs.get("title", "Notification")
@@ -202,7 +239,7 @@ class NotificationTool(Tool):
         channels = inputs.get("channels", ["default"])
         recipients = inputs.get("recipients", [])
         metadata = inputs.get("metadata", {})
-        
+
         try:
             # Create notification record
             notification = {
@@ -214,15 +251,17 @@ class NotificationTool(Tool):
                 "recipients": recipients,
                 "metadata": metadata,
                 "timestamp": datetime.now().isoformat(),
-                "status": "sent"
+                "status": "sent",
             }
-            
+
             # Mock sending to different channels
             sent_channels = []
             for channel in channels:
-                logger.info(f"Mock notification sent via {channel}: {title} - {message}")
+                logger.info(
+                    f"Mock notification sent via {channel}: {title} - {message}"
+                )
                 sent_channels.append(channel)
-            
+
             return {
                 "success": True,
                 "notification_id": notification["id"],
@@ -230,18 +269,18 @@ class NotificationTool(Tool):
                 "channels_used": sent_channels,
                 "recipients_count": len(recipients),
                 "priority": priority,
-                "timestamp": notification["timestamp"]
+                "timestamp": notification["timestamp"],
             }
-            
+
         except Exception as e:
             logger.error(f"Failed to send notification: {e}")
             return {
                 "success": False,
                 "error": str(e),
                 "title": title,
-                "message": message
+                "message": message,
             }
-    
+
     def validate_inputs(self, inputs: Dict[str, Any]) -> bool:
         """Validate input parameters."""
         return "message" in inputs and isinstance(inputs["message"], str)
@@ -249,7 +288,7 @@ class NotificationTool(Tool):
 
 class WebhookTool(Tool):
     """Tool for sending webhook notifications."""
-    
+
     def __init__(self):
         capabilities = ToolCapability(
             name="webhook_sender",
@@ -261,28 +300,38 @@ class WebhookTool(Tool):
                 "properties": {
                     "url": {"type": "string", "description": "Webhook URL"},
                     "payload": {"type": "object", "description": "Webhook payload"},
-                    "method": {"type": "string", "enum": ["POST", "PUT", "PATCH"], "default": "POST"},
+                    "method": {
+                        "type": "string",
+                        "enum": ["POST", "PUT", "PATCH"],
+                        "default": "POST",
+                    },
                     "headers": {"type": "object", "description": "HTTP headers"},
-                    "timeout": {"type": "integer", "description": "Request timeout", "default": 30}
+                    "timeout": {
+                        "type": "integer",
+                        "description": "Request timeout",
+                        "default": 30,
+                    },
                 },
-                "required": ["url", "payload"]
-            }
+                "required": ["url", "payload"],
+            },
         )
         super().__init__("webhook_sender", capabilities)
-    
-    async def execute(self, inputs: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
+
+    async def execute(
+        self, inputs: Dict[str, Any], context: Dict[str, Any] = None
+    ) -> Dict[str, Any]:
         """Execute webhook sending."""
         url = inputs["url"]
         payload = inputs["payload"]
         method = inputs.get("method", "POST")
         headers = inputs.get("headers", {"Content-Type": "application/json"})
         timeout = inputs.get("timeout", 30)
-        
+
         try:
             # Mock webhook sending (in real implementation, use httpx or requests)
             logger.info(f"Mock webhook {method} sent to {url}")
             logger.debug(f"Webhook payload: {json.dumps(payload, indent=2)}")
-            
+
             return {
                 "success": True,
                 "status_code": 200,
@@ -290,25 +339,20 @@ class WebhookTool(Tool):
                 "url": url,
                 "method": method,
                 "payload_size": len(json.dumps(payload)),
-                "timestamp": datetime.now().isoformat()
+                "timestamp": datetime.now().isoformat(),
             }
-            
+
         except Exception as e:
             logger.error(f"Failed to send webhook: {e}")
-            return {
-                "success": False,
-                "error": str(e),
-                "url": url,
-                "method": method
-            }
-    
+            return {"success": False, "error": str(e), "url": url, "method": method}
+
     def validate_inputs(self, inputs: Dict[str, Any]) -> bool:
         """Validate input parameters."""
         return (
-            "url" in inputs and 
-            "payload" in inputs and 
-            isinstance(inputs["url"], str) and
-            isinstance(inputs["payload"], dict)
+            "url" in inputs
+            and "payload" in inputs
+            and isinstance(inputs["url"], str)
+            and isinstance(inputs["payload"], dict)
         )
 
 

@@ -2,7 +2,7 @@
 
 from typing import Any, List
 
-__version__ = "0.1.0"
+__version__ = "0.6.0"
 
 # Import core components
 from .core.config import get_config, reload_config

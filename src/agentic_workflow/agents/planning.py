@@ -486,7 +486,7 @@ class PlanningAgent(Agent):
         }
         
         try:
-            reasoning_path = self.reasoning_engine.reason(
+            reasoning_path = await self.reasoning_engine.reason_async(
                 objective=f"Analyze the project objective: {objective}",
                 pattern="chain_of_thought",
                 context=reasoning_context

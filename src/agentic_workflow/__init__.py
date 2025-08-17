@@ -2,7 +2,7 @@
 
 from typing import Any, List
 
-__version__ = "0.1.0"
+__version__ = "0.6.0"
 
 # Import core components
 from .core.config import get_config, reload_config
@@ -75,6 +75,15 @@ from .guardrails.resource_limits import ResourceLimiter, ResourceType, ResourceU
 from .guardrails.safety_checks import SafetyChecker, SafetyLevel, SafetyViolation
 from .guardrails.service import GuardrailsService
 
+# Import monitoring components
+try:
+    from .monitoring import monitoring_service, SystemMetrics, HealthChecker, MonitoringService
+    from .monitoring.health import run_all_health_checks
+except ImportError:
+    monitoring_service = None  # type: ignore
+    SystemMetrics = HealthChecker = MonitoringService = None  # type: ignore
+    run_all_health_checks = None  # type: ignore
+
 # Convenient access to services
 memory_service = None
 guardrails_service = None
@@ -122,6 +131,12 @@ __all__ = [
     "SafetyViolation",
     "SafetyLevel",
     "GuardrailsService",
+    # Monitoring
+    "monitoring_service", 
+    "SystemMetrics",
+    "HealthChecker",
+    "MonitoringService",
+    "run_all_health_checks",
     # Exceptions
     "AgenticWorkflowError",
     "ValidationError",

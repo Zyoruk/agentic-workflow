@@ -229,21 +229,21 @@ class EnhancedToolRegistry:
             {
                 'name': 'echo',
                 'description': 'Echo text back',
-                'func': lambda text: text,
+                'func': lambda text, **kwargs: text,
                 'parameters': {'text': {'type': 'string', 'description': 'Text to echo'}},
                 'category': 'utility'
             },
             {
                 'name': 'calculate',
                 'description': 'Perform basic calculations',
-                'func': lambda expression: eval(expression),  # Note: eval is dangerous, use safer alternative in production
+                'func': lambda expression, **kwargs: eval(expression),  # Note: eval is dangerous, use safer alternative in production
                 'parameters': {'expression': {'type': 'string', 'description': 'Mathematical expression'}},
                 'category': 'math'
             },
             {
                 'name': 'current_time',
                 'description': 'Get current timestamp',
-                'func': lambda: datetime.now().isoformat(),
+                'func': lambda **kwargs: datetime.now().isoformat(),
                 'parameters': {},
                 'category': 'utility'
             }

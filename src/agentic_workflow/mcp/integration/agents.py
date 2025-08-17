@@ -267,6 +267,11 @@ class MCPEnhancedAgent(Agent):
         Returns:
             Agent execution result
         """
+        # If MCP is disabled, fallback to parent class execution
+        if not self.mcp_enabled:
+            logger.info(f"Agent {self.agent_id} executing task without MCP: {task.task_id}")
+            return await super().execute(task)
+        
         start_time = datetime.now()
         execution_steps = []
         
@@ -516,11 +521,8 @@ class MCPEnhancedAgent(Agent):
         else:
             pattern = self.default_reasoning_pattern  # Default to CoT
         
-        # Execute reasoning with async support for RAISE
-        if pattern == 'raise':
-            return await self.reasoning_engine.reason_async(objective, pattern, context)
-        else:
-            return self.reasoning_engine.reason(objective, pattern, context)
+        # All patterns are now async, so use reason_async
+        return await self.reasoning_engine.reason_async(objective, pattern, context)
     
     def _extract_tools_from_reasoning(self, reasoning_path) -> List[str]:
         """Extract MCP tools mentioned in reasoning steps."""
@@ -874,8 +876,7 @@ class MCPEnhancedAgent(Agent):
             if self.mcp_client:
                 await self.mcp_client.close()
             
-            # Close base agent
-            await super().close()
+            # Note: Base Agent class doesn't have a close method, so we skip the super() call
             
         except Exception as e:
             logger.error(f"Error closing agent {self.agent_id}: {e}")

@@ -864,9 +864,9 @@ class MCPEnhancedAgent(Agent):
             logger.error(f"Failed to disconnect MCP server {server_name} for agent {self.agent_id}: {e}")
             return False
     
-    async def close(self) -> None:
-        """Close the agent and cleanup MCP resources."""
-        logger.info(f"Closing MCP-enhanced agent: {self.agent_id}")
+    async def stop(self) -> None:
+        """Stop the agent and cleanup MCP resources."""
+        logger.info(f"Stopping MCP-enhanced agent: {self.agent_id}")
         
         try:
             # Close MCP components
@@ -876,13 +876,13 @@ class MCPEnhancedAgent(Agent):
             if self.mcp_client:
                 await self.mcp_client.close()
             
-            # Call parent close method
-            await super().close()
+            # Call parent stop method  
+            await super().stop()
             
         except Exception as e:
             logger.error(f"Error closing agent {self.agent_id}: {e}")
         
-        logger.info(f"Agent {self.agent_id} closed")
+        logger.info(f"Agent {self.agent_id} stopped")
 
 
 # Backward compatibility helper

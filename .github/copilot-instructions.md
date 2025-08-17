@@ -24,7 +24,7 @@ pip install pytest pytest-cov pytest-asyncio pytest-mock coverage black isort fl
 # 4. Run tests - CORE VALIDATION
 python -m pytest tests/ -v
 # Expected time: 9 seconds. NEVER CANCEL - Set timeout to 30+ seconds.
-# Expected result: ~613 passed, ~9 failed (MCP integration failures expected without configuration)
+# Expected result: All 622 tests pass with ~59 warnings (async mock warnings expected)
 
 # 5. Check code quality (will show current issues)
 make format-check  # Shows formatting issues (expected to fail initially)
@@ -87,10 +87,10 @@ python examples/basic_workflow_example.py
    # Kill the API process when done
    ```
 
-4. **Test Suite Validation**:
+3. **Test Suite Validation**:
    ```bash
    python -m pytest tests/ -v
-   # Must pass at least 600+ tests with only MCP-related failures acceptable
+   # Must pass all 622 tests with only async mock warnings (no failures)
    ```
 
 ### Build Time Expectations
@@ -188,7 +188,7 @@ src/agentic_workflow/       # Main Python package
 └── utils/                  # Utility functions
 
 tests/                      # Test suite (622 tests total)
-├── unit/                   # Unit tests (~613 pass)
+├── unit/                   # Unit tests (all 622 pass)
 │   ├── agents/             # Agent testing
 │   ├── core/               # Core functionality tests
 │   ├── graph/              # Graph processing tests
@@ -196,7 +196,7 @@ tests/                      # Test suite (622 tests total)
 │   │   └── domain/         # Domain model tests
 │   ├── mcp/                # MCP component tests
 │   └── tools/              # Tool system tests
-└── integration/            # Integration tests (~9 fail - MCP related)
+└── integration/            # Integration tests (all pass)
     └── mcp/                # MCP integration tests
 
 examples/                   # Working examples for testing
@@ -317,8 +317,8 @@ export AGENTIC_MONITORING__PROMETHEUS_PORT=8000
 - **Build failures**: Check Python version (requires 3.11+)
 
 ### Test Failures
-- **9 MCP tests failing**: Expected without proper MCP configuration
-- **613+ tests passing**: Normal and expected
+- **All tests passing**: MCP tests now properly mocked and working
+- **All 622 tests passing**: Normal and expected
 - **RuntimeWarnings**: Expected for async mock issues
 
 ### API Issues  

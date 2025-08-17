@@ -1,15 +1,15 @@
 """FastAPI application for the Agentic Workflow System."""
 
+from contextlib import asynccontextmanager
+
+import uvicorn
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from contextlib import asynccontextmanager
-import uvicorn
 
 from agentic_workflow import __version__, monitoring_service
 from agentic_workflow.api.agents import router as agents_router
 from agentic_workflow.api.health import router as health_router
 from agentic_workflow.core.logging_config import get_logger, setup_logging
-
 
 logger = get_logger(__name__)
 
@@ -20,13 +20,13 @@ async def lifespan(app: FastAPI):
     # Startup
     setup_logging()
     logger.info(f"Starting Agentic Workflow System v{__version__}")
-    
+
     # Start monitoring service
     await monitoring_service.start()
     logger.info("System services started")
-    
+
     yield
-    
+
     # Shutdown
     await monitoring_service.stop()
     logger.info("System services stopped")
@@ -39,7 +39,7 @@ app = FastAPI(
     version=__version__,
     lifespan=lifespan,
     docs_url="/docs",
-    redoc_url="/redoc"
+    redoc_url="/redoc",
 )
 
 # Add CORS middleware for development
@@ -67,8 +67,8 @@ async def root():
             "health": "/api/v1/health",
             "agents": "/api/v1/agents",
             "docs": "/docs",
-            "metrics": "/metrics" if monitoring_service.metrics.enabled else None
-        }
+            "metrics": "/metrics" if monitoring_service.metrics.enabled else None,
+        },
     }
 
 
@@ -78,7 +78,7 @@ async def status():
     return {
         "status": "ok",
         "version": __version__,
-        "uptime_seconds": monitoring_service.get_uptime()
+        "uptime_seconds": monitoring_service.get_uptime(),
     }
 
 
@@ -94,5 +94,5 @@ if __name__ == "__main__":
         host="0.0.0.0",
         port=8000,
         reload=True,
-        log_level="info"
+        log_level="info",
     )

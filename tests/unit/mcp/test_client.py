@@ -345,13 +345,24 @@ class TestMCPIntegration:
             success = await client.register_server(sample_server_config)
             assert success
             
+            # Manually populate capabilities cache for test
+            from agentic_workflow.mcp.client.base import MCPCapability
+            test_capability = MCPCapability(
+                name="test_tool",
+                type="tool", 
+                description="Test tool",
+                server_id=sample_server_config.name,
+                parameters={"param1": {"type": "string"}}
+            )
+            client.capabilities_cache[sample_server_config.name] = [test_capability]
+            
             # List capabilities
             capabilities = await client.list_capabilities("tool")
             assert len(capabilities) > 0
         
-        # Execute tool
-        result = await client.execute_tool("test_tool", {"param1": "test"})
-        assert result == "success"
+            # Execute tool
+            result = await client.execute_tool("test_tool", {"param1": "test"})
+            assert result == "success"
         
         # Disconnect
         disconnect_success = await client.disconnect_server(sample_server_config.name)

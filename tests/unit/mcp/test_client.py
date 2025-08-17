@@ -71,7 +71,8 @@ class TestMCPClient:
     
     @patch('agentic_workflow.mcp.client.base.MCP_AVAILABLE', True)
     @patch('agentic_workflow.mcp.client.base.ClientSession')
-    async def test_register_server_success(self, mock_session_class, sample_server_config):
+    @patch('agentic_workflow.mcp.client.base.StdioServerParameters')
+    async def test_register_server_success(self, mock_params_class, mock_session_class, sample_server_config):
         """Test successful server registration."""
         # Mock the session
         mock_session = AsyncMock()
@@ -80,6 +81,10 @@ class TestMCPClient:
         mock_session.list_resources = AsyncMock(return_value=Mock(resources=[]))
         mock_session.list_prompts = AsyncMock(return_value=Mock(prompts=[]))
         mock_session_class.return_value = mock_session
+        
+        # Mock the server parameters
+        mock_params = Mock()
+        mock_params_class.return_value = mock_params
         
         client = MCPClient()
         await client.initialize()
@@ -145,6 +150,7 @@ class TestMCPClient:
         with pytest.raises(MCPExecutionError, match="MCP not available"):
             await client.execute_tool("test_tool", {})
     
+    @patch('agentic_workflow.mcp.client.base.MCP_AVAILABLE', True)
     async def test_execute_tool_not_found(self):
         """Test tool execution when tool not found."""
         client = MCPClient()
@@ -309,42 +315,47 @@ class TestMCPCapability:
 class TestMCPIntegration:
     """Integration tests for MCP functionality."""
     
-    async def test_full_workflow(self, sample_server_config, sample_capability):
+    @patch('agentic_workflow.mcp.client.base.MCP_AVAILABLE', True)
+    @patch('agentic_workflow.mcp.client.base.ClientSession')
+    @patch('agentic_workflow.mcp.client.base.StdioServerParameters')
+    async def test_full_workflow(self, mock_params_class, mock_session_class, sample_server_config, sample_capability):
         """Test complete MCP workflow."""
         client = MCPClient()
         await client.initialize()
         
-        # Mock the full workflow
-        with patch('agentic_workflow.mcp.client.base.MCP_AVAILABLE', True):
-            with patch('agentic_workflow.mcp.client.base.ClientSession') as mock_session_class:
-                mock_session = AsyncMock()
-                mock_session.initialize = AsyncMock()
-                mock_session.list_tools = AsyncMock(return_value=Mock(tools=[Mock(
-                    name="test_tool",
-                    description="Test tool",
-                    inputSchema={"param1": {"type": "string"}}
-                )]))
-                mock_session.list_resources = AsyncMock(return_value=Mock(resources=[]))
-                mock_session.list_prompts = AsyncMock(return_value=Mock(prompts=[]))
-                mock_session.call_tool = AsyncMock(return_value="success")
-                mock_session_class.return_value = mock_session
-                
-                with patch.object(client, '_validate_server_command', return_value=True):
-                    # Register server
-                    success = await client.register_server(sample_server_config)
-                    assert success
-                    
-                    # List capabilities
-                    capabilities = await client.list_capabilities("tool")
-                    assert len(capabilities) > 0
-                    
-                    # Execute tool
-                    result = await client.execute_tool("test_tool", {"param1": "test"})
-                    assert result == "success"
-                    
-                    # Disconnect
-                    disconnect_success = await client.disconnect_server(sample_server_config.name)
-                    assert disconnect_success
+        # Setup mocks
+        mock_session = AsyncMock()
+        mock_session.initialize = AsyncMock()
+        mock_session.list_tools = AsyncMock(return_value=Mock(tools=[Mock(
+            name="test_tool",
+            description="Test tool",
+            inputSchema={"param1": {"type": "string"}}
+        )]))
+        mock_session.list_resources = AsyncMock(return_value=Mock(resources=[]))
+        mock_session.list_prompts = AsyncMock(return_value=Mock(prompts=[]))
+        mock_session.call_tool = AsyncMock(return_value="success")
+        mock_session_class.return_value = mock_session
+        
+        # Mock the server parameters
+        mock_params = Mock()
+        mock_params_class.return_value = mock_params
+        
+        with patch.object(client, '_validate_server_command', return_value=True):
+            # Register server
+            success = await client.register_server(sample_server_config)
+            assert success
+            
+            # List capabilities
+            capabilities = await client.list_capabilities("tool")
+            assert len(capabilities) > 0
+        
+        # Execute tool
+        result = await client.execute_tool("test_tool", {"param1": "test"})
+        assert result == "success"
+        
+        # Disconnect
+        disconnect_success = await client.disconnect_server(sample_server_config.name)
+        assert disconnect_success
     
     async def test_error_handling(self, sample_server_config):
         """Test error handling in MCP operations."""

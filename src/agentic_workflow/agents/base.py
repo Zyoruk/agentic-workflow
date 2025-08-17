@@ -306,3 +306,22 @@ class Agent(Component, ABC):
         # Keep only last 100 executions to prevent memory bloat
         if len(self._execution_history) > 100:
             self._execution_history = self._execution_history[-100:]
+    
+    async def close(self) -> None:
+        """Clean up agent resources."""
+        self.logger.info(f"Closing agent: {self.agent_id}")
+        self.status = ComponentStatus.STOPPED
+        
+        # Clean up memory manager if available
+        if self.memory_manager:
+            try:
+                await self.memory_manager.close()
+            except Exception as e:
+                self.logger.warning(f"Error closing memory manager: {e}")
+        
+        # Clean up guardrails if available
+        if self.guardrails:
+            try:
+                await self.guardrails.close()
+            except Exception as e:
+                self.logger.warning(f"Error closing guardrails: {e}")

@@ -13,7 +13,7 @@ from contextlib import asynccontextmanager
 
 try:
     from mcp import ClientSession, StdioServerParameters
-    from mcp.client.models import Tool, Resource, Prompt
+    from mcp.types import Tool, Resource, GetPromptResult
     MCP_AVAILABLE = True
 except ImportError:
     MCP_AVAILABLE = False
@@ -26,7 +26,7 @@ except ImportError:
         pass
     class Resource:
         pass
-    class Prompt:
+    class GetPromptResult:
         pass
 
 from agentic_workflow.core.logging_config import get_logger
@@ -105,6 +105,11 @@ class MCPClient:
             'capability_removed': [],
         }
         
+        # Rate limiting
+        self._rate_limits: Dict[str, Dict[str, List[float]]] = {}
+        self._rate_limit_window = 60  # 1 minute window
+        self._rate_limit_max_requests = 60  # 60 requests per minute
+        
     async def initialize(self) -> None:
         """Initialize the MCP client."""
         if not MCP_AVAILABLE:
@@ -145,9 +150,9 @@ class MCPClient:
                 
                 # Create server parameters
                 server_params = StdioServerParameters(
-                    command=config.command,
-                    args=config.args or [],
-                    env=config.env or {}
+                    command=config.command[0],  # First element is the command
+                    args=config.command[1:] + (config.args or []),  # Rest + additional args
+                    env=config.env
                 )
                 
                 # Create and start session with retries
@@ -558,6 +563,40 @@ class MCPClient:
                     callback(data)
             except Exception as e:
                 logger.error(f"Error in event callback for {event_type}: {e}")
+    
+    async def _check_rate_limit(self, agent_id: str, operation: str) -> bool:
+        """
+        Check if rate limit allows the operation.
+        
+        Args:
+            agent_id: Agent identifier
+            operation: Operation type
+            
+        Returns:
+            True if operation is allowed, False if rate limited
+        """
+        current_time = asyncio.get_event_loop().time()
+        
+        # Initialize tracking for agent if needed
+        if agent_id not in self._rate_limits:
+            self._rate_limits[agent_id] = {}
+        
+        if operation not in self._rate_limits[agent_id]:
+            self._rate_limits[agent_id][operation] = []
+        
+        # Clean up old requests outside the window
+        request_times = self._rate_limits[agent_id][operation]
+        window_start = current_time - self._rate_limit_window
+        self._rate_limits[agent_id][operation] = [
+            t for t in request_times if t > window_start
+        ]
+        
+        # Check if under rate limit
+        if len(self._rate_limits[agent_id][operation]) < self._rate_limit_max_requests:
+            self._rate_limits[agent_id][operation].append(current_time)
+            return True
+        
+        return False
     
     @asynccontextmanager
     async def server_session(self, server_id: str):

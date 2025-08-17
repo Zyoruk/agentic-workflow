@@ -477,6 +477,7 @@ class TestCreateMCPEnhancedAgent:
         assert issubclass(EnhancedAgent, MCPEnhancedAgent)
         assert issubclass(EnhancedAgent, Agent)
     
+    @pytest.mark.asyncio
     async def test_enhanced_agent_instance(self):
         """Test creating instance of enhanced agent."""
         from agentic_workflow.agents.base import Agent
@@ -496,6 +497,7 @@ class TestCreateMCPEnhancedAgent:
     @patch('agentic_workflow.mcp.integration.agents.MCPClient')
     @patch('agentic_workflow.mcp.integration.agents.MCPServerRegistry')
     @patch('agentic_workflow.mcp.integration.agents.EnhancedToolRegistry')
+    @pytest.mark.asyncio
     async def test_enhanced_agent_execution_fallback(self, mock_tools, mock_registry, mock_client, sample_agent_task):
         """Test enhanced agent execution with fallback."""
         from agentic_workflow.agents.base import Agent

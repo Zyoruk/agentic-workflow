@@ -170,15 +170,34 @@ src/agentic_workflow/       # Main Python package
 ├── agents/                 # AI agent implementations  
 ├── api/                    # FastAPI REST endpoints
 ├── core/                   # Core workflow functionality
+├── events/                 # Event system components
 ├── graph/                  # Neo4j graph processing
+│   ├── application/        # Application layer
+│   ├── domain/             # Domain models
+│   └── infrastructure/     # Infrastructure layer
+├── guardrails/             # Safety and validation guardrails
+├── mcp/                    # Model Context Protocol integration
+│   ├── client/             # MCP client implementation
+│   ├── integration/        # MCP integration layer
+│   └── tools/              # MCP tool implementations
 ├── memory/                 # Memory management (Redis, Weaviate)
+│   └── connections/        # Memory connection handlers
 ├── monitoring/             # Prometheus metrics
 ├── tools/                  # Tool integration system
+│   └── builtin/            # Built-in tool implementations
 └── utils/                  # Utility functions
 
 tests/                      # Test suite (622 tests total)
 ├── unit/                   # Unit tests (~613 pass)
+│   ├── agents/             # Agent testing
+│   ├── core/               # Core functionality tests
+│   ├── graph/              # Graph processing tests
+│   │   ├── application/    # Application layer tests
+│   │   └── domain/         # Domain model tests
+│   ├── mcp/                # MCP component tests
+│   └── tools/              # Tool system tests
 └── integration/            # Integration tests (~9 fail - MCP related)
+    └── mcp/                # MCP integration tests
 
 examples/                   # Working examples for testing
 ├── basic_workflow_example.py     # ✅ WORKS - Use for validation

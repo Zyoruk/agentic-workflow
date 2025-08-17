@@ -58,7 +58,7 @@ class ReasoningPattern(ABC):
         self.logger = get_logger(f"{__name__}.{self.__class__.__name__}")
     
     @abstractmethod
-    def reason(self, objective: str, context: Dict[str, Any] = None) -> ReasoningPath:
+    async def reason(self, objective: str, context: Dict[str, Any] = None) -> ReasoningPath:
         """Execute the reasoning pattern for a given objective."""
         pass
     
@@ -67,38 +67,36 @@ class ReasoningPattern(ABC):
         """Validate the quality of the reasoning path."""
         pass
     
-    def store_reasoning_path(self, path: ReasoningPath) -> None:
+    async def store_reasoning_path(self, path: ReasoningPath) -> None:
         """Store reasoning path in memory system."""
         if self.memory_manager:
             try:
                 # Store in short-term memory for immediate access
-                self.memory_manager.store(
-                    key=f"reasoning_path_{path.path_id}",
-                    data=path.model_dump(),
+                await self.memory_manager.store(
+                    content=json.dumps(path.model_dump()),
                     memory_type=MemoryType.SHORT_TERM,
                     metadata={
                         "agent_id": self.agent_id,
                         "task_id": path.task_id,
                         "pattern_type": path.pattern_type,
                         "created_at": path.created_at
-                    }
+                    },
+                    entry_id=f"reasoning_path_{path.path_id}"
                 )
                 
                 # Store in vector store for similarity search
-                self.memory_manager.store(
-                    key=f"reasoning_embedding_{path.path_id}",
-                    data={
-                        "objective": path.objective,
-                        "reasoning_summary": self._summarize_reasoning(path),
-                        "pattern_type": path.pattern_type,
-                        "confidence": path.confidence
-                    },
+                reasoning_summary = self._summarize_reasoning(path)
+                await self.memory_manager.store(
+                    content=f"{path.objective}. {reasoning_summary}",
                     memory_type=MemoryType.VECTOR,
                     metadata={
                         "type": "reasoning_path",
                         "agent_id": self.agent_id,
-                        "pattern": path.pattern_type
-                    }
+                        "pattern": path.pattern_type,
+                        "path_id": path.path_id,
+                        "confidence": path.confidence
+                    },
+                    entry_id=f"reasoning_embedding_{path.path_id}"
                 )
                 
                 self.logger.info(f"Stored reasoning path {path.path_id} for task {path.task_id}")
@@ -135,7 +133,7 @@ class ChainOfThoughtReasoning(ReasoningPattern):
         self.max_steps = max_steps
         self.pattern_type = "chain_of_thought"
     
-    def reason(self, objective: str, context: Dict[str, Any] = None) -> ReasoningPath:
+    async def reason(self, objective: str, context: Dict[str, Any] = None) -> ReasoningPath:
         """Execute Chain of Thought reasoning."""
         context = context or {}
         task_id = context.get("task_id", str(uuid.uuid4()))
@@ -184,7 +182,7 @@ class ChainOfThoughtReasoning(ReasoningPattern):
             path.completed_at = datetime.now(UTC).isoformat()
             
             # Store the reasoning path
-            self.store_reasoning_path(path)
+            await self.store_reasoning_path(path)
             
             self.logger.info(f"CoT reasoning completed with confidence {path.confidence:.2f}")
             return path
@@ -334,7 +332,7 @@ class ReActReasoning(ReasoningPattern):
         self.max_cycles = max_cycles
         self.pattern_type = "react"
     
-    def reason(self, objective: str, context: Dict[str, Any] = None) -> ReasoningPath:
+    async def reason(self, objective: str, context: Dict[str, Any] = None) -> ReasoningPath:
         """Execute ReAct reasoning cycles."""
         context = context or {}
         task_id = context.get("task_id", str(uuid.uuid4()))
@@ -375,7 +373,7 @@ class ReActReasoning(ReasoningPattern):
             path.completed = True
             path.completed_at = datetime.now(UTC).isoformat()
             
-            self.store_reasoning_path(path)
+            await self.store_reasoning_path(path)
             
             self.logger.info(f"ReAct reasoning completed with {len(path.steps)} steps")
             return path
@@ -541,28 +539,33 @@ class ReasoningEngine:
         
         self.logger.info(f"Executing {pattern} reasoning for: {objective}")
         
-        # Handle async patterns
-        if pattern == "raise":
-            import asyncio
+        # All patterns are now async, so we need to handle the event loop
+        import asyncio
+        
+        # Always try to run the async pattern
+        try:
+            # Try to get existing loop
             try:
-                # Try to get existing loop
-                loop = asyncio.get_event_loop()
-                if loop.is_running():
-                    # If we're already in an async context, this is called from async code
-                    raise ReasoningError("RAISE pattern requires async context. Use 'await reasoning_engine.reason_async()' instead.")
-                else:
-                    # Create new loop if none exists
-                    return loop.run_until_complete(self.patterns[pattern].reason(objective, context))
+                loop = asyncio.get_running_loop()
+                # If we get here, we're in an async context
+                raise ReasoningError(f"Pattern '{pattern}' requires async context. Use 'await reasoning_engine.reason_async()' instead.")
             except RuntimeError:
-                # No event loop exists, create one
-                loop = asyncio.new_event_loop()
-                asyncio.set_event_loop(loop)
-                try:
-                    return loop.run_until_complete(self.patterns[pattern].reason(objective, context))
-                finally:
-                    loop.close()
-        else:
-            return self.patterns[pattern].reason(objective, context)
+                # No running loop, safe to create one
+                pass
+            
+            # Create and run new event loop
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            try:
+                return loop.run_until_complete(self.patterns[pattern].reason(objective, context))
+            finally:
+                loop.close()
+                
+        except Exception as e:
+            if "requires async context" in str(e):
+                raise e
+            else:
+                raise ReasoningError(f"Failed to execute {pattern} reasoning: {e}")
     
     async def reason_async(self, objective: str, pattern: str = "chain_of_thought", 
                           context: Dict[str, Any] = None) -> ReasoningPath:
@@ -572,11 +575,8 @@ class ReasoningEngine:
         
         self.logger.info(f"Executing {pattern} reasoning for: {objective}")
         
-        # Handle async patterns
-        if pattern == "raise":
-            return await self.patterns[pattern].reason(objective, context)
-        else:
-            return self.patterns[pattern].reason(objective, context)
+        # All patterns are now async
+        return await self.patterns[pattern].reason(objective, context)
     
     def get_similar_reasoning(self, objective: str, limit: int = 5) -> List[Dict[str, Any]]:
         """Find similar reasoning paths from memory."""
@@ -689,7 +689,7 @@ class RAISEReasoning(ReasoningPattern):
                 path.completed = True
             
             path.completed_at = datetime.now(UTC).isoformat()
-            self.store_reasoning_path(path)
+            await self.store_reasoning_path(path)
             
         except Exception as e:
             self.logger.error(f"RAISE reasoning failed: {e}")

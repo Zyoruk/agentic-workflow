@@ -62,9 +62,9 @@ class ThreatEvent:
     threat_type: ThreatType
     threat_level: ThreatLevel
     agent_id: str
+    description: str
     server_id: Optional[str] = None
     tool_name: Optional[str] = None
-    description: str
     evidence: Dict[str, Any] = field(default_factory=dict)
     confidence: float = 0.0
     timestamp: datetime = field(default_factory=datetime.now)

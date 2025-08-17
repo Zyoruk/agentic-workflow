@@ -74,16 +74,22 @@ class TestMCPEnhancedAgent:
     @patch('agentic_workflow.mcp.integration.agents.MCPClient')
     @patch('agentic_workflow.mcp.integration.agents.MCPServerRegistry')
     @patch('agentic_workflow.mcp.integration.agents.EnhancedToolRegistry')
+    @pytest.mark.asyncio
     async def test_mcp_initialization_success(self, mock_tools, mock_registry, mock_client):
         """Test successful MCP initialization."""
         # Setup mocks
         mock_client_instance = AsyncMock()
+        mock_client_instance.initialize = AsyncMock()
         mock_client.return_value = mock_client_instance
         
         mock_registry_instance = AsyncMock()
+        mock_registry_instance.initialize = AsyncMock()
+        mock_registry_instance.register_server = AsyncMock(return_value=True)
+        mock_registry_instance.connect_servers = AsyncMock(return_value={"test_server": True})
         mock_registry.return_value = mock_registry_instance
         
         mock_tools_instance = AsyncMock()
+        mock_tools_instance.initialize = AsyncMock()
         mock_tools.return_value = mock_tools_instance
         
         agent = MCPEnhancedAgent(
@@ -471,6 +477,7 @@ class TestCreateMCPEnhancedAgent:
         assert issubclass(EnhancedAgent, MCPEnhancedAgent)
         assert issubclass(EnhancedAgent, Agent)
     
+    @pytest.mark.asyncio
     async def test_enhanced_agent_instance(self):
         """Test creating instance of enhanced agent."""
         from agentic_workflow.agents.base import Agent
@@ -490,6 +497,7 @@ class TestCreateMCPEnhancedAgent:
     @patch('agentic_workflow.mcp.integration.agents.MCPClient')
     @patch('agentic_workflow.mcp.integration.agents.MCPServerRegistry')
     @patch('agentic_workflow.mcp.integration.agents.EnhancedToolRegistry')
+    @pytest.mark.asyncio
     async def test_enhanced_agent_execution_fallback(self, mock_tools, mock_registry, mock_client, sample_agent_task):
         """Test enhanced agent execution with fallback."""
         from agentic_workflow.agents.base import Agent

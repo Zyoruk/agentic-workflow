@@ -47,7 +47,7 @@ async def demonstrate_chain_of_thought():
     print()
     
     # Execute Chain of Thought reasoning
-    reasoning_path = reasoning_engine.reason(
+    reasoning_path = await reasoning_engine.reason_async(
         objective=objective,
         pattern="chain_of_thought",
         context=context
@@ -94,7 +94,7 @@ async def demonstrate_react_reasoning():
     print()
     
     # Execute ReAct reasoning
-    reasoning_path = reasoning_engine.reason(
+    reasoning_path = await reasoning_engine.reason_async(
         objective=objective,
         pattern="react",
         context=context
@@ -232,7 +232,7 @@ async def demonstrate_reasoning_comparison():
     # Chain of Thought approach
     print("🧠 Chain of Thought Approach:")
     print("-" * 30)
-    cot_path = reasoning_engine.reason(objective, "chain_of_thought", context)
+    cot_path = await reasoning_engine.reason_async(objective, "chain_of_thought", context)
     print(f"   Steps: {len(cot_path.steps)}")
     print(f"   Confidence: {cot_path.confidence:.2f}")
     print(f"   Focus: Systematic analysis and planning")
@@ -242,7 +242,7 @@ async def demonstrate_reasoning_comparison():
     # ReAct approach
     print("🔄 ReAct Approach:")
     print("-" * 20)
-    react_path = reasoning_engine.reason(objective, "react", context)
+    react_path = await reasoning_engine.reason_async(objective, "react", context)
     print(f"   Steps: {len(react_path.steps)}")
     print(f"   Confidence: {react_path.confidence:.2f}")
     print(f"   Focus: Iterative action and observation")

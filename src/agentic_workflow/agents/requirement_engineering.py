@@ -59,14 +59,14 @@ class RequirementDocument(BaseModel):
 class RequirementEngineeringAgent(Agent):
     """Agent for automated requirement engineering tasks."""
 
-    def __init__(self, name: str = "requirement_engineering", **kwargs: Any):
+    def __init__(self, agent_id: str = "requirement_engineering", **kwargs: Any):
         """Initialize the Requirement Engineering Agent.
 
         Args:
-            name: Agent name
+            agent_id: Agent identifier
             **kwargs: Additional configuration
         """
-        super().__init__(name, **kwargs)
+        super().__init__(agent_id, **kwargs)
         self.capabilities = [
             "stakeholder_input_gathering",
             "requirement_analysis",

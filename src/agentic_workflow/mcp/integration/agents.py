@@ -267,6 +267,11 @@ class MCPEnhancedAgent(Agent):
         Returns:
             Agent execution result
         """
+        # If MCP is disabled, fallback to parent class execution
+        if not self.mcp_enabled:
+            logger.info(f"Agent {self.agent_id} executing task without MCP: {task.task_id}")
+            return await super().execute(task)
+        
         start_time = datetime.now()
         execution_steps = []
         

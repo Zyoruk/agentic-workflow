@@ -534,14 +534,15 @@ class TestRAISEReasoning:
         assert raise_reasoning.max_cycles == 8
         assert raise_reasoning.improvement_threshold == 0.7
     
-    def test_raise_reasoning_execution(self):
+    @pytest.mark.asyncio
+    async def test_raise_reasoning_execution(self):
         """Test RAISE reasoning execution."""
         mock_memory = Mock()
         mock_communication = Mock()
         
         raise_reasoning = RAISEReasoning("test_agent", mock_memory, mock_communication)
         
-        result = raise_reasoning.reason("Implement microservices architecture")
+        result = await raise_reasoning.reason("Implement microservices architecture")
         
         assert isinstance(result, ReasoningPath)
         assert result.pattern_type == "raise"
@@ -551,14 +552,15 @@ class TestRAISEReasoning:
         assert result.final_answer is not None
         assert result.confidence > 0
     
-    def test_raise_phases_representation(self):
+    @pytest.mark.asyncio
+    async def test_raise_phases_representation(self):
         """Test that all RAISE phases are represented in reasoning."""
         mock_memory = Mock()
         mock_communication = Mock()
         
         raise_reasoning = RAISEReasoning("test_agent", mock_memory, mock_communication)
         
-        result = raise_reasoning.reason("Test objective")
+        result = await raise_reasoning.reason("Test objective")
         
         # Check that all RAISE phases are present
         phases = ["reason", "act", "improve", "share", "evaluate"]
@@ -571,19 +573,21 @@ class TestRAISEReasoning:
         
         assert len(found_phases) == 5, f"Missing phases: {set(phases) - found_phases}"
     
-    def test_raise_reasoning_validation(self):
+    @pytest.mark.asyncio
+    async def test_raise_reasoning_validation(self):
         """Test RAISE reasoning path validation."""
         mock_memory = Mock()
         mock_communication = Mock()
         
         raise_reasoning = RAISEReasoning("test_agent", mock_memory, mock_communication)
         
-        result = raise_reasoning.reason("Test validation objective")
+        result = await raise_reasoning.reason("Test validation objective")
         
         assert raise_reasoning.validate_reasoning(result)
         assert result.confidence >= 0.6
     
-    def test_raise_reasoning_with_communication_error(self):
+    @pytest.mark.asyncio
+    async def test_raise_reasoning_with_communication_error(self):
         """Test RAISE reasoning when communication fails."""
         mock_memory = Mock()
         mock_communication = Mock()
@@ -592,19 +596,20 @@ class TestRAISEReasoning:
         raise_reasoning = RAISEReasoning("test_agent", mock_memory, mock_communication)
         
         # Should not fail even if communication fails
-        result = raise_reasoning.reason("Test with communication error")
+        result = await raise_reasoning.reason("Test with communication error")
         
         assert isinstance(result, ReasoningPath)
         assert result.completed
     
-    def test_raise_reasoning_confidence_improvement(self):
+    @pytest.mark.asyncio
+    async def test_raise_reasoning_confidence_improvement(self):
         """Test that RAISE reasoning improves confidence over cycles."""
         mock_memory = Mock()
         mock_communication = Mock()
         
         raise_reasoning = RAISEReasoning("test_agent", mock_memory, mock_communication)
         
-        result = raise_reasoning.reason("Complex optimization problem")
+        result = await raise_reasoning.reason("Complex optimization problem")
         
         # Find improve steps and check confidence progression
         improve_steps = [s for s in result.steps if "improve" in s.thought.lower()]
@@ -614,7 +619,8 @@ class TestRAISEReasoning:
         for step in improve_steps:
             assert step.confidence > 0.7
     
-    def test_raise_reasoning_early_completion(self):
+    @pytest.mark.asyncio
+    async def test_raise_reasoning_early_completion(self):
         """Test RAISE reasoning early completion when threshold is met."""
         mock_memory = Mock()
         mock_communication = Mock()
@@ -623,7 +629,7 @@ class TestRAISEReasoning:
         raise_reasoning = RAISEReasoning("test_agent", mock_memory, mock_communication)
         raise_reasoning.improvement_threshold = 0.65
         
-        result = raise_reasoning.reason("Simple task")
+        result = await raise_reasoning.reason("Simple task")
         
         assert result.completed
         assert result.confidence >= 0.65

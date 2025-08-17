@@ -91,15 +91,16 @@ class TestChainOfThoughtReasoning:
         assert self.cot.max_steps == 6
         assert self.cot.pattern_type == "chain_of_thought"
     
-    def test_cot_reasoning_basic(self):
+    @pytest.mark.asyncio
+    async def test_cot_reasoning_basic(self):
         """Test basic CoT reasoning execution."""
         objective = "Create a web application"
         context = {"task_id": "web_app_task"}
         
         # Mock memory manager store method
-        self.mock_memory.store = Mock()
+        self.mock_memory.store = AsyncMock()
         
-        path = self.cot.reason(objective, context)
+        path = await self.cot.reason(objective, context)
         
         assert isinstance(path, ReasoningPath)
         assert path.objective == objective
@@ -114,13 +115,14 @@ class TestChainOfThoughtReasoning:
         # Verify memory storage was called
         self.mock_memory.store.assert_called()
     
-    def test_cot_reasoning_steps_progression(self):
+    @pytest.mark.asyncio
+    async def test_cot_reasoning_steps_progression(self):
         """Test that CoT reasoning steps follow logical progression."""
         objective = "Design a microservices architecture"
         
-        self.mock_memory.store = Mock()
+        self.mock_memory.store = AsyncMock()
         
-        path = self.cot.reason(objective)
+        path = await self.cot.reason(objective)
         
         # Check that steps are numbered sequentially
         for i, step in enumerate(path.steps):
@@ -222,14 +224,15 @@ class TestReActReasoning:
         assert self.react.max_cycles == 3
         assert self.react.pattern_type == "react"
     
-    def test_react_reasoning_basic(self):
+    @pytest.mark.asyncio
+    async def test_react_reasoning_basic(self):
         """Test basic ReAct reasoning execution."""
         objective = "Implement user authentication"
         context = {"task_id": "auth_task"}
         
-        self.mock_memory.store = Mock()
+        self.mock_memory.store = AsyncMock()
         
-        path = self.react.reason(objective, context)
+        path = await self.react.reason(objective, context)
         
         assert isinstance(path, ReasoningPath)
         assert path.objective == objective
@@ -246,13 +249,14 @@ class TestReActReasoning:
         # Verify memory storage was called
         self.mock_memory.store.assert_called()
     
-    def test_react_reasoning_cycles(self):
+    @pytest.mark.asyncio
+    async def test_react_reasoning_cycles(self):
         """Test ReAct reasoning cycle structure."""
         objective = "Build API endpoints"
         
-        self.mock_memory.store = Mock()
+        self.mock_memory.store = AsyncMock()
         
-        path = self.react.reason(objective)
+        path = await self.react.reason(objective)
         
         # Check that we have proper cycle structure
         # Should have sets of 3 steps (reason, act, observe) + conclusion
@@ -375,9 +379,10 @@ class TestReasoningEngine:
         """Test reasoning with Chain of Thought pattern."""
         objective = "Solve a complex problem"
         
-        self.mock_memory.store = Mock()
+        mock_memory = Mock()
+        engine = ReasoningEngine("test_agent", mock_memory)
         
-        path = self.engine.reason(objective, pattern="chain_of_thought")
+        path = engine.reason(objective, pattern="chain_of_thought")
         
         assert isinstance(path, ReasoningPath)
         assert path.pattern_type == "chain_of_thought"
@@ -387,9 +392,10 @@ class TestReasoningEngine:
         """Test reasoning with ReAct pattern."""
         objective = "Implement a solution"
         
-        self.mock_memory.store = Mock()
+        mock_memory = Mock()
+        engine = ReasoningEngine("test_agent", mock_memory)
         
-        path = self.engine.reason(objective, pattern="react")
+        path = engine.reason(objective, pattern="react")
         
         assert isinstance(path, ReasoningPath)
         assert path.pattern_type == "react"
@@ -461,10 +467,11 @@ class TestReasoningEngine:
 class TestReasoningMemoryIntegration:
     """Test reasoning pattern integration with memory system."""
     
-    def test_store_reasoning_path(self):
+    @pytest.mark.asyncio
+    async def test_store_reasoning_path(self):
         """Test storing reasoning path in memory."""
         mock_memory = Mock()
-        mock_memory.store = Mock()
+        mock_memory.store = AsyncMock()
         
         cot = ChainOfThoughtReasoning("test_agent", mock_memory)
         
@@ -483,7 +490,7 @@ class TestReasoningMemoryIntegration:
             )
         ]
         
-        cot.store_reasoning_path(path)
+        await cot.store_reasoning_path(path)
         
         # Verify store was called twice (short-term and vector)
         assert mock_memory.store.call_count == 2
@@ -493,16 +500,17 @@ class TestReasoningMemoryIntegration:
         
         # First call should be short-term memory
         short_term_call = calls[0]
-        assert "reasoning_path_" in short_term_call[1]["key"]
+        assert "reasoning_path_" in short_term_call.kwargs["entry_id"]
         
         # Second call should be vector store
         vector_call = calls[1]
-        assert "reasoning_embedding_" in vector_call[1]["key"]
+        assert "reasoning_embedding_" in vector_call.kwargs["entry_id"]
     
-    def test_store_reasoning_path_error_handling(self):
+    @pytest.mark.asyncio
+    async def test_store_reasoning_path_error_handling(self):
         """Test error handling when storing reasoning path fails."""
         mock_memory = Mock()
-        mock_memory.store = Mock(side_effect=Exception("Storage failed"))
+        mock_memory.store = AsyncMock(side_effect=Exception("Storage failed"))
         
         cot = ChainOfThoughtReasoning("test_agent", mock_memory)
         
@@ -514,7 +522,7 @@ class TestReasoningMemoryIntegration:
         )
         
         # Should not raise exception, just log error
-        cot.store_reasoning_path(path)
+        await cot.store_reasoning_path(path)
         
         # Verify store was attempted
         assert mock_memory.store.called
@@ -691,4 +699,6 @@ class TestReasoningEngineWithRAISE:
         
         with pytest.raises(ReasoningError, match="Unknown reasoning pattern: unknown"):
             engine.reason("Test objective", pattern="unknown")
-        mock_memory.store.assert_called()
+        
+        # Store should not be called for unknown patterns since it fails before execution
+        assert not mock_memory.store.called

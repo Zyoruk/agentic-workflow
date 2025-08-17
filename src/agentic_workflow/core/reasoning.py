@@ -541,23 +541,31 @@ class ReasoningEngine:
         
         # All patterns are now async, so we need to handle the event loop
         import asyncio
+        
+        # Always try to run the async pattern
         try:
             # Try to get existing loop
-            loop = asyncio.get_event_loop()
-            if loop.is_running():
-                # If we're already in an async context, this is called from async code
+            try:
+                loop = asyncio.get_running_loop()
+                # If we get here, we're in an async context
                 raise ReasoningError(f"Pattern '{pattern}' requires async context. Use 'await reasoning_engine.reason_async()' instead.")
-            else:
-                # Create new loop if none exists
-                return loop.run_until_complete(self.patterns[pattern].reason(objective, context))
-        except RuntimeError:
-            # No event loop exists, create one
+            except RuntimeError:
+                # No running loop, safe to create one
+                pass
+            
+            # Create and run new event loop
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
             try:
                 return loop.run_until_complete(self.patterns[pattern].reason(objective, context))
             finally:
                 loop.close()
+                
+        except Exception as e:
+            if "requires async context" in str(e):
+                raise e
+            else:
+                raise ReasoningError(f"Failed to execute {pattern} reasoning: {e}")
     
     async def reason_async(self, objective: str, pattern: str = "chain_of_thought", 
                           context: Dict[str, Any] = None) -> ReasoningPath:
@@ -567,11 +575,8 @@ class ReasoningEngine:
         
         self.logger.info(f"Executing {pattern} reasoning for: {objective}")
         
-        # Handle async patterns
-        if pattern == "raise":
-            return await self.patterns[pattern].reason(objective, context)
-        else:
-            return self.patterns[pattern].reason(objective, context)
+        # All patterns are now async
+        return await self.patterns[pattern].reason(objective, context)
     
     def get_similar_reasoning(self, objective: str, limit: int = 5) -> List[Dict[str, Any]]:
         """Find similar reasoning paths from memory."""

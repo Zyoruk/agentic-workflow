@@ -77,7 +77,12 @@ from .guardrails.service import GuardrailsService
 
 # Import monitoring components
 try:
-    from .monitoring import monitoring_service, SystemMetrics, HealthChecker, MonitoringService
+    from .monitoring import (
+        HealthChecker,
+        MonitoringService,
+        SystemMetrics,
+        monitoring_service,
+    )
     from .monitoring.health import run_all_health_checks
 except ImportError:
     monitoring_service = None  # type: ignore
@@ -132,7 +137,7 @@ __all__ = [
     "SafetyLevel",
     "GuardrailsService",
     # Monitoring
-    "monitoring_service", 
+    "monitoring_service",
     "SystemMetrics",
     "HealthChecker",
     "MonitoringService",

@@ -60,11 +60,10 @@ class PlanningAgent(Agent):
 
         # Task templates for different domains
         self.task_templates = self._initialize_task_templates()
-        
+
         # Initialize reasoning engine for advanced planning
         self.reasoning_engine = ReasoningEngine(
-            agent_id=self.agent_id,
-            memory_manager=self.memory_manager
+            agent_id=self.agent_id, memory_manager=self.memory_manager
         )
 
         self.logger.info(
@@ -477,27 +476,31 @@ class PlanningAgent(Agent):
     ) -> Dict[str, Any]:
         """Analyze objective to determine project type and characteristics using CoT reasoning."""
         self.logger.info(f"Analyzing objective with Chain of Thought: {objective}")
-        
+
         # Use Chain of Thought reasoning for comprehensive analysis
         reasoning_context = {
             "task_id": context.get("task_id", "objective_analysis"),
             "objective": objective,
-            "context": context
+            "context": context,
         }
-        
+
         try:
             reasoning_path = await self.reasoning_engine.reason_async(
                 objective=f"Analyze the project objective: {objective}",
                 pattern="chain_of_thought",
-                context=reasoning_context
+                context=reasoning_context,
             )
-            
-            self.logger.info(f"CoT reasoning completed with {len(reasoning_path.steps)} steps")
-            
+
+            self.logger.info(
+                f"CoT reasoning completed with {len(reasoning_path.steps)} steps"
+            )
+
         except Exception as e:
-            self.logger.warning(f"CoT reasoning failed, falling back to basic analysis: {e}")
+            self.logger.warning(
+                f"CoT reasoning failed, falling back to basic analysis: {e}"
+            )
             reasoning_path = None
-        
+
         # Continue with original analysis logic (enhanced by reasoning insights)
         objective_lower = objective.lower()
 
@@ -554,7 +557,7 @@ class PlanningAgent(Agent):
             "estimated_scope": self._estimate_scope(objective, complexity),
             "analysis_timestamp": datetime.now(UTC).isoformat(),
         }
-        
+
         # Add reasoning insights if available
         if reasoning_path:
             analysis_result["reasoning_analysis"] = {
@@ -562,9 +565,11 @@ class PlanningAgent(Agent):
                 "confidence": reasoning_path.confidence,
                 "step_count": len(reasoning_path.steps),
                 "final_reasoning": reasoning_path.final_answer,
-                "key_insights": [step.thought for step in reasoning_path.steps[:3]]  # First 3 insights
+                "key_insights": [
+                    step.thought for step in reasoning_path.steps[:3]
+                ],  # First 3 insights
             }
-        
+
         return analysis_result
 
     def _estimate_scope(self, objective: str, complexity: str) -> Dict[str, Any]:

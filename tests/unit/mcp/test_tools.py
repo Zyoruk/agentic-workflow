@@ -415,11 +415,13 @@ class TestToolMetadata:
 class TestBuiltinTool:
     """Test built-in tool functionality."""
     
+    @pytest.mark.asyncio
     async def test_builtin_tool_execution(self, sample_builtin_tool):
         """Test built-in tool execution."""
         result = await sample_builtin_tool.execute(text="hello world")
         assert result == "Echo: hello world"
     
+    @pytest.mark.asyncio
     async def test_builtin_tool_metadata(self, sample_builtin_tool):
         """Test built-in tool metadata."""
         metadata = sample_builtin_tool.metadata
@@ -427,6 +429,7 @@ class TestBuiltinTool:
         assert metadata.source == "builtin"
         assert metadata.category == "utility"
     
+    @pytest.mark.asyncio
     async def test_builtin_tool_parameter_validation(self, sample_builtin_tool):
         """Test parameter validation."""
         # This is a basic test - in a real implementation, 
@@ -438,6 +441,7 @@ class TestBuiltinTool:
 class TestMCPTool:
     """Test MCP tool functionality."""
     
+    @pytest.mark.asyncio
     async def test_mcp_tool_creation(self, sample_mcp_capability, mock_mcp_client):
         """Test MCP tool creation."""
         tool = MCPTool(sample_mcp_capability, mock_mcp_client)
@@ -446,6 +450,7 @@ class TestMCPTool:
         assert tool.metadata.source == "mcp"
         assert tool.metadata.description == sample_mcp_capability.description
     
+    @pytest.mark.asyncio
     async def test_mcp_tool_execution(self, sample_mcp_capability, mock_mcp_client):
         """Test MCP tool execution."""
         tool = MCPTool(sample_mcp_capability, mock_mcp_client)
@@ -459,6 +464,7 @@ class TestMCPTool:
             sample_mcp_capability.server_id
         )
     
+    @pytest.mark.asyncio
     async def test_mcp_tool_usage_tracking(self, sample_mcp_capability, mock_mcp_client):
         """Test usage tracking in MCP tools."""
         tool = MCPTool(sample_mcp_capability, mock_mcp_client)

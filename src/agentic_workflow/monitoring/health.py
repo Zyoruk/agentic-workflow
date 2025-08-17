@@ -118,11 +118,10 @@ async def reasoning_engine_health_check() -> Dict[str, Any]:
         
         # Use basic reasoning pattern
         try:
-            reasoning_result = reasoning_engine.reason(
-                task_id="health_check",
-                agent_id="health_check",
+            reasoning_result = await reasoning_engine.reason_async(
                 objective=test_objective,
-                pattern="chain_of_thought"
+                pattern="chain_of_thought",
+                context={"task_id": "health_check"}
             )
             
             reasoning_works = (reasoning_result.completed and 

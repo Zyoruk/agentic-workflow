@@ -876,7 +876,8 @@ class MCPEnhancedAgent(Agent):
             if self.mcp_client:
                 await self.mcp_client.close()
             
-            # Note: Base Agent class doesn't have a close method, so we skip the super() call
+            # Call parent close method
+            await super().close()
             
         except Exception as e:
             logger.error(f"Error closing agent {self.agent_id}: {e}")

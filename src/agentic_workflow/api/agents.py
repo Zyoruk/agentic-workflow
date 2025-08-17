@@ -12,7 +12,7 @@ from agentic_workflow.core.exceptions import AgentError, ValidationError
 from agentic_workflow.core.logging_config import get_logger
 
 # Create router
-router = APIRouter(prefix="/api/v1/agents", tags=["agents"])
+router = APIRouter(prefix="/agents", tags=["agents"])
 logger = get_logger(__name__)
 
 # Global agent registry for managing active agents

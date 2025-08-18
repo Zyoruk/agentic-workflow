@@ -9,6 +9,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from agentic_workflow import __version__, monitoring_service
 from agentic_workflow.api.agents import router as agents_router
 from agentic_workflow.api.health import router as health_router
+from agentic_workflow.api.mcp import router as mcp_router
+from agentic_workflow.api.tools import router as tools_router
 from agentic_workflow.core.logging_config import get_logger, setup_logging
 
 logger = get_logger(__name__)
@@ -54,6 +56,8 @@ app.add_middleware(
 # Include routers
 app.include_router(health_router, prefix="/api/v1")
 app.include_router(agents_router, prefix="/api/v1")
+app.include_router(mcp_router, prefix="/api/v1")
+app.include_router(tools_router, prefix="/api/v1")
 
 
 @app.get("/")
@@ -66,6 +70,8 @@ async def root():
         "endpoints": {
             "health": "/api/v1/health",
             "agents": "/api/v1/agents",
+            "mcp": "/api/v1/mcp",
+            "tools": "/api/v1/tools",
             "docs": "/docs",
             "metrics": "/metrics" if monitoring_service.metrics.enabled else None,
         },

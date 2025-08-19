@@ -3,17 +3,15 @@ MCP Server Registry for managing server configurations and discovery.
 """
 
 import asyncio
-import json
-import os
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, List, Optional
 
 import yaml
 
 from agentic_workflow.core.logging_config import get_logger
 
-from .base import MCPCapability, MCPClient, MCPServerConfig
+from .base import MCPClient, MCPServerConfig
 
 logger = get_logger(__name__)
 

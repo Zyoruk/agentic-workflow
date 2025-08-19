@@ -2,9 +2,8 @@
 Unit tests for enhanced tool registry.
 """
 
-import asyncio
 from datetime import datetime
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 
@@ -13,7 +12,6 @@ from agentic_workflow.mcp.tools.enhanced_registry import (
     BuiltinTool,
     EnhancedToolRegistry,
     MCPTool,
-    Tool,
     ToolMetadata,
 )
 
@@ -167,7 +165,7 @@ class TestEnhancedToolRegistry:
         assert all(tool.source == "builtin" for tool in builtin_tools)
 
         # Filter by tags
-        tagged_tools = registry.list_tools(tags=["utility"])
+        registry.list_tools(tags=["utility"])
         # Should return tools that have any of the specified tags
 
     async def test_execute_builtin_tool(self):
@@ -240,7 +238,7 @@ class TestEnhancedToolRegistry:
 
         recent_execution = history[-1]
         assert recent_execution["tool_name"] == "echo"
-        assert recent_execution["success"] == True
+        assert recent_execution["success"] is True
         assert "execution_time" in recent_execution
         assert "timestamp" in recent_execution
 
@@ -384,8 +382,9 @@ class TestEnhancedToolRegistry:
         # Add some data
         await registry.execute_tool("echo", {"text": "test"})
 
-        initial_builtin_count = len(registry.builtin_tools)
-        initial_history_count = len(registry.execution_history)
+        # Store initial counts
+        len(registry.builtin_tools)
+        len(registry.execution_history)
 
         await registry.close()
 

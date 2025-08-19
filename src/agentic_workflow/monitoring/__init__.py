@@ -40,7 +40,7 @@ class SystemMetrics:
     def __init__(self) -> None:
         self.config = get_config()
         self.enabled = getattr(self.config.monitoring, "prometheus_enabled", False)
-        self._metrics = {}
+        self._metrics: Dict[str, Any] = {}
 
         if self.enabled and PROMETHEUS_AVAILABLE:
             self._initialize_prometheus_metrics()
@@ -222,7 +222,7 @@ class HealthChecker:
     """Health check system for monitoring component status."""
 
     def __init__(self) -> None:
-        self.components = {}
+        self.components: Dict[str, Any] = {}
         self.logger = get_logger(f"{__name__}.health")
 
     def register_component(self, name: str, check_func: Callable[[], bool]) -> None:

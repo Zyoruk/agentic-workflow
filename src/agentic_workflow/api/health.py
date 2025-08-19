@@ -11,7 +11,7 @@ router = APIRouter(tags=["health", "monitoring"])
 
 
 @router.get("/health", response_model=Dict[str, Any])
-async def health_check():
+async def health_check() -> Dict[str, Any]:
     """
     Comprehensive health check endpoint.
 
@@ -37,7 +37,7 @@ async def health_check():
 
 
 @router.get("/health/simple")
-async def simple_health_check():
+async def simple_health_check() -> Dict[str, Any]:
     """
     Simple health check endpoint for load balancers.
 
@@ -51,7 +51,7 @@ async def simple_health_check():
 
 
 @router.get("/metrics/summary")
-async def metrics_summary():
+async def metrics_summary() -> Dict[str, Any]:
     """
     Get a summary of system metrics.
 
@@ -82,7 +82,7 @@ async def metrics_summary():
 
 
 @router.get("/health/{component}")
-async def component_health_check(component: str):
+async def component_health_check(component: str) -> Dict[str, Any]:
     """
     Check health of a specific system component.
 

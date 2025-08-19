@@ -4,7 +4,6 @@ import asyncio
 import json
 import tempfile
 from pathlib import Path
-from unittest.mock import Mock, patch
 
 import pytest
 
@@ -317,7 +316,7 @@ class TestToolManager:
         await self.manager.initialize()
 
         # Should have discovered some built-in tools
-        stats = self.manager.registry.get_registry_stats()
+        self.manager.registry.get_registry_stats()
         # Note: This might be 0 if builtin modules aren't properly structured
         # but the test should not fail
 

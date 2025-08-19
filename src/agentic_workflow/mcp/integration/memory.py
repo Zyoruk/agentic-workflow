@@ -6,15 +6,12 @@ including server configurations, capability mappings, execution history,
 and performance metrics.
 """
 
-import asyncio
-import json
 from dataclasses import asdict
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 from agentic_workflow.core.logging_config import get_logger
 from agentic_workflow.mcp.client.base import MCPCapability, MCPServerConfig
-from agentic_workflow.mcp.tools.enhanced_registry import ToolMetadata
 from agentic_workflow.memory.manager import MemoryManager
 
 logger = get_logger(__name__)

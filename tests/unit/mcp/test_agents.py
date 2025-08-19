@@ -2,8 +2,6 @@
 Unit tests for MCP-enhanced agents.
 """
 
-import asyncio
-from datetime import datetime
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
@@ -334,7 +332,7 @@ class TestMCPEnhancedAgent:
         history_record = agent.capability_usage_history[0]
         assert history_record["task_id"] == sample_agent_task.task_id
         assert history_record["tools_used"] == ["tool1", "tool2"]
-        assert history_record["success"] == True
+        assert history_record["success"] is True
 
     async def test_get_mcp_status(self):
         """Test MCP status reporting."""
@@ -728,7 +726,7 @@ class TestMCPEnhancedIntegration:
             objective = f"Test {task_type} task"
             context = {"task_type": task_type}
 
-            result = await agent._execute_mcp_aware_reasoning(objective, context)
+            await agent._execute_mcp_aware_reasoning(objective, context)
 
             # Verify reason_async was called (all patterns now use async reasoning)
             mock_engine.reason_async.assert_called()

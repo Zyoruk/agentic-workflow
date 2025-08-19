@@ -6,7 +6,6 @@ for MCP server connections and tool executions. Includes advanced threat detecti
 prompt/response scanning, and malicious connection handling.
 """
 
-import asyncio
 import hashlib
 import json
 import logging
@@ -18,7 +17,7 @@ from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Set
 
 from agentic_workflow.core.logging_config import get_logger
-from agentic_workflow.mcp.client.base import MCPCapability, MCPServerConfig
+from agentic_workflow.mcp.client.base import MCPServerConfig
 
 logger = get_logger(__name__)
 

@@ -12,6 +12,7 @@ import uuid
 from abc import ABC, abstractmethod
 from datetime import UTC, datetime
 from pathlib import Path
+from pkgutil import iter_modules
 from typing import Any, Callable, Dict, List, Optional, Type, Union
 
 from pydantic import BaseModel, Field
@@ -64,7 +65,7 @@ class Tool(ABC):
 
     @abstractmethod
     async def execute(
-        self, inputs: Dict[str, Any], context: Dict[str, Any] = None
+        self, inputs: Dict[str, Any], context: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         """Execute the tool with given inputs."""
         pass
@@ -75,7 +76,10 @@ class Tool(ABC):
         pass
 
     async def execute_with_monitoring(
-        self, inputs: Dict[str, Any], agent_id: str, context: Dict[str, Any] = None
+        self,
+        inputs: Dict[str, Any],
+        agent_id: str,
+        context: Optional[Dict[str, Any]] = None,
     ) -> ToolExecution:
         """Execute tool with full monitoring and error handling."""
         execution = ToolExecution(
@@ -146,7 +150,7 @@ class Tool(ABC):
 class ToolRegistry:
     """Central registry for tool discovery and management."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._tools: Dict[str, Tool] = {}
         self._capabilities: Dict[str, ToolCapability] = {}
         self._categories: Dict[str, List[str]] = {}
@@ -195,7 +199,7 @@ class ToolRegistry:
         return self._tools.get(tool_id)
 
     def list_tools(
-        self, category: Optional[str] = None, tags: List[str] = None
+        self, category: Optional[str] = None, tags: Optional[List[str]] = None
     ) -> List[str]:
         """List available tools, optionally filtered by category or tags."""
         if category:
@@ -248,7 +252,7 @@ class ToolRegistry:
         tool_id: str,
         inputs: Dict[str, Any],
         agent_id: str,
-        context: Dict[str, Any] = None,
+        context: Optional[Dict[str, Any]] = None,
     ) -> ToolExecution:
         """Execute a tool by ID."""
         tool = self.get_tool(tool_id)
@@ -316,7 +320,7 @@ class ToolDiscovery:
 
     def discover_from_directory(self, directory_path: str) -> List[str]:
         """Discover tools from a directory containing Python files."""
-        discovered_tools = []
+        discovered_tools: List[str] = []
         directory = Path(directory_path)
 
         if not directory.exists():
@@ -346,7 +350,7 @@ class ToolDiscovery:
             package = importlib.import_module(package_name)
 
             if hasattr(package, "__path__"):
-                for finder, name, ispkg in importlib.iter_modules(
+                for finder, name, ispkg in iter_modules(
                     package.__path__, package.__name__ + "."
                 ):
                     tools = self.discover_from_module(name)
@@ -361,7 +365,7 @@ class ToolDiscovery:
 class ToolManager:
     """High-level tool management interface."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.registry = ToolRegistry()
         self.discovery = ToolDiscovery(self.registry)
         self.logger = get_logger(__name__)
@@ -396,7 +400,7 @@ class ToolManager:
         tool_identifier: str,
         inputs: Dict[str, Any],
         agent_id: str,
-        context: Dict[str, Any] = None,
+        context: Optional[Dict[str, Any]] = None,
     ) -> ToolExecution:
         """Execute a tool by ID or find best match."""
 
@@ -461,7 +465,7 @@ class ToolManager:
 
     def get_tool_catalog(self) -> Dict[str, Any]:
         """Get a complete catalog of available tools."""
-        catalog = {
+        catalog: Dict[str, Any] = {
             "categories": {},
             "total_tools": 0,
             "registry_stats": self.registry.get_registry_stats(),

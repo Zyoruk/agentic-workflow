@@ -154,7 +154,7 @@ class InMemoryChannel(CommunicationChannel):
 class CommunicationManager:
     """Central manager for agent communication and coordination."""
 
-    def __init__(self, memory_manager=None) -> None:
+    def __init__(self, memory_manager: Optional[Any] = None) -> None:
         self.memory_manager = memory_manager
         self.channels: Dict[str, CommunicationChannel] = {}
         self.subscriptions: Dict[str, Set[str]] = {}  # agent_id -> message_types
@@ -308,7 +308,7 @@ class CommunicationManager:
                 limit=limit,
                 filters={"type": "message"},
             )
-            return results
+            return results if isinstance(results, list) else []
         except Exception as e:
             self.logger.error(f"Failed to retrieve message history: {e}")
             return []
@@ -339,7 +339,9 @@ class CommunicationManager:
 
 
 # Convenience functions for common communication patterns
-async def create_communication_manager(memory_manager=None) -> CommunicationManager:
+async def create_communication_manager(
+    memory_manager: Optional[Any] = None,
+) -> CommunicationManager:
     """Create and configure a communication manager."""
     manager = CommunicationManager(memory_manager)
     return manager
@@ -348,7 +350,7 @@ async def create_communication_manager(memory_manager=None) -> CommunicationMana
 async def setup_agent_communication(
     agent_id: str,
     communication_manager: CommunicationManager,
-    message_types: List[str] = None,
+    message_types: Optional[List[str]] = None,
 ) -> None:
     """Set up communication for an agent."""
     default_types = ["insight", "coordination", "notification"]

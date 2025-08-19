@@ -3,13 +3,11 @@ Core MCP client implementation for agentic workflow system.
 """
 
 import asyncio
-import json
-import logging
 import subprocess
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Callable, Dict, List, Optional
 
 try:
     from mcp import ClientSession, StdioServerParameters

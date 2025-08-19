@@ -51,14 +51,14 @@ class ReasoningPath(BaseModel):
 class ReasoningPattern(ABC):
     """Abstract base class for reasoning patterns."""
 
-    def __init__(self, agent_id: str, memory_manager=None):
+    def __init__(self, agent_id: str, memory_manager: Optional[Any] = None):
         self.agent_id = agent_id
         self.memory_manager = memory_manager
         self.logger = get_logger(f"{__name__}.{self.__class__.__name__}")
 
     @abstractmethod
     async def reason(
-        self, objective: str, context: Dict[str, Any] = None
+        self, objective: str, context: Optional[Dict[str, Any]] = None
     ) -> ReasoningPath:
         """Execute the reasoning pattern for a given objective."""
         pass
@@ -131,13 +131,13 @@ class ChainOfThoughtReasoning(ReasoningPattern):
     making the decision process transparent and more reliable.
     """
 
-    def __init__(self, agent_id: str, memory_manager=None, max_steps: int = 10):
+    def __init__(self, agent_id: str, memory_manager: Optional[Any] = None, max_steps: int = 10):
         super().__init__(agent_id, memory_manager)
         self.max_steps = max_steps
         self.pattern_type = "chain_of_thought"
 
     async def reason(
-        self, objective: str, context: Dict[str, Any] = None
+        self, objective: str, context: Optional[Dict[str, Any]] = None
     ) -> ReasoningPath:
         """Execute Chain of Thought reasoning."""
         context = context or {}
@@ -350,13 +350,13 @@ class ReActReasoning(ReasoningPattern):
     allowing agents to plan, act, observe, and adapt their approach.
     """
 
-    def __init__(self, agent_id: str, memory_manager=None, max_cycles: int = 5):
+    def __init__(self, agent_id: str, memory_manager: Optional[Any] = None, max_cycles: int = 5):
         super().__init__(agent_id, memory_manager)
         self.max_cycles = max_cycles
         self.pattern_type = "react"
 
     async def reason(
-        self, objective: str, context: Dict[str, Any] = None
+        self, objective: str, context: Optional[Dict[str, Any]] = None
     ) -> ReasoningPath:
         """Execute ReAct reasoning cycles."""
         context = context or {}
@@ -492,7 +492,7 @@ class ReActReasoning(ReasoningPattern):
         """Execute observation phase of ReAct cycle."""
         # Get the action from the previous step
         action = prev_steps[-1].action if prev_steps else "unknown"
-
+        
         observations = {
             "analyze_requirements": "Requirements are well-defined with clear acceptance criteria",
             "design_solution": "Solution architecture is feasible with identified components",
@@ -501,7 +501,7 @@ class ReActReasoning(ReasoningPattern):
             "validate_results": "Results meet requirements and stakeholder expectations",
         }
 
-        observation = observations.get(action, "Action completed successfully")
+        observation = observations.get(action or "unknown", "Action completed successfully")
 
         return ReasoningStep(
             step_number=len(prev_steps) + 1,
@@ -571,7 +571,7 @@ class ReActReasoning(ReasoningPattern):
 class ReasoningEngine:
     """Central engine for managing different reasoning patterns."""
 
-    def __init__(self, agent_id: str, memory_manager=None, communication_manager=None):
+    def __init__(self, agent_id: str, memory_manager: Optional[Any] = None, communication_manager: Optional[Any] = None):
         self.agent_id = agent_id
         self.memory_manager = memory_manager
         self.communication_manager = communication_manager
@@ -588,7 +588,7 @@ class ReasoningEngine:
         self,
         objective: str,
         pattern: str = "chain_of_thought",
-        context: Dict[str, Any] = None,
+        context: Optional[Dict[str, Any]] = None,
     ) -> ReasoningPath:
         """Execute reasoning using specified pattern."""
         if pattern not in self.patterns:
@@ -632,7 +632,7 @@ class ReasoningEngine:
         self,
         objective: str,
         pattern: str = "chain_of_thought",
-        context: Dict[str, Any] = None,
+        context: Optional[Dict[str, Any]] = None,
     ) -> ReasoningPath:
         """Execute reasoning using specified pattern (async version)."""
         if pattern not in self.patterns:
@@ -658,7 +658,7 @@ class ReasoningEngine:
                 limit=limit,
                 filters={"type": "reasoning_path", "agent_id": self.agent_id},
             )
-            return results
+            return results if isinstance(results, list) else []
         except Exception as e:
             self.logger.error(f"Failed to retrieve similar reasoning: {e}")
             return []
@@ -694,7 +694,7 @@ class RAISEReasoning(ReasoningPattern):
     - Evaluate: Assess overall progress and adjust strategy
     """
 
-    def __init__(self, agent_id: str, memory_manager=None, communication_manager=None):
+    def __init__(self, agent_id: str, memory_manager: Optional[Any] = None, communication_manager: Optional[Any] = None):
         super().__init__(agent_id, memory_manager)
         self.pattern_type = "raise"
         self.communication_manager = communication_manager
@@ -702,7 +702,7 @@ class RAISEReasoning(ReasoningPattern):
         self.improvement_threshold = 0.7
 
     async def reason(
-        self, objective: str, context: Dict[str, Any] = None
+        self, objective: str, context: Optional[Dict[str, Any]] = None
     ) -> ReasoningPath:
         """Execute RAISE reasoning cycles."""
         context = context or {}
@@ -821,7 +821,7 @@ class RAISEReasoning(ReasoningPattern):
         thought = (
             f"ACT (Cycle {cycle}): Executing planned actions based on strategic reasoning. "
             f"Taking concrete steps toward objective. "
-            f"Acting on insight: {reason_step.observation[:100]}..."
+            f"Acting on insight: {(reason_step.observation or 'No observation')[:100]}..."
         )
 
         action = f"Execute strategic actions for: {objective}"
@@ -877,7 +877,7 @@ class RAISEReasoning(ReasoningPattern):
         """Share: Communicate insights with other agents."""
         thought = (
             f"SHARE (Cycle {cycle}): Communicating insights and learnings with other agents. "
-            f"Sharing improvement insights: {improve_step.observation[:100]}... "
+            f"Sharing improvement insights: {(improve_step.observation or 'No observation')[:100]}... "
             f"Facilitating collaborative knowledge building."
         )
 
@@ -926,11 +926,11 @@ class RAISEReasoning(ReasoningPattern):
             cycle_steps
         )
         progress_indicators = len(
-            [s for s in cycle_steps if "success" in s.observation.lower()]
+            [s for s in cycle_steps if "success" in (s.observation or "").lower()]
         )
 
         # Check if network sharing was successful (indicates better coordination)
-        network_sharing = any("network" in s.observation for s in cycle_steps)
+        network_sharing = any("network" in (s.observation or "") for s in cycle_steps)
 
         # Boost confidence if network sharing was successful
         if network_sharing:

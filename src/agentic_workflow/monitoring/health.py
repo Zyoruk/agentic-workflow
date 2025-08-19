@@ -1,6 +1,5 @@
 """Health check implementations for system components."""
 
-import asyncio
 from datetime import UTC, datetime
 from typing import Any, Dict
 
@@ -264,8 +263,6 @@ async def tool_system_health_check() -> Dict[str, Any]:
 async def configuration_health_check() -> Dict[str, Any]:
     """Check configuration system health."""
     try:
-        from agentic_workflow.core.config import get_config
-
         # Test configuration loading
         config = get_config()
 

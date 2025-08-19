@@ -1,6 +1,5 @@
 """Test the event system functionality."""
 
-import asyncio
 from datetime import UTC, datetime
 from unittest.mock import AsyncMock, Mock
 
@@ -13,7 +12,6 @@ from agentic_workflow.events import (
     EventType,
     emit_agent_started,
     emit_event,
-    event_manager,
     subscribe_to_events,
 )
 

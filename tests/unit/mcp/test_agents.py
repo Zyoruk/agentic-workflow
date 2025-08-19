@@ -726,7 +726,7 @@ class TestMCPEnhancedIntegration:
             objective = f"Test {task_type} task"
             context = {"task_type": task_type}
 
-            result = await agent._execute_mcp_aware_reasoning(objective, context)
+            await agent._execute_mcp_aware_reasoning(objective, context)
 
             # Verify reason_async was called (all patterns now use async reasoning)
             mock_engine.reason_async.assert_called()

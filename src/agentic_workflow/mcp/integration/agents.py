@@ -515,7 +515,7 @@ class MCPEnhancedAgent(Agent):
 
             # Analyze task requirements against available capabilities
             task_type = task.get("type", "")
-            
+
             # Simple keyword-based capability matching
             relevant_tools = []
             for tool_info in self.mcp_capabilities_cache.get("tools", []):

@@ -58,13 +58,12 @@ class EmailTool(Tool):
         to_addresses = inputs["to"]
         subject = inputs["subject"]
         body = inputs["body"]
-        _smtp_server = inputs.get(
-            "smtp_server", "localhost"
-        )  # Not used in mock implementation
-        _smtp_port = inputs.get("smtp_port", 587)  # Not used in mock implementation
+        # These are available but not used in mock implementation
+        # _smtp_server = inputs.get("smtp_server", "localhost")
+        # _smtp_port = inputs.get("smtp_port", 587)
         username = inputs.get("username")
-        _password = inputs.get("password")  # Not used in mock implementation
-        _use_tls = inputs.get("use_tls", True)  # Not used in mock implementation
+        # _password = inputs.get("password")
+        # _use_tls = inputs.get("use_tls", True)
 
         try:
             # Create message
@@ -142,7 +141,7 @@ class SlackTool(Tool):
         self, inputs: Dict[str, Any], context: Dict[str, Any] = None
     ) -> Dict[str, Any]:
         """Execute Slack message sending."""
-        _webhook_url = inputs["webhook_url"]  # Not used in mock implementation
+        # _webhook_url = inputs["webhook_url"]  # Not used in mock implementation
         message = inputs["message"]
         channel = inputs.get("channel")
         username = inputs.get("username", "Agentic Workflow Bot")
@@ -324,10 +323,8 @@ class WebhookTool(Tool):
         url = inputs["url"]
         payload = inputs["payload"]
         method = inputs.get("method", "POST")
-        _headers = inputs.get(
-            "headers", {"Content-Type": "application/json"}
-        )  # Not used in mock implementation
-        _timeout = inputs.get("timeout", 30)  # Not used in mock implementation
+        # _headers = inputs.get("headers", {"Content-Type": "application/json"})  # Not used in mock implementation
+        # _timeout = inputs.get("timeout", 30)  # Not used in mock implementation
 
         try:
             # Mock webhook sending (in real implementation, use httpx or requests)

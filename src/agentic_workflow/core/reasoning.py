@@ -253,10 +253,10 @@ class ChainOfThoughtReasoning(ReasoningPattern):
         return ReasoningStep(
             step_number=3,
             question="What's the best approach to solve this?",
-            thought=f"Based on my analysis, the best approach is to: "
-            f"1) Analyze requirements, 2) Design solution, 3) Implement incrementally, "
-            f"4) Test and validate. This systematic approach aligns with the problem "
-            f"decomposition from step 1.",
+            thought="Based on my analysis, the best approach is to: "
+            "1) Analyze requirements, 2) Design solution, 3) Implement incrementally, "
+            "4) Test and validate. This systematic approach aligns with the problem "
+            "decomposition from step 1.",
             confidence=0.8,
         )
 
@@ -796,9 +796,9 @@ class RAISEReasoning(ReasoningPattern):
 
         action = f"Generate strategic plans for: {objective}"
         observation = (
-            f"Strategic analysis complete. Identified 3 key approaches: "
-            f"1) Direct implementation 2) Incremental development 3) Collaborative solution. "
-            f"Selected approach based on context and previous learning."
+            "Strategic analysis complete. Identified 3 key approaches: "
+            "1) Direct implementation 2) Incremental development 3) Collaborative solution. "
+            "Selected approach based on context and previous learning."
         )
 
         return ReasoningStep(
@@ -826,9 +826,9 @@ class RAISEReasoning(ReasoningPattern):
 
         action = f"Execute strategic actions for: {objective}"
         observation = (
-            f"Actions executed successfully. Made concrete progress toward objective. "
-            f"Key achievements: plan formulation, resource allocation, initial implementation. "
-            f"Ready for improvement analysis."
+            "Actions executed successfully. Made concrete progress toward objective. "
+            "Key achievements: plan formulation, resource allocation, initial implementation. "
+            "Ready for improvement analysis."
         )
 
         return ReasoningStep(

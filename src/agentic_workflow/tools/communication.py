@@ -5,7 +5,7 @@ import time
 from datetime import datetime
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from ..core.logging_config import get_logger
 from . import Tool, ToolCapability
@@ -16,7 +16,7 @@ logger = get_logger(__name__)
 class EmailTool(Tool):
     """Tool for sending emails."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         capabilities = ToolCapability(
             name="email_sender",
             description="Send emails via SMTP",
@@ -52,7 +52,7 @@ class EmailTool(Tool):
         super().__init__("email_sender", capabilities)
 
     async def execute(
-        self, inputs: Dict[str, Any], context: Dict[str, Any] = None
+        self, inputs: Dict[str, Any], context: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         """Execute email sending."""
         to_addresses = inputs["to"]
@@ -114,7 +114,7 @@ class EmailTool(Tool):
 class SlackTool(Tool):
     """Tool for sending Slack messages."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         capabilities = ToolCapability(
             name="slack_messenger",
             description="Send messages to Slack channels",
@@ -138,7 +138,7 @@ class SlackTool(Tool):
         super().__init__("slack_messenger", capabilities)
 
     async def execute(
-        self, inputs: Dict[str, Any], context: Dict[str, Any] = None
+        self, inputs: Dict[str, Any], context: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         """Execute Slack message sending."""
         # _webhook_url = inputs["webhook_url"]  # Not used in mock implementation

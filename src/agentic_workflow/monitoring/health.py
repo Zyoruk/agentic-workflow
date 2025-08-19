@@ -22,7 +22,6 @@ async def memory_health_check() -> Dict[str, Any]:
         await memory_manager.initialize()
 
         # Test a simple store/retrieve operation
-        test_key = f"health_check_{datetime.now(UTC).timestamp()}"
         store_result = await memory_manager.store(
             content="health check test",
             memory_type="SHORT_TERM",
@@ -184,8 +183,8 @@ async def communication_health_check() -> Dict[str, Any]:
 
             await comm_manager.send_message(test_message, "test")
 
-            # Test message receiving
-            messages = await comm_manager.receive_messages(test_agent_id)
+            # Test message receiving - just ensure no exceptions
+            await comm_manager.receive_messages(test_agent_id)
 
             comm_works = True  # If we got here without exceptions
         except Exception as e:

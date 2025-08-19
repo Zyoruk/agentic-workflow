@@ -2,8 +2,6 @@
 Unit tests for MCP-enhanced agents.
 """
 
-import asyncio
-from datetime import datetime
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest

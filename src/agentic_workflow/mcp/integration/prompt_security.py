@@ -775,8 +775,6 @@ class PromptResponseScanner:
         self, agent_id: str, time_window: timedelta = timedelta(hours=24)
     ) -> Dict[str, Any]:
         """Get security profile for a specific agent."""
-        cutoff = datetime.now() - time_window
-
         # Find reports for this agent (need to track agent_id in reports)
         # This would require modifying the scan methods to store agent_id
         # For now, return a placeholder

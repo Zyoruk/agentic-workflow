@@ -240,7 +240,7 @@ class TestEnhancedToolRegistry:
 
         recent_execution = history[-1]
         assert recent_execution["tool_name"] == "echo"
-        assert recent_execution["success"] == True
+        assert recent_execution["success"] is True
         assert "execution_time" in recent_execution
         assert "timestamp" in recent_execution
 

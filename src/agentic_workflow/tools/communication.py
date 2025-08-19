@@ -58,7 +58,9 @@ class EmailTool(Tool):
         to_addresses = inputs["to"]
         subject = inputs["subject"]
         body = inputs["body"]
-        _smtp_server = inputs.get("smtp_server", "localhost")  # Not used in mock implementation
+        _smtp_server = inputs.get(
+            "smtp_server", "localhost"
+        )  # Not used in mock implementation
         _smtp_port = inputs.get("smtp_port", 587)  # Not used in mock implementation
         username = inputs.get("username")
         _password = inputs.get("password")  # Not used in mock implementation
@@ -322,7 +324,9 @@ class WebhookTool(Tool):
         url = inputs["url"]
         payload = inputs["payload"]
         method = inputs.get("method", "POST")
-        _headers = inputs.get("headers", {"Content-Type": "application/json"})  # Not used in mock implementation
+        _headers = inputs.get(
+            "headers", {"Content-Type": "application/json"}
+        )  # Not used in mock implementation
         _timeout = inputs.get("timeout", 30)  # Not used in mock implementation
 
         try:

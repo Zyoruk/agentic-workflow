@@ -5,17 +5,12 @@ Provides real-time scanning of prompts and responses for security threats,
 injection attacks, sensitive data exposure, and malicious content.
 """
 
-import asyncio
-import base64
 import hashlib
-import json
-import logging
 import re
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
-from urllib.parse import urlparse
+from typing import Any, Dict, List, Optional
 
 from agentic_workflow.core.logging_config import get_logger
 

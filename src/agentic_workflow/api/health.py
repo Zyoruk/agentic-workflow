@@ -1,6 +1,5 @@
 """Health check and monitoring API endpoints."""
 
-import asyncio
 from typing import Any, Dict
 
 from fastapi import APIRouter, HTTPException
@@ -26,7 +25,6 @@ async def health_check():
     """
     try:
         health_results = await run_all_health_checks()
-        status_code = 200 if health_results["overall_healthy"] else 503
 
         return {
             "status": "healthy" if health_results["overall_healthy"] else "unhealthy",
@@ -100,7 +98,6 @@ async def component_health_check(component: str):
             )
 
         component_result = health_results["checks"][component]
-        status_code = 200 if component_result.get("healthy", False) else 503
 
         return {
             "component": component,

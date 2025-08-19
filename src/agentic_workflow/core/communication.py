@@ -4,7 +4,6 @@ This module provides infrastructure for agents to communicate, share insights,
 and coordinate activities across the workflow system.
 """
 
-import json
 import uuid
 from abc import ABC, abstractmethod
 from datetime import UTC, datetime
@@ -12,7 +11,6 @@ from typing import Any, Dict, List, Optional, Set
 
 from pydantic import BaseModel, Field
 
-from agentic_workflow.core.exceptions import ReasoningError
 from agentic_workflow.core.logging_config import get_logger
 from agentic_workflow.memory.interfaces import MemoryType
 
@@ -80,7 +78,7 @@ class CommunicationChannel(ABC):
 class InMemoryChannel(CommunicationChannel):
     """In-memory communication channel for local agent coordination."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.messages: Dict[str, List[Message]] = {}  # agent_id -> messages
         self.broadcast_messages: List[Message] = []
         self.max_messages_per_agent = 1000
@@ -156,7 +154,7 @@ class InMemoryChannel(CommunicationChannel):
 class CommunicationManager:
     """Central manager for agent communication and coordination."""
 
-    def __init__(self, memory_manager=None):
+    def __init__(self, memory_manager=None) -> None:
         self.memory_manager = memory_manager
         self.channels: Dict[str, CommunicationChannel] = {}
         self.subscriptions: Dict[str, Set[str]] = {}  # agent_id -> message_types
@@ -165,12 +163,12 @@ class CommunicationManager:
         # Initialize default in-memory channel
         self.add_channel("default", InMemoryChannel())
 
-    def add_channel(self, channel_name: str, channel: CommunicationChannel):
+    def add_channel(self, channel_name: str, channel: CommunicationChannel) -> None:
         """Add a communication channel."""
         self.channels[channel_name] = channel
         self.logger.info(f"Added communication channel: {channel_name}")
 
-    def subscribe_agent(self, agent_id: str, message_types: List[str]):
+    def subscribe_agent(self, agent_id: str, message_types: List[str]) -> None:
         """Subscribe an agent to specific message types."""
         if agent_id not in self.subscriptions:
             self.subscriptions[agent_id] = set()
@@ -252,7 +250,7 @@ class CommunicationManager:
         task_id: str,
         action_type: str,
         recipient_id: Optional[str] = None,
-        dependencies: List[str] = None,
+        dependencies: Optional[List[str]] = None,
     ) -> bool:
         """Send a coordination request to one or all agents."""
         coordination_message = CoordinationMessage(

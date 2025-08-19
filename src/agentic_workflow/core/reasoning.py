@@ -8,7 +8,7 @@ import json
 import uuid
 from abc import ABC, abstractmethod
 from datetime import UTC, datetime
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field
 

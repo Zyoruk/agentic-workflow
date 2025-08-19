@@ -9,15 +9,12 @@ import asyncio
 import importlib
 import importlib.util
 import inspect
-import json
-import logging
-import os
 import sys
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Type, Union
+from typing import Any, Dict, List, Optional, Type
 
 import yaml
 
@@ -262,8 +259,6 @@ class PluginManager:
 
     async def _load_plugin_package(self, plugin_dir: Path) -> None:
         """Load a plugin from a Python package."""
-        package_name = f"mcp_plugin_{plugin_dir.name}"
-
         # Add to Python path temporarily
         if str(plugin_dir.parent) not in sys.path:
             sys.path.insert(0, str(plugin_dir.parent))
@@ -704,9 +699,9 @@ from agentic_workflow.mcp.client.base import MCPServerConfig, MCPCapability
 
 class {plugin_name.title().replace('_', '')}Plugin(MCPServerPlugin):
     """Custom MCP server plugin: {plugin_name}"""
-    
+
     PLUGIN_NAME = "{plugin_name}"
-    
+
     async def get_metadata(self) -> PluginMetadata:
         """Get plugin metadata."""
         return PluginMetadata(
@@ -720,7 +715,7 @@ class {plugin_name.title().replace('_', '')}Plugin(MCPServerPlugin):
             homepage="",
             license="MIT"
         )
-    
+
     async def create_server_config(self) -> MCPServerConfig:
         """Create MCP server configuration."""
         return MCPServerConfig(
@@ -731,7 +726,7 @@ class {plugin_name.title().replace('_', '')}Plugin(MCPServerPlugin):
             timeout=30,
             metadata={{"plugin": "{plugin_name}"}}
         )
-    
+
     async def get_capabilities(self) -> List[MCPCapability]:
         """Get plugin capabilities."""
         # Define your plugin's capabilities here

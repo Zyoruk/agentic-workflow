@@ -74,7 +74,7 @@ class PromptResponseScanner:
     and compliance violations in MCP communications.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize prompt/response scanner."""
         self.scan_reports: List[ScanReport] = []
         self.max_reports = 10000
@@ -728,7 +728,7 @@ class PromptResponseScanner:
         if not reports:
             return {"total_scans": 0}
 
-        stats = {
+        stats: Dict[str, Any] = {
             "total_scans": len(reports),
             "scan_results": {},
             "violation_types": {},

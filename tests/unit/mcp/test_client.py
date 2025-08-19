@@ -2,7 +2,6 @@
 Unit tests for MCP client functionality.
 """
 
-import asyncio
 from datetime import datetime
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -11,7 +10,6 @@ import pytest
 from agentic_workflow.mcp.client.base import (
     MCPCapability,
     MCPClient,
-    MCPConnectionError,
     MCPExecutionError,
     MCPServerConfig,
 )
@@ -197,9 +195,7 @@ class TestMCPClient:
 
         # Mock failing health check
         with patch.object(client, "_check_server_health", return_value=False):
-            with patch.object(
-                client, "_reconnect_server", return_value=True
-            ) as mock_reconnect:
+            with patch.object(client, "_reconnect_server", return_value=True):
                 await client._check_server_health("test_server")
                 # Health check would trigger reconnection in the background
                 # This test just verifies the method exists and can be called

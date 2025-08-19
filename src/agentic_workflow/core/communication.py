@@ -4,7 +4,6 @@ This module provides infrastructure for agents to communicate, share insights,
 and coordinate activities across the workflow system.
 """
 
-import json
 import uuid
 from abc import ABC, abstractmethod
 from datetime import UTC, datetime
@@ -12,7 +11,6 @@ from typing import Any, Dict, List, Optional, Set
 
 from pydantic import BaseModel, Field
 
-from agentic_workflow.core.exceptions import ReasoningError
 from agentic_workflow.core.logging_config import get_logger
 from agentic_workflow.memory.interfaces import MemoryType
 

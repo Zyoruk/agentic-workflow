@@ -1,6 +1,7 @@
 """FastAPI application for the Agentic Workflow System."""
 
 from contextlib import asynccontextmanager
+from typing import Any, AsyncGenerator
 
 import uvicorn
 from fastapi import FastAPI
@@ -17,7 +18,7 @@ logger = get_logger(__name__)
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Application lifespan context manager."""
     # Startup
     setup_logging()
@@ -61,7 +62,7 @@ app.include_router(tools_router, prefix="/api/v1")
 
 
 @app.get("/")
-async def root():
+async def root() -> dict[str, Any]:
     """Root endpoint with system information."""
     return {
         "name": "Agentic Workflow System",
@@ -79,7 +80,7 @@ async def root():
 
 
 @app.get("/status")
-async def status():
+async def status() -> dict[str, Any]:
     """Quick status endpoint."""
     return {
         "status": "ok",

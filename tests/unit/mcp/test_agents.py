@@ -334,7 +334,7 @@ class TestMCPEnhancedAgent:
         history_record = agent.capability_usage_history[0]
         assert history_record["task_id"] == sample_agent_task.task_id
         assert history_record["tools_used"] == ["tool1", "tool2"]
-        assert history_record["success"] == True
+        assert history_record["success"] is True
 
     async def test_get_mcp_status(self):
         """Test MCP status reporting."""

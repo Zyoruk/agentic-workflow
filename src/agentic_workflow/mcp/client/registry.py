@@ -485,7 +485,6 @@ class MCPServerRegistry:
 
         # Get connection status if client available
         status = None
-        capabilities = []
         if self.client:
             status = self.client.get_server_status(server_name)
             # Note: capabilities would need to be fetched in an async context

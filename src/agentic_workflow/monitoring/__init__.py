@@ -3,7 +3,7 @@
 import time
 from dataclasses import dataclass
 from datetime import UTC, datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional
 
 try:
     from prometheus_client import Counter, Gauge, Histogram, Info, start_http_server
@@ -24,10 +24,10 @@ class MetricValue:
 
     name: str
     value: float
-    labels: Dict[str, str] = None
-    timestamp: datetime = None
+    labels: Optional[Dict[str, str]] = None
+    timestamp: Optional[datetime] = None
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if self.labels is None:
             self.labels = {}
         if self.timestamp is None:
@@ -37,7 +37,7 @@ class MetricValue:
 class SystemMetrics:
     """Core system metrics for the agentic workflow platform."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.config = get_config()
         self.enabled = getattr(self.config.monitoring, "prometheus_enabled", False)
         self._metrics = {}
@@ -47,7 +47,7 @@ class SystemMetrics:
         else:
             logger.info("Prometheus metrics disabled or unavailable")
 
-    def _initialize_prometheus_metrics(self):
+    def _initialize_prometheus_metrics(self) -> None:
         """Initialize Prometheus metrics."""
         # Agent execution metrics
         self._metrics["agent_tasks_total"] = Counter(
@@ -221,11 +221,11 @@ class SystemMetrics:
 class HealthChecker:
     """Health check system for monitoring component status."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.components = {}
         self.logger = get_logger(f"{__name__}.health")
 
-    def register_component(self, name: str, check_func: callable) -> None:
+    def register_component(self, name: str, check_func: Callable[[], bool]) -> None:
         """Register a component health check function."""
         self.components[name] = {
             "check_func": check_func,
@@ -286,7 +286,7 @@ class HealthChecker:
 class MonitoringService:
     """Central monitoring service for the agentic workflow system."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.config = get_config()
         self.metrics = SystemMetrics()
         self.health_checker = HealthChecker()

@@ -5,10 +5,8 @@ This module provides agents with MCP capabilities while maintaining
 full backward compatibility with existing agent implementations.
 """
 
-import asyncio
-import json
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Type, Union
+from typing import Any, Dict, List, Optional, Type
 
 from agentic_workflow.agents.base import Agent, AgentResult, AgentTask
 from agentic_workflow.core.logging_config import get_logger

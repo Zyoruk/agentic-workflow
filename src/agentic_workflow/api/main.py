@@ -14,6 +14,7 @@ from agentic_workflow.api.health import router as health_router
 from agentic_workflow.api.mcp import router as mcp_router
 from agentic_workflow.api.tools import router as tools_router
 from agentic_workflow.api.workflows import router as workflows_router
+from agentic_workflow.api.workflow_protected import router as protected_workflows_router
 from agentic_workflow.core.logging_config import get_logger, setup_logging
 
 logger = get_logger(__name__)
@@ -63,6 +64,7 @@ app.include_router(agents_router, prefix="/api/v1")
 app.include_router(mcp_router, prefix="/api/v1")
 app.include_router(tools_router, prefix="/api/v1")
 app.include_router(workflows_router)  # Visual workflow builder (includes /api/v1 prefix)
+app.include_router(protected_workflows_router, prefix="/api/v1")  # Protected workflow endpoints
 
 
 @app.get("/")
@@ -79,6 +81,7 @@ async def root() -> Dict[str, Any]:
             "mcp": "/api/v1/mcp",
             "tools": "/api/v1/tools",
             "workflows": "/api/v1/workflows",
+            "protected_workflows": "/api/v1/workflows/protected",
             "docs": "/docs",
             "metrics": "/metrics" if monitoring_service.metrics.enabled else None,
         },

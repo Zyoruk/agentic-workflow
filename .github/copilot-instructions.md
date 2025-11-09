@@ -2,6 +2,18 @@
 
 **ALWAYS follow these instructions first and fallback to additional search and context gathering only if the information here is incomplete or found to be in error.**
 
+## Project Overview
+
+This is an **AI-driven autonomous software development workflow system** built with Python 3.11+. The system enables:
+- Autonomous software development through AI-driven agents
+- Multiple reasoning patterns (Chain of Thought, ReAct, RAISE)
+- Tool integration system with dynamic discovery
+- Multi-agent communication and coordination
+- Memory management (Redis, Weaviate, Neo4j)
+- FastAPI REST endpoints with health monitoring
+
+Key technologies: FastAPI, LangChain, Neo4j, Redis, Weaviate, Pydantic, Prometheus
+
 ## Working Effectively
 
 ### Bootstrap, Build, and Test the Repository
@@ -348,5 +360,41 @@ mypy src/              # Type checking (34s, expect failures)
 python -m uvicorn agentic_workflow.api.main:app --host 127.0.0.1 --port 8000
 curl http://127.0.0.1:8000/api/v1/health
 ```
+
+## Code Review and Contribution Guidelines
+
+### Code Review Expectations
+- All code changes require passing the test suite (622 tests must pass)
+- Code should follow the conventions in `CONVENTIONS.md`
+- Type hints are required for all functions and methods
+- Docstrings following Google style are required for public APIs
+- Changes should maintain or improve test coverage (target: 90%+)
+
+### Commit and PR Conventions
+- Use [Conventional Commits](https://www.conventionalcommits.org/) format
+- Commit types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`
+- PR titles should follow the same conventional commit format
+- Breaking changes must be clearly documented
+
+### Before Submitting Changes
+1. Run all tests: `python -m pytest tests/ -v`
+2. Verify package imports: `make package-check`
+3. Test examples still work: `python examples/basic_workflow_example.py`
+4. Check formatting (aware of current failures): `make format-check`
+5. Review your changes: `git diff`
+
+## Documentation Requirements
+
+### When to Update Documentation
+- New features require documentation in `docs/` and examples
+- API changes require updates to docstrings and API documentation
+- Breaking changes require updates to CHANGELOG.md
+- Configuration changes require updates to environment variable sections
+
+### Documentation Structure
+- `README.md` - Project overview and quick start
+- `CONVENTIONS.md` - Development standards and conventions
+- `docs/` - Detailed documentation organized by topic
+- `examples/` - Working code examples demonstrating features
 
 Always validate changes using the complete testing scenarios above before considering work complete.

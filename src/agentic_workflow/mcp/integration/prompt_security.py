@@ -5,17 +5,12 @@ Provides real-time scanning of prompts and responses for security threats,
 injection attacks, sensitive data exposure, and malicious content.
 """
 
-import asyncio
-import base64
 import hashlib
-import json
-import logging
 import re
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
-from urllib.parse import urlparse
+from typing import Any, Dict, List, Optional
 
 from agentic_workflow.core.logging_config import get_logger
 
@@ -79,7 +74,7 @@ class PromptResponseScanner:
     and compliance violations in MCP communications.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize prompt/response scanner."""
         self.scan_reports: List[ScanReport] = []
         self.max_reports = 10000
@@ -733,7 +728,7 @@ class PromptResponseScanner:
         if not reports:
             return {"total_scans": 0}
 
-        stats = {
+        stats: Dict[str, Any] = {
             "total_scans": len(reports),
             "scan_results": {},
             "violation_types": {},
@@ -780,8 +775,6 @@ class PromptResponseScanner:
         self, agent_id: str, time_window: timedelta = timedelta(hours=24)
     ) -> Dict[str, Any]:
         """Get security profile for a specific agent."""
-        cutoff = datetime.now() - time_window
-
         # Find reports for this agent (need to track agent_id in reports)
         # This would require modifying the scan methods to store agent_id
         # For now, return a placeholder

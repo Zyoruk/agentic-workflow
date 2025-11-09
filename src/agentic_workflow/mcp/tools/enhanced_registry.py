@@ -2,12 +2,11 @@
 Enhanced tool registry that integrates built-in tools with MCP capabilities.
 """
 
-import asyncio
 import inspect
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Callable, Dict, List, Optional, Type, Union
+from typing import Any, Callable, Dict, List, Optional
 
 from agentic_workflow.core.logging_config import get_logger
 from agentic_workflow.mcp.client.base import MCPCapability, MCPClient, MCPExecutionError

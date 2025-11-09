@@ -1,11 +1,10 @@
 """Development tools for agentic workflow system."""
 
 import ast
-import json
 import subprocess
 import sys
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, Optional
 
 from ..core.logging_config import get_logger
 from . import Tool, ToolCapability
@@ -16,7 +15,7 @@ logger = get_logger(__name__)
 class CodeAnalyzerTool(Tool):
     """Tool for analyzing Python code."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         capabilities = ToolCapability(
             name="code_analyzer",
             description="Analyze Python code for complexity, style, and potential issues",
@@ -47,7 +46,7 @@ class CodeAnalyzerTool(Tool):
         super().__init__("code_analyzer", capabilities)
 
     async def execute(
-        self, inputs: Dict[str, Any], context: Dict[str, Any] = None
+        self, inputs: Dict[str, Any], context: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         """Execute code analysis."""
         code = inputs["code"]
@@ -119,7 +118,7 @@ class CodeAnalyzerTool(Tool):
 class TestRunnerTool(Tool):
     """Tool for running tests."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         capabilities = ToolCapability(
             name="test_runner",
             description="Run Python tests and return results",

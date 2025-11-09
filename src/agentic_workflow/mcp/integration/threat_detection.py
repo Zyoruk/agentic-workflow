@@ -5,16 +5,14 @@ Provides real-time monitoring and detection of malicious connections,
 suspicious activities, and advanced security threats.
 """
 
-import asyncio
 import hashlib
 import json
-import logging
 import re
 from collections import defaultdict, deque
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any, Dict, List, Optional
 
 from agentic_workflow.core.logging_config import get_logger
 
@@ -84,7 +82,7 @@ class ThreatDetectionEngine:
     and implements real-time threat detection and response.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize threat detection engine."""
         self.threat_indicators: Dict[str, ThreatIndicator] = {}
         self.threat_events: List[ThreatEvent] = []
@@ -524,7 +522,7 @@ class ThreatDetectionEngine:
                 agent_id=agent_id,
                 server_id=server_id,
                 tool_name=tool_name,
-                description=f"Multiple sensitive data keywords detected in request",
+                description="Multiple sensitive data keywords detected in request",
                 evidence={
                     "keyword_count": suspicious_count,
                     "request_content": request_str,
@@ -687,7 +685,7 @@ class ThreatDetectionEngine:
         else:
             events = self.threat_events
 
-        summary = {
+        summary: Dict[str, Any] = {
             "total_threats": len(events),
             "threat_types": {},
             "threat_levels": {},

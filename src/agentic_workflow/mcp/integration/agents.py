@@ -514,7 +514,6 @@ class MCPEnhancedAgent(Agent):
             await self._cache_mcp_capabilities()
 
             # Analyze task requirements against available capabilities
-            task_description = task.get("description", "")
             task_type = task.get("type", "")
 
             # Simple keyword-based capability matching
@@ -685,7 +684,6 @@ class MCPEnhancedAgent(Agent):
     def _assess_task_complexity(self, task: AgentTask) -> str:
         """Assess task complexity."""
         description = task.get("description", "")
-        task_type = task.get("type", "")
 
         # Simple heuristics for complexity assessment
         if any(

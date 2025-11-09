@@ -17,6 +17,7 @@ from agentic_workflow.api.workflows import (
     VisualWorkflowDefinition,
     WorkflowConverter,
     workflow_storage,
+    execution_storage,
 )
 
 client = TestClient(app)
@@ -25,11 +26,11 @@ client = TestClient(app)
 @pytest.fixture(autouse=True)
 def clear_storage():
     """Clear workflow storage before each test."""
-    workflow_storage._workflows.clear()
-    workflow_storage._executions.clear()
+    workflow_storage.clear()
+    execution_storage.clear()
     yield
-    workflow_storage._workflows.clear()
-    workflow_storage._executions.clear()
+    workflow_storage.clear()
+    execution_storage.clear()
 
 
 class TestWorkflowAPI:
@@ -38,6 +39,7 @@ class TestWorkflowAPI:
     def test_create_visual_workflow(self):
         """Test creating a visual workflow."""
         workflow_data = {
+            "id": "wf_test123",
             "name": "Test Workflow",
             "description": "A test workflow",
             "nodes": [

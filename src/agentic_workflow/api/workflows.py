@@ -57,6 +57,7 @@ class VisualEdge(BaseModel):
 
 class VisualWorkflowDefinition(BaseModel):
     """Complete visual workflow definition."""
+    id: str = Field(..., description="Unique workflow identifier")
     name: str = Field(..., description="Workflow name")
     description: Optional[str] = Field(None, description="Workflow description")
     nodes: List[VisualNode] = Field(..., description="List of workflow nodes")
@@ -66,8 +67,7 @@ class VisualWorkflowDefinition(BaseModel):
 
 class WorkflowExecutionRequest(BaseModel):
     """Request to execute a workflow."""
-    workflow_id: str = Field(..., description="ID of the workflow to execute")
-    inputs: Dict[str, Any] = Field(default_factory=dict, description="Input parameters for the workflow")
+    parameters: Dict[str, Any] = Field(default_factory=dict, description="Execution parameters for the workflow")
 
 
 class WorkflowExecutionResponse(BaseModel):
@@ -75,8 +75,8 @@ class WorkflowExecutionResponse(BaseModel):
     execution_id: str
     workflow_id: str
     status: str
-    started_at: datetime
-    completed_at: Optional[datetime] = None
+    created_at: Optional[str] = None
+    message: Optional[str] = None
     result: Optional[Dict[str, Any]] = None
     error: Optional[str] = None
 
@@ -90,6 +90,17 @@ class WorkflowListItem(BaseModel):
     created_at: datetime
     updated_at: datetime
     created_by: Optional[str] = None
+
+
+class WorkflowResponse(BaseModel):
+    """Response model for workflow operations."""
+    id: str
+    name: str
+    description: Optional[str] = None
+    created_at: Optional[str] = None
+    updated_at: Optional[str] = None
+    status: str = "active"
+    owner: Optional[str] = None
 
 
 # ============================================================================
@@ -145,7 +156,11 @@ class WorkflowStorage:
 
 
 # Global storage instance (will be replaced with database in Sprint 3-4)
-workflow_storage = WorkflowStorage()
+_storage_instance = WorkflowStorage()
+
+# Expose internal dicts for backward compatibility and protected endpoints
+workflow_storage: Dict[str, Dict[str, Any]] = _storage_instance._workflows
+execution_storage: Dict[str, Dict[str, Any]] = _storage_instance._executions
 
 
 # ============================================================================
@@ -261,6 +276,17 @@ class WorkflowConverter:
         }
 
 
+# Module-level helper functions for easier import
+def visual_to_workflow(visual: VisualWorkflowDefinition) -> WorkflowDefinition:
+    """Convert visual workflow to engine WorkflowDefinition."""
+    return WorkflowConverter.visual_to_workflow(visual)
+
+
+def workflow_to_visual(workflow: WorkflowDefinition, workflow_id: str) -> Dict[str, Any]:
+    """Convert engine WorkflowDefinition to visual format."""
+    return WorkflowConverter.workflow_to_visual(workflow, workflow_id)
+
+
 # ============================================================================
 # API Endpoints
 # ============================================================================
@@ -292,7 +318,7 @@ async def create_visual_workflow(definition: VisualWorkflowDefinition) -> Dict[s
         logger.info(f"Workflow has {len(definition.nodes)} nodes and {len(definition.edges)} edges")
         
         # Save to storage
-        workflow_data = workflow_storage.save_workflow(workflow_id, definition)
+        workflow_data = _storage_instance.save_workflow(workflow_id, definition)
         
         return {
             "workflow_id": workflow_id,
@@ -329,7 +355,7 @@ async def get_workflow(workflow_id: str) -> Dict[str, Any]:
     Returns:
         Visual workflow definition
     """
-    workflow = workflow_storage.get_workflow(workflow_id)
+    workflow = _storage_instance.get_workflow(workflow_id)
     
     if not workflow:
         raise HTTPException(
@@ -350,7 +376,7 @@ async def list_workflows() -> List[WorkflowListItem]:
     Returns:
         List of workflow summaries
     """
-    workflows = workflow_storage.list_workflows()
+    workflows = list(workflow_storage.values())
     
     return [
         WorkflowListItem(
@@ -378,7 +404,7 @@ async def update_workflow(workflow_id: str, definition: VisualWorkflowDefinition
     Returns:
         Updated workflow data
     """
-    existing = workflow_storage.get_workflow(workflow_id)
+    existing = _storage_instance.get_workflow(workflow_id)
     
     if not existing:
         raise HTTPException(
@@ -393,7 +419,7 @@ async def update_workflow(workflow_id: str, definition: VisualWorkflowDefinition
         logger.info(f"Updating workflow: {workflow_id}")
         
         # Save updated version
-        workflow_data = workflow_storage.save_workflow(workflow_id, definition)
+        workflow_data = _storage_instance.save_workflow(workflow_id, definition)
         
         return {
             "workflow_id": workflow_id,
@@ -417,7 +443,7 @@ async def delete_workflow(workflow_id: str):
     Args:
         workflow_id: Workflow to delete
     """
-    if not workflow_storage.delete_workflow(workflow_id):
+    if not _storage_instance.delete_workflow(workflow_id):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Workflow {workflow_id} not found"
@@ -442,7 +468,7 @@ async def execute_workflow(workflow_id: str, request: WorkflowExecutionRequest) 
         Execution result
     """
     # Get workflow
-    workflow_data = workflow_storage.get_workflow(workflow_id)
+    workflow_data = _storage_instance.get_workflow(workflow_id)
     
     if not workflow_data:
         raise HTTPException(
@@ -478,7 +504,7 @@ async def execute_workflow(workflow_id: str, request: WorkflowExecutionRequest) 
             "result": None,
             "error": None,
         }
-        workflow_storage.save_execution(execution_id, execution_data)
+        _storage_instance.save_execution(execution_id, execution_data)
         
         # Execute workflow (Sprint 1-2: simplified execution)
         # In Sprint 3-4, this will use the actual WorkflowEngine
@@ -505,7 +531,7 @@ async def execute_workflow(workflow_id: str, request: WorkflowExecutionRequest) 
                 "error": str(e),
             })
         
-        workflow_storage.save_execution(execution_id, execution_data)
+        _storage_instance.save_execution(execution_id, execution_data)
         
         return WorkflowExecutionResponse(**execution_data)
         
@@ -531,7 +557,7 @@ async def list_workflow_executions(workflow_id: str) -> List[WorkflowExecutionRe
     # For Sprint 1-2, return from in-memory storage
     # Sprint 3-4: Query from database with pagination
     executions = [
-        exec_data for exec_data in workflow_storage._executions.values()
+        exec_data for exec_data in execution_storage.values()
         if exec_data["workflow_id"] == workflow_id
     ]
     
@@ -549,7 +575,7 @@ async def get_execution_status(execution_id: str) -> WorkflowExecutionResponse:
     Returns:
         Execution status and result
     """
-    execution = workflow_storage.get_execution(execution_id)
+    execution = _storage_instance.get_execution(execution_id)
     
     if not execution:
         raise HTTPException(

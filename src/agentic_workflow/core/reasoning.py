@@ -500,7 +500,7 @@ class ReActReasoning(ReasoningPattern):
             "validate_results": "Results meet requirements and stakeholder expectations",
         }
 
-        observation = observations.get(action or "unknown", "Action completed successfully")
+        observation = observations.get(action, "Action completed successfully")
 
         return ReasoningStep(
             step_number=len(prev_steps) + 1,

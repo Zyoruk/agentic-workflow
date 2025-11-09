@@ -8,7 +8,7 @@ Sprint 1-2: Foundation - API Structure
 """
 
 from typing import Any, Dict, List, Optional
-from datetime import datetime
+from datetime import datetime, timezone
 
 from fastapi import APIRouter, HTTPException, Depends, status
 from pydantic import BaseModel, Field
@@ -105,7 +105,7 @@ class WorkflowStorage:
     
     def save_workflow(self, workflow_id: str, workflow: VisualWorkflowDefinition) -> Dict[str, Any]:
         """Save a workflow definition."""
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         workflow_data = {
             "id": workflow_id,
             "name": workflow.name,
@@ -205,7 +205,7 @@ class WorkflowConverter:
             steps.append(step)
         
         return WorkflowDefinition(
-            id=f"wf_def_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}",
+            id=f"wf_def_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}",
             name=visual.name,
             description=visual.description or "",
             steps=steps,
@@ -283,7 +283,7 @@ async def create_visual_workflow(definition: VisualWorkflowDefinition) -> Dict[s
     """
     try:
         # Generate workflow ID
-        workflow_id = f"wf_{datetime.utcnow().strftime('%Y%m%d_%H%M%S_%f')}"
+        workflow_id = f"wf_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S_%f')}"
         
         # Validate by converting to workflow definition (checks for cycles, etc.)
         workflow_def = WorkflowConverter.visual_to_workflow(definition)
@@ -463,12 +463,12 @@ async def execute_workflow(workflow_id: str, request: WorkflowExecutionRequest) 
         workflow_def = WorkflowConverter.visual_to_workflow(visual_def)
         
         # Generate execution ID
-        execution_id = f"exec_{datetime.utcnow().strftime('%Y%m%d_%H%M%S_%f')}"
+        execution_id = f"exec_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S_%f')}"
         
         logger.info(f"Executing workflow {workflow_id} (execution: {execution_id})")
         
         # Create execution record
-        started_at = datetime.utcnow()
+        started_at = datetime.now(timezone.utc)
         execution_data = {
             "execution_id": execution_id,
             "workflow_id": workflow_id,
@@ -490,7 +490,7 @@ async def execute_workflow(workflow_id: str, request: WorkflowExecutionRequest) 
                 "message": "Workflow executed successfully (MVP mode)",
             }
             
-            completed_at = datetime.utcnow()
+            completed_at = datetime.now(timezone.utc)
             execution_data.update({
                 "status": "completed",
                 "completed_at": completed_at,
@@ -501,7 +501,7 @@ async def execute_workflow(workflow_id: str, request: WorkflowExecutionRequest) 
             logger.error(f"Workflow execution failed: {e}")
             execution_data.update({
                 "status": "failed",
-                "completed_at": datetime.utcnow(),
+                "completed_at": datetime.now(timezone.utc),
                 "error": str(e),
             })
         

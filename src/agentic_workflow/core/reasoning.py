@@ -131,7 +131,9 @@ class ChainOfThoughtReasoning(ReasoningPattern):
     making the decision process transparent and more reliable.
     """
 
-    def __init__(self, agent_id: str, memory_manager: Optional[Any] = None, max_steps: int = 10):
+    def __init__(
+        self, agent_id: str, memory_manager: Optional[Any] = None, max_steps: int = 10
+    ):
         super().__init__(agent_id, memory_manager)
         self.max_steps = max_steps
         self.pattern_type = "chain_of_thought"
@@ -350,7 +352,9 @@ class ReActReasoning(ReasoningPattern):
     allowing agents to plan, act, observe, and adapt their approach.
     """
 
-    def __init__(self, agent_id: str, memory_manager: Optional[Any] = None, max_cycles: int = 5):
+    def __init__(
+        self, agent_id: str, memory_manager: Optional[Any] = None, max_cycles: int = 5
+    ):
         super().__init__(agent_id, memory_manager)
         self.max_cycles = max_cycles
         self.pattern_type = "react"
@@ -570,7 +574,12 @@ class ReActReasoning(ReasoningPattern):
 class ReasoningEngine:
     """Central engine for managing different reasoning patterns."""
 
-    def __init__(self, agent_id: str, memory_manager: Optional[Any] = None, communication_manager: Optional[Any] = None):
+    def __init__(
+        self,
+        agent_id: str,
+        memory_manager: Optional[Any] = None,
+        communication_manager: Optional[Any] = None,
+    ):
         self.agent_id = agent_id
         self.memory_manager = memory_manager
         self.communication_manager = communication_manager
@@ -693,7 +702,12 @@ class RAISEReasoning(ReasoningPattern):
     - Evaluate: Assess overall progress and adjust strategy
     """
 
-    def __init__(self, agent_id: str, memory_manager: Optional[Any] = None, communication_manager: Optional[Any] = None):
+    def __init__(
+        self,
+        agent_id: str,
+        memory_manager: Optional[Any] = None,
+        communication_manager: Optional[Any] = None,
+    ):
         super().__init__(agent_id, memory_manager)
         self.pattern_type = "raise"
         self.communication_manager = communication_manager

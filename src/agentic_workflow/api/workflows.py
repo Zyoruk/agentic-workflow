@@ -193,17 +193,19 @@ class WorkflowConverter:
         node_map = {node.id: node for node in visual.nodes}
         steps = []
         
-        for node_id in sorted_nodes:
+        for idx, node_id in enumerate(sorted_nodes):
             node = node_map[node_id]
             step = WorkflowStep(
+                id=f"step_{idx}",
                 name=node.data.label,
-                service=node.data.agent_type,
+                component=node.data.agent_type,
                 action="execute",
                 parameters=node.data.config,
             )
             steps.append(step)
         
         return WorkflowDefinition(
+            id=f"wf_def_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}",
             name=visual.name,
             description=visual.description or "",
             steps=steps,

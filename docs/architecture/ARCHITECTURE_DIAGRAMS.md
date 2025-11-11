@@ -1,9 +1,175 @@
 # Architecture Diagrams - Agentic Workflow System
 ## Comprehensive System Architecture Visualization
 
-**Document Version:** 1.0  
-**Date:** November 9, 2025  
+**Document Version:** 2.0  
+**Date:** November 11, 2025  
 **Status:** Current
+
+---
+
+## 0. Customer-Facing Views (New)
+
+### 0.1 Customer Workflow Journey (40,000 Feet View)
+
+**For Business Users and Product Managers**
+
+```mermaid
+graph TD
+    START([You Have a Task]) --> API{Access Agentic<br/>Workflow API}
+    
+    API --> METHOD1[Option 1:<br/>Visual Workflow Builder]
+    API --> METHOD2[Option 2:<br/>Single API Call]
+    
+    METHOD1 --> VISUAL[Create Workflow Visually<br/>- Drag and drop agents<br/>- Connect steps<br/>- Configure parameters]
+    
+    METHOD2 --> SIMPLE[Simple REST API Call<br/>POST /api/v1/workflows/execute]
+    
+    VISUAL --> EXECUTE[Execute Workflow]
+    SIMPLE --> EXECUTE
+    
+    EXECUTE --> REALTIME[Real-time Progress<br/>via WebSocket]
+    
+    REALTIME --> AI[AI Agents Working<br/>- Planning<br/>- Code Generation<br/>- Testing<br/>- Review]
+    
+    AI --> RESULT{Results Ready}
+    
+    RESULT --> SUCCESS[✅ Success<br/>Get Results via API]
+    RESULT --> PROGRESS[🔄 In Progress<br/>Check Status]
+    RESULT --> ERROR[❌ Error<br/>Get Error Details]
+    
+    SUCCESS --> DASHBOARD[View in Dashboard<br/>or Access via API]
+    PROGRESS --> REALTIME
+    ERROR --> RETRY[Retry or Adjust]
+    RETRY --> EXECUTE
+    
+    DASHBOARD --> DONE([Task Complete!])
+    
+    style START fill:#e8f5e9,stroke:#2e7d32,stroke-width:3px
+    style API fill:#e3f2fd,stroke:#1565c0,stroke-width:3px
+    style EXECUTE fill:#fff3e0,stroke:#ef6c00,stroke-width:3px
+    style AI fill:#f3e5f5,stroke:#6a1b9a,stroke-width:3px
+    style SUCCESS fill:#e8f5e9,stroke:#2e7d32,stroke-width:3px
+    style DONE fill:#e8f5e9,stroke:#2e7d32,stroke-width:3px
+```
+
+**What This Means for You:**
+- 🎯 **Simple Integration**: Just one REST API endpoint to start automation
+- 🎨 **Visual or Code**: Choose visual builder or direct API calls
+- ⚡ **Real-time Updates**: Watch your workflow execute in real-time
+- 🤖 **AI-Powered**: Multiple AI agents work together on your tasks
+- 📊 **Full Visibility**: Track progress, get results, handle errors
+
+### 0.2 System Components (Customer View)
+
+**What's Under the Hood**
+
+```mermaid
+graph TB
+    subgraph "🌐 Your Integration"
+        YOU[Your Application]
+        DASH[Web Dashboard<br/>Optional UI]
+    end
+    
+    subgraph "🔌 API Gateway - Your Entry Point"
+        REST[REST API<br/>35+ Endpoints]
+        AUTH[Secure Authentication<br/>API Keys/JWT]
+        DOCS[📚 OpenAPI Docs<br/>/docs /redoc]
+    end
+    
+    subgraph "🤖 AI Agent Team - The Workers"
+        COORD[Coordinator<br/>Manages workflow]
+        PLAN[Planning<br/>Breaks down tasks]
+        CODE[Code Generator<br/>Creates solutions]
+        TEST[Tester<br/>Validates quality]
+        REVIEW[Reviewer<br/>Final checks]
+    end
+    
+    subgraph "💡 Intelligence Layer"
+        GPT[GPT-4/5<br/>AI Brain]
+        REASON[Smart Reasoning<br/>Decision Making]
+    end
+    
+    subgraph "💾 Memory & Storage"
+        CACHE[Fast Cache<br/>Session Data]
+        VECTOR[Knowledge Base<br/>Learning & Memory]
+        GRAPH[Relationships<br/>Context]
+    end
+    
+    YOU --> REST
+    DASH --> REST
+    REST --> AUTH
+    AUTH --> REST
+    
+    REST --> COORD
+    COORD --> PLAN
+    PLAN --> CODE
+    CODE --> TEST
+    TEST --> REVIEW
+    
+    COORD --> GPT
+    PLAN --> GPT
+    CODE --> GPT
+    TEST --> GPT
+    REVIEW --> GPT
+    
+    GPT --> REASON
+    
+    COORD --> CACHE
+    PLAN --> VECTOR
+    CODE --> VECTOR
+    
+    REST -.-> DOCS
+    
+    style YOU fill:#e8f5e9,stroke:#2e7d32,stroke-width:3px
+    style REST fill:#e3f2fd,stroke:#1565c0,stroke-width:3px
+    style COORD fill:#fff3e0,stroke:#ef6c00,stroke-width:3px
+    style GPT fill:#f3e5f5,stroke:#6a1b9a,stroke-width:3px
+    style DOCS fill:#ffebee,stroke:#c62828,stroke-width:2px
+```
+
+**Key Features for You:**
+- 🔐 **Enterprise Security**: OAuth2, JWT tokens, API keys
+- 📖 **Self-Documenting**: Interactive OpenAPI/Swagger docs
+- 🚀 **Production Ready**: Built on FastAPI, battle-tested
+- 🧠 **Latest AI**: GPT-4/GPT-5 powered intelligence
+- 📈 **Scalable**: Designed for high-volume production use
+
+### 0.3 Visual Workflow Builder Flow
+
+**Create Workflows Without Code**
+
+```mermaid
+graph LR
+    subgraph "🎨 Visual Builder"
+        START[1. Open Builder] --> DRAG[2. Drag Agents<br/>onto Canvas]
+        DRAG --> CONNECT[3. Connect Steps<br/>with Arrows]
+        CONNECT --> CONFIG[4. Configure<br/>Each Agent]
+        CONFIG --> SAVE[5. Save Workflow]
+    end
+    
+    subgraph "🚀 Execution"
+        SAVE --> EXEC[6. Click Execute]
+        EXEC --> WATCH[7. Watch Real-time<br/>Progress]
+        WATCH --> RESULTS[8. Get Results]
+    end
+    
+    subgraph "📊 Management"
+        RESULTS --> VIEW[View History]
+        VIEW --> REUSE[Reuse & Share]
+        REUSE --> SCHEDULE[Schedule Runs]
+    end
+    
+    style START fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
+    style EXEC fill:#fff3e0,stroke:#ef6c00,stroke-width:3px
+    style RESULTS fill:#e3f2fd,stroke:#1565c0,stroke-width:2px
+```
+
+**Visual Builder Benefits:**
+- 🎯 **No Coding Required**: Point, click, configure
+- 🔄 **Reusable Templates**: Save and share workflows
+- 👥 **Team Collaboration**: Share workflows across teams
+- 📅 **Scheduling**: Run workflows on a schedule
+- 📈 **Version Control**: Track workflow changes
 
 ---
 

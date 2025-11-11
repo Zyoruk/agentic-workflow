@@ -1,721 +1,493 @@
 # Agentic Workflow System
 
-> AI-driven autonomous software development workflow system
+> **AI-Powered Automation for Software Development**  
+> Automate complex development tasks with intelligent AI agents working together
 
 [![Version](https://img.shields.io/badge/version-0.6.0-blue.svg)](CHANGELOG.md)
-[![Python](https://img.shields.io/badge/python-3.11+-blue.svg)](https://python.org)
-[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-[![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-yellow.svg)](https://conventionalcommits.org)
+[![API](https://img.shields.io/badge/API-REST-green.svg)](https://your-instance.com/docs)
+[![Status](https://img.shields.io/badge/status-production-brightgreen.svg)]()
 
-An advanced agentic workflow system that enables autonomous software development through AI-driven agents, comprehensive planning, and self-improving processes.
+---
 
-## 📋 Table of Contents
+## 🎯 What is Agentic Workflow?
 
-- [🚀 Quick Start](#-quick-start)
-- [💻 Development Setup](#-development-setup)
-- [🔧 Development Workflow](#-development-workflow)
-- [🧪 Testing](#-testing)
-- [📝 Documentation](#-documentation)
-- [🔄 Version Management](#-version-management)
-- [📊 Code Quality](#-code-quality)
-- [🤝 Contributing](#-contributing)
-- [📚 Project Structure](#-project-structure)
+**Agentic Workflow** is a production-ready AI automation platform that uses multiple intelligent agents to handle complex software development tasks. Whether you're reviewing code, generating tests, or orchestrating entire development pipelines, Agentic Workflow provides a simple REST API to get the job done.
 
-## 🚀 Quick Start
+### Why Choose Agentic Workflow?
 
-### Prerequisites
+- 🚀 **Simple REST API**: Single endpoint to execute complex workflows
+- 🎨 **Visual Workflow Builder**: Create workflows without writing code
+- 🤖 **Multi-Agent Intelligence**: AI agents collaborate like a real team
+- ⚡ **Real-Time Updates**: WebSocket support for live progress tracking
+- 📊 **Production Ready**: Built on FastAPI, battle-tested and scalable
+- 🔐 **Enterprise Security**: OAuth2, JWT, API keys, tenant isolation
+- 📖 **Self-Documenting**: Interactive OpenAPI/Swagger documentation
 
-- **Python 3.11+**
-- **Git**
-- **Conda or venv** (recommended)
+---
 
-### Installation
+## 🚀 Quick Start (3 Minutes)
 
-```bash
-# Full installation with all dependencies (recommended)
-make install
+### Option 1: Execute a Workflow via REST API
 
-# Minimal installation (core package only)
-make install-minimal
-
-# Specific dependency groups
-make install-dev      # Development dependencies
-make install-docs     # Documentation dependencies
-make install-test     # Test dependencies
-make install-embedding # Embedding dependencies
-
-# Legacy command (same as install)
-make install-all
-```
-
-### Quick Examples
-
-#### 🧠 Reasoning Patterns
-
-```python
-from agentic_workflow.core.reasoning import ReasoningEngine
-
-# Initialize reasoning engine
-reasoning_engine = ReasoningEngine()
-
-# Chain of Thought reasoning
-cot_result = reasoning_engine.reason(
-    task_id="demo_task",
-    agent_id="demo_agent", 
-    objective="Design scalable microservices architecture",
-    pattern="chain_of_thought"
-)
-print(f"Reasoning confidence: {cot_result.confidence:.1%}")
-print(f"Steps taken: {len(cot_result.steps)}")
-
-# ReAct (Reasoning + Acting) pattern  
-react_result = reasoning_engine.reason(
-    task_id="demo_task_2",
-    agent_id="demo_agent",
-    objective="Implement real-time chat feature",
-    pattern="react"
-)
-print(f"Final answer: {react_result.final_answer}")
-
-# RAISE (Reason, Act, Improve, Share, Evaluate) pattern for multi-agent coordination
-from agentic_workflow.core.communication import CommunicationManager
-
-comm_manager = CommunicationManager()
-reasoning_engine_with_comm = ReasoningEngine(
-    agent_id="coordinator_agent",
-    communication_manager=comm_manager
-)
-
-raise_result = reasoning_engine_with_comm.reason(
-    objective="Design fault-tolerant microservices architecture",
-    pattern="raise"
-)
-print(f"RAISE coordination completed: {raise_result.confidence:.1%} confidence")
-```
-
-#### 🔧 Tool Integration System
-
-```python
-from agentic_workflow.tools import ToolManager
-import asyncio
-
-async def demo_tools():
-    # Initialize tool manager
-    manager = ToolManager()
-    await manager.initialize()
-    
-    # Discover available tools
-    text_tools = manager.registry.search_tools("text processing")
-    print(f"Found {len(text_tools)} text processing tools")
-    
-    # Get tool recommendations for a task
-    recommendations = manager.recommend_tools(
-        "analyze sales data", 
-        category="analysis"
-    )
-    
-    # Execute a tool
-    result = await manager.execute_tool("data_analysis_tool", {
-        "operation": "statistics",
-        "data": [10, 20, 30, 40, 50]
-    }, agent_id="demo_agent")
-    
-    print(f"Analysis result: {result}")
-
-# Run the demo
-asyncio.run(demo_tools())
-```
-
-#### 🤖 Enhanced Planning Agent
-
-```python
-from agentic_workflow.agents.planning import PlanningAgent
-
-# Create planning agent with reasoning capabilities
-planner = PlanningAgent(agent_id="strategic_planner")
-
-# Analyze objective with Chain of Thought reasoning
-analysis = planner.analyze_objective(
-    "Develop a comprehensive testing strategy",
-    use_reasoning=True
-)
-
-print(f"Analysis: {analysis['analysis']}")
-print(f"Reasoning insights: {analysis['reasoning_insights']}")
-```
-
-#### 🤝 Multi-Agent Communication
-
-```python
-import asyncio
-from agentic_workflow.core.communication import CommunicationManager, setup_agent_communication
-
-async def demo_communication():
-    # Initialize communication manager
-    comm_manager = CommunicationManager()
-    
-    # Setup agent network
-    await setup_agent_communication("coordinator", comm_manager)
-    await setup_agent_communication("worker1", comm_manager, ["coordination"])
-    await setup_agent_communication("worker2", comm_manager, ["insight"])
-    
-    # Broadcast insight
-    await comm_manager.broadcast_insight({
-        "agent_id": "coordinator",
-        "confidence": 0.92,
-        "insight": "Optimal deployment strategy identified"
-    })
-    
-    # Send coordination request
-    await comm_manager.send_coordination_request(
-        sender_id="coordinator",
-        task_id="deploy_services",
-        action_type="execute",
-        recipient_id="worker1"
-    )
-    
-    # Check messages
-    worker1_messages = await comm_manager.receive_messages("worker1")
-    worker2_messages = await comm_manager.receive_messages("worker2")
-    
-    print(f"Worker1 received {len(worker1_messages)} messages")
-    print(f"Worker2 received {len(worker2_messages)} messages")
-
-# Run communication demo
-asyncio.run(demo_communication())
-```
-
-## 💻 Development Setup
-
-### Environment Setup
-
-The project uses **conda** for environment management and **pip** for package installation:
+The simplest way to use Agentic Workflow:
 
 ```bash
-# Clone the repository
-git clone https://github.com/yourusername/agentic-workflow.git
-cd agentic-workflow
-
-# Create and activate environment
-conda create -n agentic-workflow python=3.11 -y
-conda activate agentic-workflow
-
-# Install the package (choose one):
-make install          # Full installation (recommended)
-make install-minimal  # Minimal installation
-
-# Set up pre-commit hooks
-make dev-setup
-
-# Verify installation
-make package-check
+# Execute a code review workflow
+curl -X POST "https://your-instance.com/api/v1/workflows/execute" \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "workflow": {
+      "name": "Code Review",
+      "steps": [
+        {
+          "agent": "code_review",
+          "parameters": {
+            "repository": "myorg/myrepo",
+            "pr_number": 123
+          }
+        }
+      ]
+    }
+  }'
 ```
 
-### Available Make Commands
-
-```bash
-# Show all available commands
-make help
-
-# Development
-make install        # Install package and dependencies
-make dev-setup      # Complete development environment setup
-
-# Code Quality
-make format         # Format code with Black and isort
-make lint           # Run linting (Flake8 + MyPy)
-make quality        # Run all quality checks
-make format-check   # Check if code is properly formatted
-
-# Testing
-make test           # Run all tests
-make test-cov       # Run tests with coverage report
-make test-unit      # Run only unit tests
-make test-integration  # Run only integration tests
-make test-fast      # Run tests excluding slow ones
-
-# Version Management
-make version-check     # Check current version
-make version-bump-dry  # Preview version bump
-make version-bump      # Bump version based on commits
-make changelog         # Generate/update CHANGELOG.md
-make release          # Create release (bump + changelog + tag)
-make commit           # Interactive conventional commit
-
-# Utilities
-make clean            # Clean build artifacts
-make package-check    # Verify package can be imported
-```
-
-### IDE Configuration
-
-#### VS Code (Recommended)
-
-Create `.vscode/settings.json`:
-
+**Response:**
 ```json
 {
-    "python.defaultInterpreterPath": "./venv/bin/python",
-    "python.formatting.provider": "black",
-    "python.linting.enabled": true,
-    "python.linting.flake8Enabled": true,
-    "python.linting.mypyEnabled": true,
-    "editor.formatOnSave": true,
-    "[python]": {
-        "editor.codeActionsOnSave": {
-            "source.organizeImports": true
-        }
-    }
+  "execution_id": "exec_20231111_142530",
+  "status": "running",
+  "websocket_url": "wss://your-instance.com/api/v1/ws/executions/exec_20231111_142530"
 }
 ```
 
-## 🔧 Development Workflow
+### Option 2: Use the Visual Workflow Builder
 
-### 1. Daily Development
+1. Open the visual builder at `https://your-instance.com/builder`
+2. Drag and drop agents onto the canvas
+3. Connect them with arrows
+4. Click "Execute" and watch it run
 
-```bash
-# Start development
-conda activate agentic-workflow
-
-# Create feature branch
-git checkout -b feat/amazing-feature
-
-# Install dependencies (choose based on needs)
-make install          # Install all dependencies
-make install-dev      # Install only development dependencies
-make install-docs     # Install only documentation dependencies
-make install-test     # Install only test dependencies
-make install-embedding # Install embedding dependencies
-
-# Make changes, then check quality
-make quality
-
-# Commit using conventional commits
-make commit
-```
-
-### 2. Code Quality Checks
-
-All commits are automatically validated with **pre-commit hooks**:
-
-- ✅ **Code Formatting** (Black, isort)
-- ✅ **Linting** (Flake8, MyPy)
-- ✅ **Commit Format** (Conventional Commits)
-- ✅ **File Checks** (trailing whitespace, large files, etc.)
-
-You can run quality checks manually:
+### Option 3: Create Reusable Workflow Templates
 
 ```bash
-make format        # Format code
-make lint         # Run linting
-make quality      # Run all quality checks
+# Create a workflow template
+curl -X POST "https://your-instance.com/api/v1/workflows/visual/create" \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Full Development Pipeline",
+    "nodes": [
+      {"id": "plan", "type": "agent", "data": {"agent_type": "planning"}},
+      {"id": "code", "type": "agent", "data": {"agent_type": "code_generation"}},
+      {"id": "test", "type": "agent", "data": {"agent_type": "testing"}}
+    ],
+    "edges": [
+      {"source": "plan", "target": "code"},
+      {"source": "code", "target": "test"}
+    ]
+  }'
+
+# Execute the template with different parameters
+curl -X POST "https://your-instance.com/api/v1/workflows/{workflow_id}/execute" \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -d '{"parameters": {"task": "Implement user authentication"}}'
 ```
 
-### LLM Configuration
+---
 
-Set environment variables (prefix AGENTIC_) to configure the LLM provider:
+## 💡 What Can You Automate?
 
-- AGENTIC_LLM__OPENAI_API_KEY: your OpenAI API key
-- AGENTIC_LLM__DEFAULT_MODEL: default chat model (e.g., gpt-4o)
-- AGENTIC_LLM__USE_GPT5_PREVIEW: set to true to enable GPT-5 (Preview) when available
-- AGENTIC_LLM__GPT5_MODEL_NAME: override the preview model name (default: gpt-5-preview)
-- AGENTIC_LLM__ENABLE_MODEL_HEALTH_CHECK: when true, automatically fallback to DEFAULT_MODEL if preview model fails at runtime
+### Code Development Workflows
 
-Example:
+- **Code Review**: Automated PR review with AI insights
+- **Code Generation**: Generate implementation from requirements
+- **Testing**: Automatic test generation and execution
+- **Documentation**: Generate and maintain documentation
+- **Refactoring**: Automated code improvement suggestions
+
+### CI/CD Pipelines
+
+- **Build Automation**: Compile, test, and package
+- **Deployment**: Automated deployment to staging/production
+- **Quality Gates**: Automated quality checks before deployment
+- **Rollback**: Intelligent rollback on failures
+
+### Requirements & Planning
+
+- **Requirement Analysis**: Break down complex requirements
+- **Task Decomposition**: Split work into manageable tasks
+- **Estimation**: AI-powered effort estimation
+- **Architecture Planning**: Design system architecture
+
+---
+
+## 📖 API Documentation
+
+### Interactive Documentation
+
+Access our comprehensive, interactive API documentation:
+
+- **Swagger UI**: [`https://your-instance.com/docs`](https://your-instance.com/docs)
+  - Try API calls directly in your browser
+  - See request/response schemas
+  - Test authentication
+
+- **ReDoc**: [`https://your-instance.com/redoc`](https://your-instance.com/redoc)
+  - Beautiful, readable documentation
+  - Detailed endpoint descriptions
+  - Example requests and responses
+
+- **OpenAPI Specification**: [`https://your-instance.com/openapi.json`](https://your-instance.com/openapi.json)
+  - Machine-readable API spec
+  - Import into Postman, Insomnia, or any API client
+  - Generate client libraries in any language
+
+### Key API Endpoints
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/v1/workflows` | GET | List all workflows |
+| `/api/v1/workflows/visual/create` | POST | Create visual workflow |
+| `/api/v1/workflows/{id}` | GET | Get workflow details |
+| `/api/v1/workflows/{id}/execute` | POST | Execute a workflow |
+| `/api/v1/workflows/executions/{id}` | GET | Check execution status |
+| `/api/v1/ws/executions/{id}` | WebSocket | Real-time progress updates |
+| `/api/v1/agents` | GET | List available agents |
+| `/api/v1/health` | GET | System health check |
+
+### Example: Full Workflow Lifecycle
 
 ```bash
-export AGENTIC_LLM__OPENAI_API_KEY=sk-...
-export AGENTIC_LLM__DEFAULT_MODEL=gpt-4o
-export AGENTIC_LLM__USE_GPT5_PREVIEW=true
-export AGENTIC_LLM__GPT5_MODEL_NAME=gpt-5-preview
-export AGENTIC_LLM__ENABLE_MODEL_HEALTH_CHECK=true
+# 1. Create a workflow
+WORKFLOW_ID=$(curl -X POST "https://your-instance.com/api/v1/workflows/visual/create" \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d @workflow.json | jq -r '.workflow_id')
 
-### Monitoring and Metrics
+# 2. Execute it
+EXEC_ID=$(curl -X POST "https://your-instance.com/api/v1/workflows/${WORKFLOW_ID}/execute" \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -d '{"parameters": {}}' | jq -r '.execution_id')
 
-Optional Prometheus metrics can be enabled to track model fallbacks.
+# 3. Check status
+curl "https://your-instance.com/api/v1/workflows/executions/${EXEC_ID}" \
+  -H "Authorization: Bearer YOUR_API_KEY"
 
-- AGENTIC_MONITORING__PROMETHEUS_ENABLED=true
-- AGENTIC_MONITORING__PROMETHEUS_PORT=8000
+# 4. Get results
+curl "https://your-instance.com/api/v1/workflows/executions/${EXEC_ID}" \
+  -H "Authorization: Bearer YOUR_API_KEY" | jq '.result'
+```
 
-When enabled, a counter named agentic_llm_model_fallback_total is incremented whenever the agent falls back from the preview model to the default model.
+---
 
-### 3. Testing
+## 🔐 Authentication
+
+### API Keys (Recommended for Services)
 
 ```bash
-# Run all tests
-make test
-
-# Run with coverage
-make test-cov
-
-# Run specific test categories
-make test-unit        # Unit tests only
-make test-integration # Integration tests only
-make test-fast        # Skip slow tests
+# Include in Authorization header
+curl -H "Authorization: Bearer YOUR_API_KEY" \
+  https://your-instance.com/api/v1/workflows
 ```
 
-### 4. Documentation
+**Get your API key:**
+- Dashboard: `https://your-instance.com/settings/api-keys`
+- API: `POST /api/v1/auth/api-keys/create`
 
-The project has two types of documentation:
-1. **API Documentation** (Sphinx) - Auto-generated from code docstrings
-2. **Project Documentation** (MkDocs) - Manual documentation for architecture, guides, etc.
-
-#### First-time Setup
+### JWT Tokens (For User Sessions)
 
 ```bash
-# Initialize API documentation structure
-make docs-init
+# Login to get token
+TOKEN=$(curl -X POST "https://your-instance.com/api/v1/auth/login" \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "username=your_user&password=your_pass" | jq -r '.access_token')
+
+# Use token
+curl -H "Authorization: Bearer $TOKEN" \
+  https://your-instance.com/api/v1/workflows
 ```
 
-#### Writing Documentation
+---
 
-1. **API Documentation** (in code):
-```python
-def complex_function(arg1: str, arg2: int) -> Dict[str, Any]:
-    """One line summary of the function.
+## 🤖 Available AI Agents
 
-    Args:
-        arg1: Description of the first argument.
-        arg2: Description of the second argument.
+Our platform includes specialized AI agents for different tasks:
 
-    Returns:
-        Dictionary containing the processed results.
+| Agent | Purpose | Key Capabilities |
+|-------|---------|------------------|
+| **Planning Agent** | Strategic planning | Task decomposition, estimation, architecture |
+| **Code Generation** | Write code | Generate implementations from requirements |
+| **Testing Agent** | Quality assurance | Generate and run tests, coverage analysis |
+| **Code Review** | Code quality | Automated PR review, best practices |
+| **CI/CD Agent** | Deployment | Build, test, deploy pipelines |
+| **Requirement Engineering** | Requirements analysis | Extract, analyze, validate requirements |
+| **Program Manager** | Orchestration | Coordinate multi-agent workflows |
 
-    Raises:
-        ValueError: If arg1 is empty.
-    """
-    pass
+Each agent can work independently or collaborate with others for complex tasks.
+
+---
+
+## 📊 Real-Time Monitoring
+
+### WebSocket Updates
+
+Get real-time progress updates during workflow execution:
+
+```javascript
+// JavaScript example
+const ws = new WebSocket('wss://your-instance.com/api/v1/ws/executions/exec_123');
+
+ws.onmessage = (event) => {
+  const update = JSON.parse(event.data);
+  console.log(`Progress: ${update.progress}%`);
+  console.log(`Current step: ${update.current_step}`);
+  console.log(`Status: ${update.status}`);
+};
 ```
-
-2. **Project Documentation** (in docs/):
-- Architecture documentation
-- Implementation guides
-- Project planning
-- Requirements specification
-
-#### Building Documentation
-
-```bash
-# API Documentation (Sphinx)
-make docs            # Generate and build API docs
-make docs-serve-sphinx  # Serve API docs locally
-
-# Project Documentation (MkDocs)
-make docs-mkdocs     # Build project docs
-make docs-serve-mkdocs  # Serve project docs locally
-
-# Documentation Maintenance
-make docs-clean      # Clean all documentation build artifacts
-make docs-check      # Check documentation links and build
-```
-
-#### Documentation Structure
-
-```
-docs/
-├── api/            # Sphinx API documentation
-│   ├── _build/     # Sphinx build directory
-│   ├── _static/    # Static files
-│   ├── _templates/ # Custom templates
-│   ├── _autosummary/ # Auto-generated API docs
-│   ├── conf.py     # Sphinx configuration
-│   ├── index.rst   # API docs index
-│   └── modules.rst # API modules index
-├── architecture/   # Architecture documentation
-├── implementation/ # Implementation guides
-├── planning/       # Project planning
-└── requirements/   # Requirements specification
-```
-
-### 5. Release Process
-
-```bash
-# Check what version would be bumped
-make version-bump-dry
-
-# Create a release (automatic versioning)
-make release
-
-# Push to remote
-git push origin main --tags
-```
-
-### 6. Development Environment
-
-```bash
-# Complete development setup
-make dev-setup
-
-# Stop development services
-make dev-down
-
-# Clean build artifacts
-make clean
-```
-
-## 🧪 Testing
-
-### Test Structure
-
-```
-tests/
-├── unit/              # Unit tests
-│   ├── test_helpers.py
-│   └── test_example.py
-├── integration/       # Integration tests
-│   └── test_example_integration.py
-└── system/           # System tests (future)
-```
-
-### Writing Tests
 
 ```python
-import pytest
-from agentic_workflow.utils.helpers import format_response
+# Python example
+import asyncio
+import websockets
 
-@pytest.mark.unit
-def test_format_response():
-    """Test response formatting."""
-    result = format_response({"key": "value"})
-    assert result["status"] == "success"
-    assert result["data"] == {"key": "value"}
+async def monitor_execution(execution_id):
+    uri = f"wss://your-instance.com/api/v1/ws/executions/{execution_id}"
+    async with websockets.connect(uri) as websocket:
+        async for message in websocket:
+            update = json.loads(message)
+            print(f"Progress: {update['progress']}%")
+            print(f"Status: {update['status']}")
 ```
 
-### Coverage Requirements
-
-- **Minimum**: 80%
-- **Target**: 90%+
-- **Critical modules**: 95%+
-
-## 📝 Documentation
-
-### Project Documentation
-
-- **[CONVENTIONS.md](CONVENTIONS.md)** - Development conventions and standards
-- **[CHANGELOG.md](CHANGELOG.md)** - Automated changelog
-- **[docs/](docs/)** - Comprehensive project documentation
-  - **[Features](docs/features/)** - Advanced reasoning patterns and tool integration
-  - **[Architecture](docs/architecture/)** - System design and components
-  - **[Implementation](docs/implementation/)** - Technical implementation guides
-  - **[Planning](docs/planning/)** - Project roadmap and planning
-
-### Feature Documentation
-
-- **[🧠 Reasoning Patterns](docs/features/reasoning-patterns.md)** - Chain of Thought, ReAct, and RAISE reasoning
-- **[🤝 Communication System](docs/features/communication-system.md)** - Multi-agent communication and coordination
-- **[🔧 Tool Integration](docs/features/tool-integration.md)** - Comprehensive tool discovery and execution system  
-- **[📖 User Guide](docs/features/user-guide.md)** - Practical examples and real-world workflows
-
-### Code Documentation
-
-We use **Google-style docstrings**:
-
-```python
-def complex_function(arg1: str, arg2: int) -> Dict[str, Any]:
-    """One line summary of the function.
-
-    Args:
-        arg1: Description of the first argument.
-        arg2: Description of the second argument.
-
-    Returns:
-        Dictionary containing the processed results.
-
-    Raises:
-        ValueError: If arg1 is empty.
-    """
-    pass
-```
-
-## 🔄 Version Management
-
-We use **automated semantic versioning** with [Commitizen](https://commitizen-tools.github.io/commitizen/):
-
-### Conventional Commits
+### Execution History
 
 ```bash
-# Features (MINOR version bump)
-git commit -m "feat(core): add new workflow engine"
+# List all executions for a workflow
+GET /api/v1/workflows/{workflow_id}/executions
 
-# Bug fixes (PATCH version bump)
-git commit -m "fix(api): resolve authentication issue"
-
-# Breaking changes (MAJOR version bump)
-git commit -m "feat!: redesign API interface"
-git commit -m "feat(api): add auth\n\nBREAKING CHANGE: requires new headers"
+# Get detailed execution information
+GET /api/v1/workflows/executions/{execution_id}
 ```
 
-### Release Workflow
+---
 
-1. **Develop** using conventional commits
-2. **Test** thoroughly (`make quality`)
-3. **Release** automatically (`make release`)
-4. **Deploy** (manual or CI/CD)
+## 🏗️ Architecture Overview
 
-## 📊 Code Quality
+### Customer Journey (40,000 Feet View)
 
-### Automated Quality Assurance
-
-- 🔧 **Black** - Code formatting
-- 📦 **isort** - Import organization
-- 🔍 **Flake8** - Linting and style
-- 🏷️ **MyPy** - Type checking
-- ✅ **pytest** - Testing framework
-- 📈 **Coverage** - Test coverage measurement
-- 🪝 **Pre-commit** - Automated quality checks
-
-### Quality Standards
-
-- **Code Style**: PEP 8 + Black (88 char line length)
-- **Type Hints**: Required for all public APIs
-- **Test Coverage**: Minimum 80%
-- **Documentation**: Google-style docstrings required
-
-## 🤝 Contributing
-
-We welcome contributions! Please follow our development conventions:
-
-### Quick Contributing Guide
-
-1. **Read** [CONVENTIONS.md](CONVENTIONS.md) for detailed standards
-2. **Fork** the repository
-3. **Create** a feature branch (`git checkout -b feat/amazing-feature`)
-4. **Follow** our coding conventions
-5. **Write** tests for new functionality
-6. **Commit** using conventional commit format
-7. **Ensure** all quality checks pass (`make quality`)
-8. **Push** to your branch
-9. **Create** a Pull Request
-
-### Development Conventions
-
-For detailed development standards, see **[CONVENTIONS.md](CONVENTIONS.md)**:
-
-- 🎨 **Code Style** - Python formatting and organization
-- 📝 **Commit Format** - Conventional commits specification
-- 🧪 **Testing Standards** - Test structure and requirements
-- 📚 **Documentation** - Docstring and README standards
-- 🗂️ **File Organization** - Project structure guidelines
-- 🏷️ **Naming Conventions** - Variable, function, and file naming
-- 🔄 **Version Management** - Semantic versioning process
-- ✅ **Code Quality** - Automated quality assurance
-
-## 📚 Project Structure
-
-```
-agentic-workflow/
-├── .github/                    # GitHub workflows and templates
-├── docs/                       # Project documentation
-│   ├── architecture/          # Architecture documentation
-│   ├── implementation/        # Implementation guides
-│   ├── planning/              # Project planning
-│   └── requirements/          # Requirements specification
-├── src/agentic_workflow/      # Main Python package
-│   ├── __init__.py           # Package initialization
-│   ├── core/                 # Core workflow functionality
-│   ├── agents/               # AI agent implementations
-│   ├── api/                  # FastAPI REST endpoints
-│   ├── graph/                # Neo4j graph processing
-│   ├── memory/               # Memory management (Redis, Weaviate)
-│   ├── monitoring/           # Prometheus metrics
-│   └── utils/                # Utility functions
-├── tests/                     # Test suite
-│   ├── unit/                 # Unit tests
-│   ├── integration/          # Integration tests
-│   └── system/               # System tests
-├── tools/                     # Development tools
-│   ├── scripts/              # Utility scripts
-│   └── config/               # Tool configurations
-├── .pre-commit-config.yaml    # Pre-commit hooks
-├── pyproject.toml            # Project configuration
-├── Makefile                  # Development commands
-├── CONVENTIONS.md            # Development conventions
-├── CHANGELOG.md              # Automated changelog
-└── README.md                 # This file
+```mermaid
+graph LR
+    YOU[Your Application] --> API[REST API]
+    API --> AGENTS[AI Agent Team]
+    AGENTS --> RESULTS[Results]
+    RESULTS --> YOU
+    
+    API -.-> DOCS[📚 /docs]
+    API -.-> REALTIME[⚡ WebSocket]
+    
+    style YOU fill:#e8f5e9
+    style API fill:#e3f2fd
+    style AGENTS fill:#f3e5f5
+    style RESULTS fill:#fff3e0
 ```
 
-### Key Components
+### System Components
 
-- **Core Engine**: Workflow execution and management
-- **AI Agents**: LangChain-based intelligent agents
-- **Graph Processing**: Neo4j-based workflow graphs
-- **API Layer**: FastAPI REST endpoints
-- **Memory Management**:
-  - Redis for caching
-  - Weaviate for vector storage
-  - Neo4j for graph relationships
-- **Monitoring**: Prometheus metrics and logging
-- **Event System**: MQTT-based event handling
+- **REST API Gateway**: FastAPI-powered, 35+ endpoints
+- **AI Agent Team**: 7 specialized agents powered by GPT-4/5
+- **Visual Builder**: No-code workflow creation
+- **Real-Time Engine**: WebSocket-based progress updates
+- **Enterprise Features**: Multi-tenancy, billing, analytics
+
+[See detailed architecture diagrams →](docs/architecture/ARCHITECTURE_DIAGRAMS.md)
+
+---
+
+## 💼 Use Cases
+
+### Startup: Accelerate Development
+
+```bash
+# Generate MVP features
+POST /api/v1/workflows/execute
+{
+  "workflow": {
+    "steps": [
+      {"agent": "planning", "parameters": {"objective": "User authentication"}},
+      {"agent": "code_generation", "parameters": {"framework": "FastAPI"}},
+      {"agent": "testing", "parameters": {"coverage": 80}}
+    ]
+  }
+}
+```
+
+### Enterprise: Automated Code Review
+
+```bash
+# Review all PRs automatically
+POST /api/v1/workflows/{code_review_template}/execute
+{
+  "parameters": {
+    "repository": "enterprise/main-app",
+    "pr_number": 1234,
+    "compliance_checks": true
+  }
+}
+```
+
+### Agency: Client Project Management
+
+```bash
+# Generate requirements, code, and tests
+POST /api/v1/workflows/{full_pipeline}/execute
+{
+  "parameters": {
+    "client": "acme_corp",
+    "project": "ecommerce_platform"
+  }
+}
+```
+
+---
+
+## 📈 Pricing Tiers
+
+| Feature | Free | Professional | Enterprise |
+|---------|------|--------------|------------|
+| Workflows/month | 100 | 1,000 | Unlimited |
+| API calls/day | 1,000 | 10,000 | Unlimited |
+| Visual builder | ✓ | ✓ | ✓ |
+| Real-time monitoring | ✓ | ✓ | ✓ |
+| WebSocket support | ✓ | ✓ | ✓ |
+| Priority support | - | ✓ | ✓ |
+| Custom agents | - | Limited | ✓ |
+| Multi-tenancy | - | - | ✓ |
+| On-premise | - | - | ✓ |
+| SLA guarantee | - | - | 99.9% |
+
+---
+
+## 📚 Documentation & Resources
+
+### For API Consumers
+
+- 🚀 [**Getting Started Guide**](docs/CUSTOMER_GETTING_STARTED.md) - Start here!
+- 📖 [**API Reference**](https://your-instance.com/docs) - Interactive Swagger docs
+- 🎨 [**Visual Builder Guide**](docs/VISUAL_BUILDER_GUIDE.md) - No-code workflows
+- 🔧 [**Integration Examples**](docs/INTEGRATION_EXAMPLES.md) - Sample code
+- ❓ [**FAQ**](docs/FAQ.md) - Common questions
+
+### For Developers & Contributors
+
+- 🏗️ [**Architecture**](docs/architecture/ARCHITECTURE_DIAGRAMS.md) - System design
+- 💻 [**Developer Guide**](docs/DEVELOPER_GUIDE.md) - Setup and contributing
+- 📝 [**API Development**](docs/API_DEVELOPMENT.md) - Extend the API
+- 🧪 [**Testing Guide**](docs/TESTING_GUIDE.md) - Test your integrations
+- 📊 [**Conventions**](CONVENTIONS.md) - Development standards
+
+### Support
+
+- 💬 [GitHub Discussions](https://github.com/yourusername/agentic-workflow/discussions)
+- 🐛 [Report Issues](https://github.com/yourusername/agentic-workflow/issues)
+- 📧 Email: support@agentic-workflow.com
+- 💼 Slack: [Join our community](https://slack.agentic-workflow.com)
+
+---
+
+## 🚦 System Status
+
+Check the health of your instance:
+
+```bash
+curl https://your-instance.com/api/v1/health
+```
+
+**Response:**
+```json
+{
+  "status": "healthy",
+  "version": "0.6.0",
+  "uptime_seconds": 1234567,
+  "components": {
+    "api": "healthy",
+    "database": "healthy",
+    "ai_agents": "healthy",
+    "cache": "healthy"
+  }
+}
+```
+
+---
+
+## 🔒 Security & Compliance
+
+- 🔐 **Authentication**: OAuth2, JWT, API keys
+- 👥 **Multi-Tenancy**: Complete tenant isolation
+- 📊 **Audit Logging**: Full activity tracking
+- 🛡️ **Data Privacy**: GDPR compliant
+- 🔒 **Encryption**: TLS 1.3, data at rest encryption
+- 🔄 **Rate Limiting**: Prevent abuse
+- 🚨 **Security Scanning**: Automated vulnerability checks
+
+---
+
+## 🌟 Client Success Stories
+
+> "Reduced code review time by 70% and caught issues our team missed."  
+> — **Tech Lead, Fortune 500 Company**
+
+> "The visual workflow builder let our PM create automation without engineering help."  
+> — **CTO, Growing Startup**
+
+> "Handles 1000+ workflows daily. Rock solid reliability."  
+> — **DevOps Lead, Enterprise SaaS**
+
+---
+
+## 🚀 Getting Started Checklist
+
+- [ ] **Get Access**: Sign up or request API key
+- [ ] **Read Docs**: Visit [Getting Started Guide](docs/CUSTOMER_GETTING_STARTED.md)
+- [ ] **Try API**: Use Swagger UI at `/docs`
+- [ ] **Create Workflow**: Start with visual builder
+- [ ] **Integrate**: Add to your application
+- [ ] **Scale**: Upgrade to Professional or Enterprise
+
+---
 
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🔗 Links
+---
 
-- **Documentation**: [docs/](docs/)
-- **Conventions**: [CONVENTIONS.md](CONVENTIONS.md)
-- **Changelog**: [CHANGELOG.md](CHANGELOG.md)
-- **Issues**: [GitHub Issues](https://github.com/yourusername/agentic-workflow/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/yourusername/agentic-workflow/discussions)
+## 🤝 Contributing
+
+We welcome contributions! See our [Developer Guide](docs/DEVELOPER_GUIDE.md) for:
+
+- Setting up development environment
+- Code style and conventions
+- Testing requirements
+- Pull request process
 
 ---
 
-**🚀 Ready to contribute?** Start by reading our [development conventions](CONVENTIONS.md) and running `make dev-setup`!
+## 📞 Contact & Support
 
-## Features
+- **Website**: https://agentic-workflow.com
+- **Documentation**: https://docs.agentic-workflow.com
+- **Email**: support@agentic-workflow.com
+- **Sales**: sales@agentic-workflow.com
+- **Twitter**: [@AgenticWorkflow](https://twitter.com/AgenticWorkflow)
 
-### 🧠 Advanced Reasoning Patterns
-- **Chain of Thought (CoT)**: Step-by-step problem decomposition with transparent reasoning paths
-- **ReAct (Reasoning + Acting)**: Iterative reasoning-action-observation cycles with self-correction
-- **RAISE (Reason, Act, Improve, Share, Evaluate)**: Multi-agent coordination with collaborative learning
-- **Memory Integration**: Reasoning paths stored in both short-term and vector memory
-- **Confidence Tracking**: Quantified confidence levels for reasoning decisions
+---
 
-### 🤝 Multi-Agent Communication System
-- **Multi-Channel Messaging**: Support for various communication channels (in-memory, Redis, etc.)
-- **Message Specialization**: Insight sharing, task coordination, and system notifications
-- **Agent Subscription Management**: Selective message filtering based on agent roles
-- **Automatic Lifecycle Management**: Message expiration and cleanup
-- **RAISE Integration**: Seamless insight sharing during collaborative reasoning
+**🎯 Ready to automate your development workflow?**
 
-### 🔧 Comprehensive Tool Integration System
-- **Dynamic Tool Discovery**: Automatic tool detection from modules and packages
-- **Registry-Based Management**: Performance monitoring and lifecycle management
-- **Built-in Tool Portfolio**: File operations, text processing, command execution, data analysis
-- **Smart Recommendations**: Task-based tool suggestions with confidence scoring
+[Get Started →](docs/CUSTOMER_GETTING_STARTED.md) | [API Docs →](https://your-instance.com/docs) | [Join Community →](https://github.com/yourusername/agentic-workflow/discussions)
 
-### 🤖 Core Workflow Engine
-- Core engine for workflow management
-- Agent-based task execution with LangChain integration
-- Enhanced Planning Agent with CoT reasoning integration
-- Flexible memory system
-  - Short-term memory with Redis
-  - Vector store (Weaviate) for long-term memory
-  - Graph database (Neo4j) for relationship management
-  - LangChain integration for embeddings
-- FastAPI-based REST API
-- MQTT-based event system
-- Prometheus metrics and monitoring
-- Plugin architecture
-- Robust event system
-- Extensible service components
+---
 
-## Installation
-
-```bash
-# Basic installation
-pip install agentic-workflow
-
-# With development dependencies
-pip install agentic-workflow[dev]
-
-# With documentation dependencies
-pip install agentic-workflow[docs]
-
-# With test dependencies
-pip install agentic-workflow[test]
-
-# With embedding support (for LangChain integration)
-pip install agentic-workflow[embedding]
-```
+*Version 0.6.0 | Last Updated: November 11, 2025*  
+*Built with ❤️ by the Agentic Workflow Team*

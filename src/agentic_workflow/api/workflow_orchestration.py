@@ -110,12 +110,13 @@ async def execute_workflow(
     Returns:
         Workflow execution response with results
     """
-    execution_id = f"exec_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}_{tenant_id[:8]}"
+    now = datetime.now(timezone.utc)
+    execution_id = f"exec_{now.strftime('%Y%m%d_%H%M%S')}_{now.microsecond:06d}_{tenant_id[:8]}"
     
     try:
         # Initialize services (use singleton pattern for consistency)
         tenant_service = get_tenant_service()
-        file_service = FileService(tenant_service=tenant_service)
+        file_service = get_file_service()
         chunking_service = ChunkingService()
 
         # Step 1: Validate tenant and check quota
@@ -304,12 +305,13 @@ async def execute_workflow_json(
     Returns:
         Workflow execution response with results
     """
-    execution_id = f"exec_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}_{request.tenant_id[:8]}"
+    now = datetime.now(timezone.utc)
+    execution_id = f"exec_{now.strftime('%Y%m%d_%H%M%S')}_{now.microsecond:06d}_{request.tenant_id[:8]}"
     
     try:
         # Initialize services (use singleton pattern for consistency)
         tenant_service = get_tenant_service()
-        file_service = FileService(tenant_service=tenant_service)
+        file_service = get_file_service()
         chunking_service = ChunkingService()
 
         # Step 1: Validate tenant and check quota

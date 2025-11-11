@@ -5,7 +5,7 @@ import uuid
 from io import BytesIO
 
 from agentic_workflow.core.tenant import get_tenant_service, TierType
-from agentic_workflow.core.file_attachment import FileService
+from agentic_workflow.core.file_attachment import get_file_service
 from agentic_workflow.api.workflow_orchestration import (
     WorkflowExecutionRequest,
     execute_workflow,
@@ -200,11 +200,9 @@ class TestWorkflowOrchestration:
 
     async def test_execute_workflow_json_with_files(self):
         """Test JSON endpoint with file IDs."""
-        from agentic_workflow.core.file_attachment import FileService
-
         from agentic_workflow.core.tenant import get_tenant_service
         tenant_service = get_tenant_service()
-        file_service = FileService(tenant_service=tenant_service)
+        file_service = get_file_service()
         
         tenant = await tenant_service.create_tenant(
             name=f"Test Corp {id(self)}",
@@ -258,11 +256,10 @@ class TestWorkflowOrchestration:
     async def test_execute_workflow_json_file_access_denied(self):
         """Test JSON endpoint denies access to other tenant's files."""
         from fastapi import HTTPException
-        from agentic_workflow.core.file_attachment import FileService
 
         from agentic_workflow.core.tenant import get_tenant_service
         tenant_service = get_tenant_service()
-        file_service = FileService(tenant_service=tenant_service)
+        file_service = get_file_service()
         
         tenant1 = await tenant_service.create_tenant(
             name=f"Tenant 1 {id(self)}",

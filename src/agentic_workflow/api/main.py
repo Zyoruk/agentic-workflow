@@ -11,6 +11,7 @@ from agentic_workflow import __version__, monitoring_service
 from agentic_workflow.api.agents import router as agents_router
 from agentic_workflow.api.auth_endpoints import router as auth_router
 from agentic_workflow.api.billing import router as billing_router
+from agentic_workflow.api.business_metrics import router as business_metrics_router
 from agentic_workflow.api.files import router as files_router
 from agentic_workflow.api.health import router as health_router
 from agentic_workflow.api.mcp import router as mcp_router
@@ -66,6 +67,7 @@ app.add_middleware(
 app.include_router(health_router, prefix="/api/v1")
 app.include_router(auth_router)  # Authentication endpoints
 app.include_router(billing_router)  # Billing and payments (includes prefix)
+app.include_router(business_metrics_router)  # Business tier metrics (includes prefix)
 app.include_router(tenants_router)  # Tenant management (includes prefix)
 app.include_router(files_router)  # File attachments (includes prefix)
 app.include_router(orchestration_router)  # Workflow orchestration (includes prefix)
@@ -88,6 +90,7 @@ async def root() -> Dict[str, Any]:
             "health": "/api/v1/health",
             "auth": "/api/v1/auth",
             "billing": "/api/v1/billing",
+            "business_metrics": "/api/v1/business-metrics",
             "tenants": "/api/v1/tenants",
             "files": "/api/v1/files",
             "workflow_orchestration": "/api/v1/workflow",

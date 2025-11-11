@@ -10,11 +10,16 @@ from fastapi.middleware.cors import CORSMiddleware
 from agentic_workflow import __version__, monitoring_service
 from agentic_workflow.api.agents import router as agents_router
 from agentic_workflow.api.auth_endpoints import router as auth_router
+from agentic_workflow.api.billing import router as billing_router
+from agentic_workflow.api.business_metrics import router as business_metrics_router
+from agentic_workflow.api.files import router as files_router
 from agentic_workflow.api.health import router as health_router
 from agentic_workflow.api.mcp import router as mcp_router
+from agentic_workflow.api.tenants import router as tenants_router
 from agentic_workflow.api.tools import router as tools_router
 from agentic_workflow.api.workflows import router as workflows_router
 from agentic_workflow.api.workflow_protected import router as protected_workflows_router
+from agentic_workflow.api.workflow_orchestration import router as orchestration_router
 from agentic_workflow.api.websocket_execution import router as websocket_router
 from agentic_workflow.core.logging_config import get_logger, setup_logging
 
@@ -61,6 +66,11 @@ app.add_middleware(
 # Include routers
 app.include_router(health_router, prefix="/api/v1")
 app.include_router(auth_router)  # Authentication endpoints
+app.include_router(billing_router)  # Billing and payments (includes prefix)
+app.include_router(business_metrics_router)  # Business tier metrics (includes prefix)
+app.include_router(tenants_router)  # Tenant management (includes prefix)
+app.include_router(files_router)  # File attachments (includes prefix)
+app.include_router(orchestration_router)  # Workflow orchestration (includes prefix)
 app.include_router(agents_router, prefix="/api/v1")
 app.include_router(mcp_router, prefix="/api/v1")
 app.include_router(tools_router, prefix="/api/v1")
@@ -79,6 +89,11 @@ async def root() -> Dict[str, Any]:
         "endpoints": {
             "health": "/api/v1/health",
             "auth": "/api/v1/auth",
+            "billing": "/api/v1/billing",
+            "business_metrics": "/api/v1/business-metrics",
+            "tenants": "/api/v1/tenants",
+            "files": "/api/v1/files",
+            "workflow_orchestration": "/api/v1/workflow",
             "agents": "/api/v1/agents",
             "mcp": "/api/v1/mcp",
             "tools": "/api/v1/tools",
